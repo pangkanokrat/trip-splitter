@@ -286,33 +286,54 @@
             });
         }
 
-        function loadExpensesFromSheet() {
-            if (!SCRIPT_URL || SCRIPT_URL.trim() === "" || SCRIPT_URL.includes("ใส่ลิงก์")) {
-                setSyncStatus("❌ ยังไม่ได้ใส่ลิงก์ SCRIPT_URL ในโค้ด", "bg-red-50 text-red-600 border-red-200");
-                return;
+function loadExpensesFromSheet() {
+    if (!SCRIPT_URL || SCRIPT_URL.trim() === "" || SCRIPT_URL.includes("ใส่ลิงก์")) {
+        setSyncStatus("❌ ยังไม่ได้ใส่ลิงก์ SCRIPT_URL ในโค้ด", "bg-red-50 text-red-600 border-red-200");
+        return;
+    }
+    const groupName = getGroupName();
+    setSyncStatus(`🔄 กำลังโหลดข้อมูลกลุ่ม [ ${groupName} ]...`, "bg-amber-50 text-amber-600 border-amber-200");
+    
+    fetch(`${SCRIPT_URL}?group=${encodeURIComponent(groupName)}&getGroups=true`)
+        .then(res => res.json())
+        .then(data => {
+            expenses = data.expenses || [];
+            if (data.allGroups && data.allGroups.length > 0) {
+                allGroups = data.allGroups;
             }
-            const groupName = getGroupName();
-            setSyncStatus(`🔄 กำลังโหลดข้อมูลกลุ่ม [ ${groupName} ]...`, "bg-amber-50 text-amber-600 border-amber-200");
             
-            fetch(`${SCRIPT_URL}?group=${encodeURIComponent(groupName)}&getGroups=true`)
-                .then(res => res.json())
-                .then(data => {
-                    expenses = data.expenses || [];
-                    if (data.allGroups && data.allGroups.length > 0) {
-                        allGroups = data.allGroups;
-                    }
-                    
-                    document.getElementById('groupNameInput').value = groupName;
-                    
-                    updateGroupDropdown(groupName);
-                    renderExpenses();
-                    calculateFinalSplit();
-                    setSyncStatus(`✅ กลุ่ม [ ${groupName} ] ซิงค์สำเร็จ`, "bg-emerald-50 text-emerald-600 border-emerald-200");
-                })
-                .catch(err => {
-                    setSyncStatus("❌ เกิดข้อผิดพลาดในการดึงข้อมูล", "bg-red-50 text-red-600 border-red-200");
-                });
-        }
+            document.getElementById('groupNameInput').value = groupName;
+            updateGroupDropdown(groupName);
+
+            // 🟢 [จุดแก้ไข] ฟังก์ชันแกะรายชื่อเพื่อนอัตโนมัติจากข้อมูลในกลุ่ม
+            let autoFriends = new Set();
+            expenses.forEach(exp => {
+                if (exp.payer) autoFriends.add(exp.payer); // ดึงชื่อคนจ่าย
+                if (exp.splitDetails) {
+                    Object.keys(exp.splitDetails).forEach(name => autoFriends.add(name)); // ดึงชื่อคนหาร
+                }
+            });
+
+            // ถ้ากลุ่มนี้มีข้อมูลเพื่อนเก่าอยู่ ให้เอามาใส่ในช่องกรอกอัติโนมัติ
+            if (autoFriends.size > 0) {
+                document.getElementById('friendsInput').value = Array.from(autoFriends).join(', ');
+            } else {
+                // ถ้าเป็นกลุ่มใหม่เอี่ยมและยังไม่มีข้อมูล ให้ใส่รายชื่อเริ่มต้นไว้ให้ก่อน
+                document.getElementById('friendsInput').value = "แป้ง, บอย, ตาล, นัท";
+            }
+            
+            // อัปเดตเมนูเลือกคนจ่ายและรูปแบบการหารใหม่ให้ตรงกับเพื่อนกลุ่มนี้
+            updatePayerDropdown();
+            renderSplitUI();
+
+            renderExpenses();
+            calculateFinalSplit();
+            setSyncStatus(`✅ กลุ่ม [ ${groupName} ] ซิงค์สำเร็จ`, "bg-emerald-50 text-emerald-600 border-emerald-200");
+        })
+        .catch(err => {
+            setSyncStatus("❌ เกิดข้อผิดพลาดในการดึงข้อมูล", "bg-red-50 text-red-600 border-red-200");
+        });
+}
 
         function startEditExpense(index) {
             const exp = expenses[index];
