@@ -3,113 +3,114 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Trip Splitter - Google Sheet + Date</title>
+    <title>Trip Splitter -ระบบบันทึกและคำนวณค่าทริป</title>
     <script src="https://cdn.tailwindcss.com"></script>
 </head>
-<body class="bg-gray-100 p-4 md:p-8">
+<body class="bg-slate-100 p-4 md:p-8 text-slate-800">
 
-    <div class="max-w-2xl mx-auto bg-white p-6 rounded-2xl shadow-lg space-y-6">
+    <div class="max-w-2xl mx-auto bg-white p-6 rounded-2xl shadow-xl space-y-6">
         <div class="text-center space-y-2">
             <h1 class="text-3xl font-extrabold text-indigo-600">📊 Trip Splitter + Google Sheet</h1>
-            <p class="text-gray-500 text-sm">บันทึกข้อมูลและวันที่ลง Google Sheet สรุปยอดได้แม่นยำรายวัน</p>
-            <div id="syncStatus" class="text-xs font-bold text-gray-400">🔄 กำลังโหลดข้อมูลจาก Google Sheet...</div>
+            <p class="text-slate-500 text-sm">ระบบคำนวณและบันทึกข้อมูลทริปแบบเรียลไทม์</p>
+            <div id="syncStatus" class="inline-block px-3 py-1 rounded-full text-xs font-bold bg-slate-100 text-slate-600 border border-slate-200">
+                🔄 กำลังเชื่อมต่อฐานข้อมูล...
+            </div>
         </div>
         
-        <hr>
+        <hr class="border-slate-100">
 
         <div class="bg-indigo-50 p-4 rounded-xl border border-indigo-100">
-            <label class="block text-sm font-bold text-indigo-900 mb-1">👥 1. รายชื่อเพื่อนในทริป (คั่นด้วยเครื่องหมายจุลภาค ,)</label>
-            <input type="text" id="friendsInput" value="A, B, C, D" oninput="handleFriendsChange()" class="w-full p-2.5 border border-indigo-200 rounded-lg shadow-sm focus:outline-indigo-500">
+            <label class="block text-sm font-bold text-indigo-950 mb-1">👥 1. รายชื่อเพื่อนในทริป (คั่นด้วยเครื่องหมายจุลภาค ,)</label>
+            <input type="text" id="friendsInput" value="A, B, C, D" oninput="handleFriendsChange()" class="w-full p-2.5 border border-indigo-200 rounded-lg shadow-sm focus:outline-indigo-500 font-medium">
         </div>
 
         <form id="expenseForm" onsubmit="event.preventDefault(); saveExpense();" class="bg-amber-50 p-4 rounded-xl border border-amber-100 space-y-4">
-            <div class="flex justify-between items-center">
-                <h3 id="formTitle" class="text-sm font-bold text-amber-900">🍔 2. เพิ่มรายการค่าใช้จ่ายใหม่</h3>
-            </div>
+            <h3 class="text-sm font-bold text-amber-950">🍔 2. เพิ่มรายการค่าใช้จ่ายใหม่</h3>
             
-            <input type="hidden" id="editIndex" value="-1">
-
             <div class="grid grid-cols-1 sm:grid-cols-4 gap-2">
                 <div>
-                    <label class="text-xs font-bold text-gray-600">📅 วันที่</label>
-                    <input type="date" id="expenseDate" required class="w-full p-2 border rounded-lg focus:outline-indigo-500 bg-white text-sm">
+                    <label class="block text-xs font-bold text-slate-600 mb-1">📅 วันที่</label>
+                    <input type="date" id="expenseDate" required class="w-full p-2 border border-amber-200 rounded-lg focus:outline-indigo-500 bg-white text-sm font-medium">
                 </div>
                 <div>
-                    <label class="text-xs font-bold text-gray-600">🍔 ชื่อรายการ</label>
-                    <input type="text" id="expenseDesc" placeholder="เช่น ค่าข้าว" required class="w-full p-2 border rounded-lg focus:outline-indigo-500 bg-white text-sm">
+                    <label class="block text-xs font-bold text-slate-600 mb-1">🍔 ชื่อรายการ</label>
+                    <input type="text" id="expenseDesc" placeholder="เช่น ค่าข้าว" required class="w-full p-2 border border-amber-200 rounded-lg focus:outline-indigo-500 bg-white text-sm">
                 </div>
                 <div>
-                    <label class="text-xs font-bold text-gray-600">💰 ยอดรวม (บาท)</label>
-                    <input type="number" id="expenseAmount" placeholder="ยอดรวมทั้งหมด" required min="0.01" step="any" class="w-full p-2 border rounded-lg focus:outline-indigo-500 bg-white text-sm">
+                    <label class="block text-xs font-bold text-slate-600 mb-1">💰 ยอดรวม (บาท)</label>
+                    <input type="number" id="expenseAmount" placeholder="ยอดรวม" required min="0.01" step="any" class="w-full p-2 border border-amber-200 rounded-lg focus:outline-indigo-500 bg-white text-sm font-bold text-slate-700">
                 </div>
                 <div>
-                    <label class="text-xs font-bold text-gray-600">👤 ใครจ่ายก่อน?</label>
-                    <select id="expensePayer" class="w-full p-2 border rounded-lg bg-white focus:outline-indigo-500 text-sm"></select>
+                    <label class="block text-xs font-bold text-slate-600 mb-1">👤 ใครจ่ายก่อน?</label>
+                    <select id="expensePayer" class="w-full p-2 border border-amber-200 rounded-lg bg-white focus:outline-indigo-500 text-sm font-medium text-slate-700"></select>
                 </div>
             </div>
 
             <div class="bg-white p-3 rounded-lg border border-amber-200 space-y-2">
-                <label class="block text-xs font-bold text-gray-700">⚙️ รูปแบบการหารเงิน (Split Option):</label>
-                <select id="splitType" onchange="renderSplitUI()" class="w-full p-2 border rounded-lg bg-gray-50 focus:outline-indigo-500 text-sm">
+                <label class="block text-xs font-bold text-slate-700">⚙️ รูปแบบการหารเงิน (Split Option):</label>
+                <select id="splitType" onchange="renderSplitUI()" class="w-full p-2 border border-slate-200 rounded-lg bg-slate-50 focus:outline-indigo-500 text-sm font-medium text-slate-700">
                     <option value="equally">A. หารเท่ากันทุกคน (Equally)</option>
                     <option value="specific">B. เลือกคนหารเฉพาะบางคน (Specific Members)</option>
                     <option value="shares">C. จ่ายไม่เท่ากันเป็นสัดส่วน (By Shares)</option>
                     <option value="exact">D. ระบุเป็นจำนวนเงินของแต่ละคน (By Exact Amount)</option>
                 </select>
-                <div id="splitUIContainer" class="p-2 bg-gray-50 rounded-lg space-y-2 text-sm max-h-48 overflow-y-auto"></div>
+                <div id="splitUIContainer" class="p-2 bg-slate-50 rounded-lg space-y-2 text-sm max-h-48 overflow-y-auto border border-slate-100"></div>
             </div>
             
-            <button type="submit" id="submitBtn" class="w-full bg-amber-500 text-white p-2.5 rounded-lg font-bold hover:bg-amber-600 transition shadow">
+            <button type="submit" class="w-full bg-amber-500 text-white p-2.5 rounded-lg font-bold hover:bg-amber-600 transition shadow-md active:scale-[0.99]">
                 ➕ เพิ่มรายการนี้ลงทริป
             </button>
         </form>
 
-        <div>
-            <div class="flex justify-between items-center mb-2">
-                <h3 class="font-bold text-gray-700">📋 รายการค่าใช้จ่ายทั้งหมดในทริป:</h3>
-                <button type="button" onclick="clearAllExpenses()" class="text-xs font-bold text-red-500 hover:text-red-700 transition bg-red-50 px-2 py-1 rounded border border-red-200">
+        <div class="space-y-2">
+            <div class="flex justify-between items-center">
+                <h3 class="font-bold text-slate-700 text-sm">📋 รายการค่าใช้จ่ายในทริปทั้งหมด:</h3>
+                <button type="button" onclick="clearAllExpenses()" class="text-xs font-bold text-red-500 hover:text-red-700 transition bg-red-50 px-2 py-1 rounded border border-red-200 active:scale-95">
                     🗑️ ล้างรายการทั้งหมด
                 </button>
             </div>
             
-            <div class="overflow-x-auto">
-                <table class="w-full text-left border-collapse bg-gray-50 rounded-lg overflow-hidden text-sm">
+            <div class="overflow-x-auto rounded-xl border border-slate-200 shadow-sm">
+                <table class="w-full text-left border-collapse bg-slate-50 text-sm">
                     <thead>
-                        <tr class="bg-gray-200 text-gray-700">
-                            <th class="p-3">วันที่</th>
-                            <th class="p-3">รายการ</th>
-                            <th class="p-3">คนจ่าย</th>
-                            <th class="p-3">การหาร</th>
-                            <th class="p-3 text-right">จำนวนเงิน</th>
+                        <tr class="bg-slate-200 text-slate-700 font-bold border-b border-slate-300">
+                            <th class="p-3 w-32">📅 วันที่</th>
+                            <th class="p-3">🍔 รายการ</th>
+                            <th class="p-3 w-24">👤 คนจ่าย</th>
+                            <th class="p-3 w-24">⚙️ การหาร</th>
+                            <th class="p-3 text-right w-32">💰 จำนวนเงิน</th>
                         </tr>
                     </thead>
-                    <tbody id="expenseList"></tbody>
+                    <tbody id="expenseList" class="divide-y divide-slate-100">
+                        <tr>
+                            <td colspan="5" class="p-6 text-center text-slate-400 bg-white">🔄 กำลังดึงข้อมูลล่าสุด...</td>
+                        </tr>
+                    </tbody>
                 </table>
             </div>
         </div>
 
-        <button type="button" onclick="calculateFinalSplit()" class="w-full bg-indigo-600 text-white p-4 rounded-xl font-bold text-lg hover:bg-indigo-700 transition shadow-lg">
+        <button type="button" onclick="calculateFinalSplit()" class="w-full bg-indigo-600 text-white p-4 rounded-xl font-bold text-lg hover:bg-indigo-700 transition shadow-lg active:scale-[0.99]">
             🧮 คำนวณสรุปยอดหักลบกลบหนี้!
         </button>
 
-        <hr>
+        <hr class="border-slate-100">
 
         <div id="resultSection" class="hidden space-y-4">
-            <h3 class="font-bold text-xl text-gray-800 border-l-4 border-green-500 pl-2">📊 ผลการสรุปยอดรวม:</h3>
-            <div class="bg-gray-50 p-3 rounded-lg text-sm space-y-1 text-gray-600">
-                <p>💰 <b>ยอดรวมทั้งทริป:</b> <span id="totalTripAmount" class="text-indigo-600 font-bold">0</span> บาท</p>
+            <h3 class="font-bold text-xl text-slate-800 border-l-4 border-emerald-500 pl-2">📊 ผลการสรุปยอดรวม:</h3>
+            <div class="bg-slate-50 p-3 rounded-lg text-sm border border-slate-200">
+                <p class="text-slate-600">💰 <b>ยอดรวมทั้งทริป:</b> <span id="totalTripAmount" class="text-indigo-600 font-bold text-base">0</span> บาท</p>
             </div>
-            <div id="transferResult" class="space-y-2 text-sm font-medium text-green-800"></div>
+            <div id="transferResult" class="space-y-2 text-sm font-medium text-emerald-900"></div>
         </div>
     </div>
 
     <script>
-        // ⚠️ เอาลิงก์ Web App URL ที่ได้จากสเต็ปแรก มาวางตรงนี้ครับ
-        const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwaTbiFoHw0FgS6bi6QXPvjT2ceADAkg9BmdxBm607tLfr3JE4wzpt0_YpGtnZ7xMN1/exec";
+        // ⚠️ บรรทัดนี้: วางลิงก์ Web App URL จาก Google Sheets ของคุณที่นี่ครับ
+        const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwaTbiFoHw0FgS6bi6QXPvjT2ceADAkg9BmdxBm607tLfr3JE4wzpt0_YpGtnZ7xMN1/exec"; 
 
         let expenses = [];
 
-        // ตั้งค่าให้ช่องวันที่เลือกเป็น "วันปัจจุบัน" ให้โดยอัตโนมัติ เพื่อให้ผู้ใช้ไม่ต้องกดเลือกบ่อยๆ
         function setDefaultDate() {
             const today = new Date().toISOString().split('T')[0];
             document.getElementById('expenseDate').value = today;
@@ -133,49 +134,60 @@
         function renderSplitUI() {
             const friends = getFriends(); const splitType = document.getElementById('splitType').value;
             const container = document.getElementById('splitUIContainer'); container.innerHTML = "";
-            if (friends.length === 0) { container.innerHTML = "<span class='text-red-500'>กรุณาใส่รายชื่อเพื่อนด้านบนก่อนครับ</span>"; return; }
-            if (splitType === 'equally') container.innerHTML = "<p class='text-gray-500 text-xs'>ทุกคนหารเท่ากันหมดในมื้อนี้</p>";
+            if (friends.length === 0) { container.innerHTML = "<span class='text-red-500 font-bold text-xs'>❌ กรุณาพิมพ์รายชื่อเพื่อนก่อนครับ</span>"; return; }
+            
+            if (splitType === 'equally') container.innerHTML = "<p class='text-slate-400 text-xs py-1'>ทุกคนจ่ายหารเท่ากันหมดในทริปนี้</p>";
             else if (splitType === 'specific') {
-                friends.forEach(name => { container.innerHTML += `<label class="flex items-center gap-2 py-1"><input type="checkbox" name="splitMember" value="${name}" checked class="w-4 h-4 text-indigo-600 rounded"><span>${name}</span></label>`; });
+                friends.forEach(name => { container.innerHTML += `<label class="flex items-center gap-2 py-1 cursor-pointer select-none"><input type="checkbox" name="splitMember" value="${name}" checked class="w-4 h-4 text-indigo-600 rounded border-slate-300"><span>${name}</span></label>`; });
             } else if (splitType === 'shares') {
-                friends.forEach(name => { container.innerHTML += `<div class="flex justify-between items-center py-1"><span>${name}</span><div class="flex items-center gap-1"><input type="number" name="shareValue_${name}" value="1" min="0" class="w-16 p-1 border rounded text-center bg-white"> ส่วน</div></div>`; });
+                friends.forEach(name => { container.innerHTML += `<div class="flex justify-between items-center py-1"><span>${name}</span><div class="flex items-center gap-1"><input type="number" name="shareValue_${name}" value="1" min="0" class="w-16 p-1 border rounded text-center bg-white font-medium"> ส่วน</div></div>`; });
             } else if (splitType === 'exact') {
-                friends.forEach(name => { container.innerHTML += `<div class="flex justify-between items-center py-1"><span>${name}</span><div class="flex items-center gap-1"><input type="number" name="exactValue_${name}" value="0" min="0" step="any" class="w-24 p-1 border rounded text-right bg-white"> บาท</div></div>`; });
+                friends.forEach(name => { container.innerHTML += `<div class="flex justify-between items-center py-1"><span>${name}</span><div class="flex items-center gap-1"><input type="number" name="exactValue_${name}" value="0" min="0" step="any" class="w-24 p-1 border rounded text-right bg-white font-bold text-slate-700"> บาท</div></div>`; });
             }
         }
 
-        // ฟังก์ชันวาดตารางที่เพิ่มคอลัมน์ "วันที่"
         function renderExpenses() {
             const tbody = document.getElementById('expenseList'); tbody.innerHTML = "";
-            if (expenses.length === 0) { tbody.innerHTML = `<tr><td colspan="5" class="p-3 text-center text-gray-400">ยังไม่มีรายการค่าใช้จ่ายในทริปนี้</td></tr>`; document.getElementById('resultSection').classList.add('hidden'); return; }
+            if (expenses.length === 0) { 
+                tbody.innerHTML = `<tr><td colspan="5" class="p-6 text-center text-slate-400 bg-white">ไม่มีรายการค่าใช้จ่าย (ตารางใน Google Sheet ว่างเปล่า)</td></tr>`; 
+                document.getElementById('resultSection').classList.add('hidden'); 
+                return; 
+            }
             const typeNames = { equally: "หารเท่ากัน", specific: "เลือกคนหาร", shares: "ตามสัดส่วน", exact: "ระบุรายคน" };
             
             expenses.forEach((exp) => {
-                // จัดการฟอร์แมตวันที่ให้อ่านง่ายขึ้น (ตัดส่วนเวลาออกถ้ามี)
-                let displayDate = exp.date ? exp.date.split('T')[0] : "-";
+                let displayDate = "-";
+                if (exp.date) {
+                    displayDate = typeof exp.date === 'string' ? exp.date.split('T')[0] : new Date(exp.date).toISOString().split('T')[0];
+                }
                 
-                tbody.innerHTML += `<tr class="border-b border-gray-100 hover:bg-gray-100 transition">
-                    <td class="p-3 text-gray-500 text-xs">${displayDate}</td>
-                    <td class="p-3 font-medium text-gray-700">${exp.desc}</td>
-                    <td class="p-3 text-gray-600"><span class="bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded-full">${exp.payer}</span></td>
-                    <td class="p-3 text-xs text-gray-500">${typeNames[exp.splitType]}</td>
-                    <td class="p-3 text-right font-bold text-gray-900">${exp.amount.toFixed(2)} บาท</td>
+                tbody.innerHTML += `<tr class="bg-white hover:bg-slate-50 transition">
+                    <td class="p-3 text-slate-600 font-mono text-xs font-bold">${displayDate}</td>
+                    <td class="p-3 font-semibold text-slate-700">${exp.desc}</td>
+                    <td class="p-3 text-slate-600"><span class="bg-blue-50 text-blue-700 text-xs px-2.5 py-0.5 rounded-full font-bold border border-blue-100">${exp.payer}</span></td>
+                    <td class="p-3 text-xs text-slate-500 font-medium">${typeNames[exp.splitType]}</td>
+                    <td class="p-3 text-right font-bold text-slate-900">${exp.amount.toFixed(2)} บาท</td>
                 </tr>`;
             });
         }
 
         function loadExpensesFromSheet() {
-            setSyncStatus("🔄 กำลังโหลดข้อมูลล่าสุดจาก Google Sheet...", "text-amber-500");
+            if (!SCRIPT_URL || SCRIPT_URL.trim() === "" || SCRIPT_URL.includes("ใส่ลิงก์")) {
+                setSyncStatus("❌ ยังไม่ได้ใส่ลิงก์ SCRIPT_URL ในโค้ด", "bg-red-50 text-red-600 border-red-200");
+                return;
+            }
+            
+            setSyncStatus("🔄 กำลังซิงค์กับ Google Sheet...", "bg-amber-50 text-amber-600 border-amber-200");
             fetch(SCRIPT_URL)
                 .then(res => res.json())
                 .then(data => {
                     expenses = data;
                     renderExpenses();
                     if(expenses.length > 0) calculateFinalSplit();
-                    setSyncStatus("✅ เชื่อมต่อฐานข้อมูล Google Sheet สำเร็จ", "text-green-500");
+                    setSyncStatus("✅ เชื่อมต่อ Google Sheet สำเร็จ", "bg-emerald-50 text-emerald-600 border-emerald-200");
                 })
                 .catch(err => {
-                    setSyncStatus("❌ ดึงข้อมูลล้มเหลว กรุณาตรวจสอบสคริปต์", "text-red-500");
+                    setSyncStatus("❌ โหลดข้อมูลล้มเหลว กรุณาตรวจสอบการตั้งค่าสิทธิ์เว็บแอป", "bg-red-50 text-red-600 border-red-200");
                     console.error(err);
                 });
         }
@@ -189,74 +201,77 @@
             const friends = getFriends();
             let splitDetails = {};
 
-            if (!date) { alert("กรุณาเลือกวันที่ก่อนครับ"); return; }
-
             if (splitType === 'equally') { friends.forEach(name => { splitDetails[name] = amount / friends.length; }); } 
             else if (splitType === 'specific') {
                 const checkboxes = document.querySelectorAll('input[name="splitMember"]:checked');
-                if (checkboxes.length === 0) { alert("ต้องเลือกอย่างน้อย 1 คนครับ"); return; }
+                if (checkboxes.length === 0) { alert("ต้องเลือกเพื่อนอย่างน้อย 1 คนครับ"); return; }
                 const subAmount = amount / checkboxes.length;
                 friends.forEach(name => { splitDetails[name] = 0; }); checkboxes.forEach(cb => { splitDetails[cb.value] = subAmount; });
             } else if (splitType === 'shares') {
                 let totalShares = 0; friends.forEach(name => { totalShares += parseFloat(document.querySelector(`input[name="shareValue_${name}"]`).value) || 0; });
-                if (totalShares === 0) { alert("สัดส่วนรวมต้องมากกว่า 0"); return; }
+                if (totalShares === 0) { alert("ยอดสัดส่วนรวมต้องมากกว่า 0"); return; }
                 friends.forEach(name => { let sh = parseFloat(document.querySelector(`input[name="shareValue_${name}"]`).value) || 0; splitDetails[name] = (sh / totalShares) * amount; });
             } else if (splitType === 'exact') {
                 let currentTotal = 0; friends.forEach(name => { let ex = parseFloat(document.querySelector(`input[name="exactValue_${name}"]`).value) || 0; splitDetails[name] = ex; currentTotal += ex; });
-                if (Math.abs(currentTotal - amount) > 0.1) { alert("ยอดรวมรายคนไม่ตรงกับยอดสุทธิครับ"); return; }
+                if (Math.abs(currentTotal - amount) > 0.1) { alert("ยอดรวมเงินกรอกไม่ตรงกับยอดเงินสุทธิครับ!"); return; }
             }
 
             const payload = { action: "insert", date, desc, amount, payer, splitType, splitDetails };
             
-            setSyncStatus("⏳ กำลังบันทึกรายการลง Google Sheet...", "text-amber-500");
-            
+            setSyncStatus("⏳ กำลังบันทึกยอดลง Google Sheet...", "bg-amber-50 text-amber-600 border-amber-200");
             fetch(SCRIPT_URL, { method: "POST", body: JSON.stringify(payload) })
                 .then(() => {
                     document.getElementById('expenseDesc').value = "";
                     document.getElementById('expenseAmount').value = "";
-                    setDefaultDate(); // รีเซ็ตวันที่กลับเป็นวันปัจจุบัน
+                    setDefaultDate();
                     loadExpensesFromSheet();
                 });
         }
 
         function clearAllExpenses() {
-            if (confirm("คุณต้องการล้างรายการทั้งหมดใน Google Sheet ใช่หรือไม่?")) {
-                setSyncStatus("⏳ กำลังล้างข้อมูลทั้งหมด...", "text-red-500");
+            if (confirm("คุณต้องการล้างรายการค่าใช้จ่ายทั้งหมดใน Google Sheet ใช่หรือไม่? (ข้อมูลจะหายถาวร)")) {
+                setSyncStatus("⏳ กำลังล้างฐานข้อมูลระบบ...", "bg-red-50 text-red-600 border-red-200");
                 fetch(SCRIPT_URL, { method: "POST", body: JSON.stringify({action: "clear"}) })
                     .then(() => { loadExpensesFromSheet(); });
             }
         }
 
-        function setSyncStatus(text, colorClass) {
+        // ตัวแปลงแสดงสถานะการเชื่อมต่อ
+        function setSyncStatus(text, classes) {
             const statusDiv = document.getElementById('syncStatus');
-            statusDiv.innerText = text; statusDiv.className = `text-xs font-bold ${colorClass}`;
+            statusDiv.innerText = text;
+            statusDiv.className = `inline-block px-3 py-1 rounded-full text-xs font-bold ${classes}`;
         }
 
         function calculateFinalSplit() {
             const friends = getFriends(); if (friends.length === 0 || expenses.length === 0) return;
             let totalTripAmount = 0; let balances = {}; friends.forEach(name => { balances[name] = 0; });
+            
             expenses.forEach(exp => {
                 totalTripAmount += exp.amount; if (balances[exp.payer] !== undefined) balances[exp.payer] += exp.amount;
                 friends.forEach(name => { if (exp.splitDetails[name] !== undefined) balances[name] -= exp.splitDetails[name]; });
             });
-            document.getElementById('totalTripAmount').innerText = totalTripAmount.toLocaleString();
+            
+            document.getElementById('totalTripAmount').innerText = totalTripAmount.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2});
             let debtors = [], creditors = [];
             for (let name in balances) {
                 if (balances[name] < -0.01) debtors.push({ name, amount: Math.abs(balances[name]) });
                 else if (balances[name] > 0.01) creditors.push({ name, amount: balances[name] });
             }
+            
             let transferOutput = ""; let d = 0, c = 0;
             while (d < debtors.length && c < creditors.length) {
                 let debtor = debtors[d], creditor = creditors[c]; let amountToTransfer = Math.min(debtor.amount, creditor.amount);
-                transferOutput += `<div class="bg-green-50 p-3 rounded-xl border border-green-200 flex justify-between items-center shadow-sm"><div>💸 <b>${debtor.name}</b> ต้องโอนให้ <b>${creditor.name}</b></div><div class="text-lg font-bold text-green-700">${amountToTransfer.toFixed(2)} บาท</div></div>`;
+                transferOutput += `<div class="bg-emerald-50 p-3.5 rounded-xl border border-emerald-200 flex justify-between items-center shadow-sm"><div>💸 <span class="font-bold text-slate-800">${debtor.name}</span> ต้องโอนเงินให้ <span class="font-bold text-slate-800">${creditor.name}</span></div><div class="text-lg font-black text-emerald-700">${amountToTransfer.toFixed(2)} บาท</div></div>`;
                 debtor.amount -= amountToTransfer; creditor.amount -= amountToTransfer;
                 if (debtor.amount <= 0.1) d++; if (creditor.amount <= 0.1) c++;
             }
-            document.getElementById('transferResult').innerHTML = transferOutput || '<div class="text-center py-4 text-gray-500 bg-gray-50 rounded-lg">เจ๊ากันพอดี ไม่ต้องโอนครับ! 🎉</div>';
+            
+            document.getElementById('transferResult').innerHTML = transferOutput || '<div class="text-center py-4 text-slate-500 bg-slate-50 rounded-xl border border-dashed border-slate-200 font-bold">🎉 เคลียร์ยอดลงตัวพอดี ไม่ต้องโอนเงินครับ!</div>';
             document.getElementById('resultSection').classList.remove('hidden');
         }
 
-        // เริ่มต้นระบบ
+        // เริ่มต้นการทำงานเบื้องต้น
         setDefaultDate();
         updatePayerDropdown();
         renderSplitUI();
