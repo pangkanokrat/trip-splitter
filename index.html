@@ -312,15 +312,31 @@ function renderExpenses() {
         return; 
     }
     
-    expenses.forEach((exp, index) => {
+expenses.forEach((exp, index) => {
         let displayDate = "-";
-        if (exp.date) { 
-            const d = new Date(exp.date);
-            // เติมเลข 0 ข้างหน้าถ้าเป็นเลขหลักเดียว เพื่อความเป๊ะสวยงาม
-            const day = String(d.getDate()).padStart(2, '0');
-            const month = String(d.getMonth() + 1).padStart(2, '0');
-            const year = d.getFullYear();
-            displayDate = `${day}/${month}/${year}`; 
+        
+        // 🟢 ปรับโค้ดเช็กวันที่ใหม่ให้ปลอดภัย ป้องกัน NaN/NaN/NaN
+        if (exp.date) {
+            // ถ้าระบบส่งมาเป็นฟอร์แมต วัน/เดือน/ปี อยู่แล้ว (มีเครื่องหมาย /) ให้ใช้ค่านั้นได้เลย
+            if (typeof exp.date === 'string' && exp.date.includes('/')) {
+                displayDate = exp.date;
+            } else {
+                try {
+                    const d = new Date(exp.date);
+                    // เช็กว่า Date แปลงค่าสำเร็จไหม (ถ้าไม่สำเร็จจะเป็น NaN)
+                    if (!isNaN(d.getTime())) {
+                        const day = String(d.getDate()).padStart(2, '0');
+                        const month = String(d.getMonth() + 1).padStart(2, '0');
+                        const year = d.getFullYear();
+                        displayDate = `${day}/${month}/${year}`;
+                    } else {
+                        // ถ้าแปลงเป็นตัวเลขไม่ได้ ให้ดึงข้อความดั้งเดิม 10 หลักแรกมาโชว์เลย
+                        displayDate = exp.date.toString().substring(0, 10);
+                    }
+                } catch (e) {
+                    displayDate = String(exp.date).substring(0, 10);
+                }
+            }
         }
 
         // 🟢 1. เรียกคำนวณสีประจำตัวของคนจ่ายรอบนั้น ๆ
