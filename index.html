@@ -296,8 +296,8 @@ function renderExpenses() {
             <td class="py-1.5 px-3 text-slate-600"><span class="bg-blue-50 text-blue-700 text-[11px] px-1.5 py-0.5 rounded font-bold">${exp.payer}</span></td>
             <td class="py-1.5 px-3 text-right font-bold text-slate-900 text-xs sm:text-sm">${exp.amount.toFixed(2)} บ.</td>
             <td class="py-1.5 px-3 text-center space-x-0.5 whitespace-nowrap">
-                <button type="button" onclick="startEditExpense(${index})" class="text-indigo-600 font-bold text-[11px] bg-indigo-50 px-1.5 py-0.5 rounded border border-indigo-100 hover:bg-indigo-100 transition active:scale-95">✏️ แก้ไข</button>
-                <button type="button" onclick="deleteExpense(${index})" class="text-red-600 font-bold text-[11px] bg-red-50 px-1.5 py-0.5 rounded border border-red-100 hover:bg-red-100 transition active:scale-95">🗑️ ลบ</button>
+                <button type="button" onclick="startEditExpense(${index})" class="text-indigo-600 font-bold text-[11px] bg-indigo-50 px-1.5 py-0.5 rounded border border-indigo-100 hover:bg-indigo-100 transition active:scale-95">✏️</button>
+                <button type="button" onclick="deleteExpense(${index})" class="text-red-600 font-bold text-[11px] bg-red-50 px-1.5 py-0.5 rounded border border-red-100 hover:bg-red-100 transition active:scale-95">🗑️</button>
             </td>
         </tr>`;
     });
