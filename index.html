@@ -47,7 +47,7 @@
             <div>
                 <label class="block text-[11px] font-bold text-violet-500 mb-1">ต้องการเปิดทริปใหม่ (พิมพ์ชื่อกลุ่มแล้วกดสร้าง):</label>
                 <div class="flex gap-2">
-                    <input type="text" id="groupNameInput" placeholder="เช่น ทริปเชียงใหม่ปีหน้า" class="flex-1 p-2.5 border border-violet-200 rounded-lg shadow-sm font-bold text-violet-700 focus:outline-violet-500 text-sm bg-white">
+                    <input type="text" id="groupNameInput" placeholder="" class="flex-1 p-2.5 border border-violet-200 rounded-lg shadow-sm font-bold text-violet-700 focus:outline-violet-500 text-sm bg-white">
                     <button onclick="createNewGroupClick()" class="bg-emerald-600 text-white px-5 rounded-lg font-bold hover:bg-emerald-700 transition text-sm active:scale-95 shadow-sm">
                         ➕ สร้างกลุ่มใหม่
                     </button>
@@ -148,7 +148,7 @@
 
     <script>
         // ⚠️ บรรทัดนี้: วางลิงก์ Web App URL จาก Google Sheets ของคุณที่นี่ครับ
-        const SCRIPT_URL = "ใส่ลิงก์_WEB_APP_URL_ตรงนี้"; 
+        const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzNokIPzdJn6KVNRYtT2c1kglFgCuWrNw4PJ-GOEUmWkNftfo1HTeipnBZf8p1ZAdEz/exec"; 
 
         let expenses = [];
         let allGroups = []; 
@@ -213,7 +213,7 @@
         }
 
         function getGroupName() { 
-            return document.getElementById('groupNameInput').value.trim() || "ทริปญี่ปุ่นปีนี้"; 
+            return document.getElementById('groupNameInput').value.trim() || ""; 
         }
         
         function setDefaultDate() { document.getElementById('expenseDate').value = new Date().toISOString().split('T')[0]; }
@@ -469,7 +469,7 @@
             }
         }
 
-        document.getElementById('groupNameInput').value = "ทริปญี่ปุ่นปีนี้"; 
+        document.getElementById('groupNameInput').value = ""; 
         setDefaultDate();
         updatePayerDropdown();
         renderSplitUI();
