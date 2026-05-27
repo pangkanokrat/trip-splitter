@@ -155,16 +155,9 @@
 
         // เมื่อเปลี่ยนค่าใน Dropdown ให้เอาค่าไปใส่ในกล่องหลักรอซิงค์
 // 1. ปรับปรุงฟังก์ชันเมื่อเลือกเปลี่ยนทริปใน Dropdown
+// เปลี่ยนฟังก์ชัน handleDropdownChange() ให้เคลียร์ค่าทิ้ง ไม่ต้องส่งคำไปช่องพิมพ์แล้วครับ
 function handleDropdownChange() {
-    const dropdown = document.getElementById('groupDropdown');
-    const groupInput = document.getElementById('groupNameInput');
-    
-    if (dropdown && dropdown.value) {
-        // เมื่อเลือกใน Dropdown ให้เอาชื่อกลุ่มไปแปะในช่องกรอก (Input) อัตโนมัติ
-        if (groupInput) {
-            groupInput.value = dropdown.value;
-        }
-    }
+    // ปล่อยข้างในให้ว่างเปล่า หรือลบคำสั่งที่เกี่ยวกับ groupNameInput ออกให้หมดครับ
 }
 
 // 2. ปรับปรุงฟังก์ชันเมื่อกดปุ่ม "🔄 เรียกดูข้อมูลกลุ่มนี้"
@@ -173,14 +166,15 @@ function switchGroup() {
     const groupInput = document.getElementById('groupNameInput');
     
     if (dropdown && dropdown.value) {
-        // อัปเดตตัวแปรกลุ่มหลักหลังบ้าน
+        // ล็อกตัวแปรหลักหลังบ้านให้จำชื่อกลุ่มจากดรอปดาวน์
         groupName = dropdown.value; 
         
-        // 🔥 จุดแก้ไข: สั่งให้กล่องพิมพ์ทริปใหม่เป็นค่าว่างเปล่าล้างออกไปเลย ไม่ต้องโชว์ชื่อกลุ่มซ้ำ
+        // สั่งเคลียร์ช่องพิมพ์เปิดทริปใหม่ให้ว่างสะอาดชัวร์ ๆ
         if (groupInput) {
             groupInput.value = ""; 
         }
         
+        // เรียกข้อมูลกลุ่มใหม่มาแสดง
         loadExpensesFromSheet();
     } else {
         alert("กรุณาเลือกกลุ่มทริปจากช่อง 'เลือกทริปที่มีอยู่เดิม' ก่อนครับ");
