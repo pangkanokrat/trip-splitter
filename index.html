@@ -47,7 +47,7 @@
             <div id="createGroupZone" class="border-t border-violet-100 pt-3">
                 <label class="block text-[11px] font-bold text-violet-500 mb-1">ต้องการเปิดทริปใหม่ (พิมพ์ชื่อกลุ่มแล้วกดสร้าง):</label>
                 <div class="flex gap-2">
-                    <input type="text" id="groupNameInput" placeholder="เช่น ทริปเชียงใหม่ปีหน้า" class="flex-1 p-2.5 border border-violet-200 rounded-lg shadow-sm font-bold text-violet-700 focus:outline-violet-500 text-sm bg-white">
+                    <input type="text" id="groupNameInput" placeholder="" class="flex-1 p-2.5 border border-violet-200 rounded-lg shadow-sm font-bold text-violet-700 focus:outline-violet-500 text-sm bg-white">
                     <button onclick="createNewGroupClick()" class="bg-emerald-600 text-white px-5 rounded-lg font-bold hover:bg-emerald-700 transition text-sm active:scale-95 shadow-sm">
                         ➕ สร้างกลุ่มใหม่
                     </button>
@@ -58,7 +58,7 @@
         <div id="page1" class="space-y-6">
             <div class="bg-indigo-50 p-4 rounded-xl border border-indigo-100">
                 <label class="block text-sm font-bold text-indigo-950 mb-1">👥 รายชื่อเพื่อนในกลุ่มนี้ (คั่นด้วยเครื่องหมายจุลภาค ,)</label>
-                <input type="text" id="friendsInput" value="แป้ง, บอย, ตาล, นัท" oninput="handleFriendsChange()" class="w-full p-2.5 border border-indigo-200 rounded-lg shadow-sm focus:outline-indigo-500 font-medium">
+                <input type="text" id="friendsInput" value="" oninput="handleFriendsChange()" class="w-full p-2.5 border border-indigo-200 rounded-lg shadow-sm focus:outline-indigo-500 font-medium">
             </div>
 
             <form id="expenseForm" onsubmit="event.preventDefault(); saveExpense();" class="bg-amber-50 p-4 rounded-xl border border-amber-100 space-y-4">
@@ -313,25 +313,37 @@ function loadExpensesFromSheet() {
         setSyncStatus("❌ ยังไม่ได้ใส่ลิงก์ SCRIPT_URL ในโค้ด", "bg-red-50 text-red-600 border-red-200");
         return;
     }
-    
-    // 🟢 เช็กให้ชัวร์ว่าใช้ชื่อกลุ่มจากตัวแปรหลัก (groupName) ที่เราเพิ่งอัปเดตค่ามา
-    if (!groupName || groupName.trim() === "") {
-        // ถ้าตอนโหลดครั้งแรกสุดยังไม่มีกลุ่ม ให้ดึงชื่อกลุ่มแรกในระบบมาเล่นก่อน หรือตั้งค่าเริ่มต้นไว้
-        groupName = document.getElementById('groupNameInput').value || "ทริปแรก";
+
+    // ✨ ปรับตรงนี้: เช็กและประกาศตัวแปร groupName ให้ชัดเจนเพื่อไม่ให้ระบบค้าง
+    let currentGroup = "";
+    const dropdown = document.getElementById('groupDropdown');
+    const groupInput = document.getElementById('groupNameInput');
+
+    if (dropdown && dropdown.value) {
+        currentGroup = dropdown.value;
+    } else if (groupInput && groupInput.value) {
+        currentGroup = groupInput.value;
+    } else {
+        currentGroup = "ทริปแรก"; // ค่าเริ่มต้นกรณีเข้าเว็บครั้งแรกสุดแล้วไม่มีอะไรเลย
     }
 
-    setSyncStatus(`🔄 กำลังโหลดข้อมูลกลุ่ม [ ${groupName} ]...`, "bg-amber-50 text-amber-600 border-amber-200");
+    // เปลี่ยนชื่อกลุ่มโกลบอลหลักให้ตรงกัน
+    groupName = currentGroup; 
+    if (groupInput) groupInput.value = currentGroup;
+
+    setSyncStatus(`🔄 กำลังโหลดข้อมูลกลุ่ม [ ${currentGroup} ]...`, "bg-amber-50 text-amber-600 border-amber-200");
     
-    fetch(`${SCRIPT_URL}?group=${encodeURIComponent(groupName)}`)
+    // ยิง Fetch ไปหา Google Apps Script
+    fetch(`${SCRIPT_URL}?group=${encodeURIComponent(currentGroup)}`)
         .then(res => res.json())
         .then(data => {
             expenses = data.expenses || [];
             if (data.allGroups && data.allGroups.length > 0) {
                 allGroups = data.allGroups;
-                updateGroupDropdown(groupName); // อัปเดตรายชื่อในดรอปดาวน์ให้ครบถ้วน
+                updateGroupDropdown(currentGroup);
             }
             
-            // นำข้อมูลรายชื่อเพื่อนและตารางมาเรนเดอร์แสดงผล
+            // จัดการรายชื่อเพื่อน
             let autoFriends = new Set();
             expenses.forEach(exp => {
                 if (exp.payer) autoFriends.add(exp.payer);
@@ -348,9 +360,10 @@ function loadExpensesFromSheet() {
             renderSplitUI();
             renderExpenses();
             calculateFinalSplit();
-            setSyncStatus(`✅ กลุ่ม [ ${groupName} ] ซิงค์สำเร็จ`, "bg-emerald-50 text-emerald-600 border-emerald-200");
+            setSyncStatus(`✅ กลุ่ม [ ${currentGroup} ] ซิงค์สำเร็จ`, "bg-emerald-50 text-emerald-600 border-emerald-200");
         })
         .catch(err => {
+            console.error(err);
             setSyncStatus("❌ เกิดข้อผิดพลาดในการดึงข้อมูล", "bg-red-50 text-red-600 border-red-200");
         });
 }
