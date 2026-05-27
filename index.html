@@ -43,7 +43,7 @@
                 <div>
                     <label class="block text-[10px] font-bold text-violet-400 mb-0.5">หรือพิมพ์ชื่อกลุ่มใหม่เพื่อเพิ่ม:</label>
                     <div class="flex gap-1">
-                        <input type="text" id="groupNameInput" placeholder="เช่น ทริปเชียงใหม่ปีหน้า" class="flex-1 p-2.5 border border-violet-200 rounded-lg shadow-sm font-bold text-violet-700 focus:outline-violet-500 text-sm">
+                        <input type="text" id="groupNameInput" placeholder="" class="flex-1 p-2.5 border border-violet-200 rounded-lg shadow-sm font-bold text-violet-700 focus:outline-violet-500 text-sm">
                         <button onclick="switchGroup()" class="bg-violet-600 text-white px-3 rounded-lg font-bold hover:bg-violet-700 transition text-xs active:scale-95">
                             🔄 ซิงค์กลุ่ม
                         </button>
@@ -72,7 +72,7 @@
                     </div>
                     <div>
                         <label class="block text-xs font-bold text-slate-600 mb-1">🍔 ชื่อรายการ</label>
-                        <input type="text" id="expenseDesc" placeholder="เช่น ค่าข้าวเที่ยง" required class="w-full p-2.5 border border-amber-200 rounded-lg focus:outline-indigo-500 bg-white text-sm">
+                        <input type="text" id="expenseDesc" placeholder="" required class="w-full p-2.5 border border-amber-200 rounded-lg focus:outline-indigo-500 bg-white text-sm">
                     </div>
                     <div>
                         <label class="block text-xs font-bold text-slate-600 mb-1">💰 ยอดรวม (บาท)</label>
@@ -186,7 +186,7 @@
         }
 
         function getGroupName() { 
-            return document.getElementById('groupNameInput').value.trim() || "ทริปญี่ปุ่นปีนี้"; 
+            return document.getElementById('groupNameInput').value.trim() || ""; 
         }
         
         function switchGroup() { 
