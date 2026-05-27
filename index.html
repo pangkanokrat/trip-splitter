@@ -183,16 +183,17 @@ function switchGroup() {
 
         // 🌟 ฟังก์ชันใหม่ล่าสุด: เมื่อกดปุ่ม "สร้างกลุ่มใหม่"
         function createNewGroupClick() {
-            const newGroup = document.getElementById('groupNameInput').value.trim();
-            if (!newGroup) {
-                alert("❌ กรุณาพิมพ์ชื่อกลุ่มทริปใหม่ที่ต้องการสร้างก่อนครับ");
-                return;
-            }
-            if (allGroups.includes(newGroup)) {
-                alert(`⚠️ กลุ่ม "${newGroup}" มีอยู่ในระบบแล้ว ระบบจะสลับไปที่กลุ่มนี้ให้ทันทีครับ`);
-                loadExpensesFromSheet();
-                return;
-            }
+               const groupInput = document.getElementById('groupNameInput');
+                if (!groupInput || groupInput.value.trim() === "") {
+                    alert("กรุณาพิมพ์ชื่อกลุ่มทริปใหม่ก่อนกดสร้างครับ");
+                    return;
+                }
+    
+             // 🔥 ล็อกชื่อกลุ่มใหม่เข้าตัวแปรหลักทันที
+            groupName = groupInput.value.trim(); 
+    
+            // สั่งโหลดข้อมูล (ซึ่งตอนนี้จะเป็นกลุ่มใหม่ว่างๆ)
+            loadExpensesFromSheet();
             
             // เคลียร์ค่าข้อมูลในหน้าจอเพื่อเตรียมรับกลุ่มใหม่แกะกล่อง
             expenses = [];
@@ -413,12 +414,23 @@ function loadExpensesFromSheet() {
             const payer = document.getElementById('expensePayer').value;
             const splitType = document.getElementById('splitType').value;
             const friends = getFriends();
-            
-            const groupName = getGroupName();
-            if (!groupName) {
-                alert("❌ เกิดข้อผิดพลาด: ไม่พบชื่อกลุ่มในการบันทึกข้อมูล");
-                return;
+    
+            // 🟢 เปลี่ยนวิธีหาชื่อกลุ่มตรงนี้ครับ (วางแทนของเดิมได้เลย)
+            const groupInput = document.getElementById('groupNameInput');
+            const groupDropdown = document.getElementById('groupDropdown');
+    
+            let groupName = "";
+            if (groupInput && groupInput.value.trim() !== "") {
+                groupName = groupInput.value.trim();
+            } else if (groupDropdown && groupDropdown.value.trim() !== "") {
+                groupName = groupDropdown.value.trim();
             }
+    
+    // ถ้าเช็กทั้ง 2 ช่องแล้วไม่มีชื่อกลุ่มโผล่มาจริง ๆ ค่อยเตือน
+    if (!groupName) {
+        alert("❌ เกิดข้อผิดพลาด: ไม่พบชื่อกลุ่มในการบันทึกข้อมูล \n(กรุณาเลือกทริปเดิมหรือพิมพ์ชื่อทริปใหม่ก่อนครับ)");
+        return;
+    }
 
             let splitDetails = {};
 
