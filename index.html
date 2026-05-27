@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Trip Splitter - 100% Stable</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 p-4 md:p-8">
+
+    <div class="max-w-xl mx-auto bg-white p-6 rounded-2xl shadow-lg space-y-6">
+        <h1 class="text-3xl font-extrabold text-center text-indigo-600">🚀 Trip Splitter</h1>
+        <p class="text-gray-500 text-sm text-center -mt-4"></p>
+        
+        <hr>
+
+        <div class="bg-indigo-50 p-4 rounded-xl border border-indigo-100">
+            <label class="block text-sm font-bold text-indigo-900 mb-1">👥 1. รายชื่อเพื่อนในทริป (คั่นด้วยเครื่องหมายจุลภาค ,)</label>
+            <input type="text" id="friendsInput" value="A, B, C, D" oninput="updatePayerDropdown()" class="w-full p-2.5 border border-indigo-200 rounded-lg shadow-sm focus:outline-indigo-500">
+        </div>
+
+        <form id="expenseForm" onsubmit="event.preventDefault(); saveExpense();" class="bg-amber-50 p-4 rounded-xl border border-amber-100 space-y-3">
+            <div class="flex justify-between items-center">
+                <h3 id="formTitle" class="text-sm font-bold text-amber-900">🍔 2. เพิ่มรายการค่าใช้จ่ายใหม่</h3>
+                <span id="editStatus" class="hidden text-xs bg-red-100 text-red-700 px-2 py-0.5 rounded font-bold animate-pulse">กำลังแก้ไขรายการ...</span>
+            </div>
+            
+            <input type="hidden" id="editIndex" value="-1">
+
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                <input type="text" id="expenseDesc" placeholder="ชื่อรายการ (เช่น ค่าข้าว)" required class="p-2 border rounded-lg focus:outline-indigo-500 bg-white">
+                <input type="number" id="expenseAmount" placeholder="จำนวนเงิน (บาท)" required min="0.01" step="any" class="p-2 border rounded-lg focus:outline-indigo-500 bg-white">
+                <select id="expensePayer" class="p-2 border rounded-lg bg-white focus:outline-indigo-500">
+                    </select>
+            </div>
+            
+            <div class="flex gap-2">
+                <button type="submit" id="submitBtn" class="w-full bg-amber-500 text-white p-2 rounded-lg font-medium hover:bg-amber-600 transition shadow">
+                    ➕ เพิ่มรายการนี้ลงทริป
+                </button>
+                <button type="button" onclick="cancelEdit()" id="cancelBtn" class="hidden w-1/3 bg-gray-400 text-white p-2 rounded-lg font-medium hover:bg-gray-500 transition shadow">
+                    ยกเลิก
+                </button>
+            </div>
+        </form>
+
+        <div>
+            <div class="flex justify-between items-center mb-2">
+                <h3 class="font-bold text-gray-700">📋 รายการค่าใช้จ่ายทั้งหมดในทริป:</h3>
+                <button type="button" onclick="clearAllExpenses()" class="text-xs font-bold text-red-500 hover:text-red-700 transition bg-red-50 px-2 py-1 rounded border border-red-200">
+                    🗑️ ล้างรายการทั้งหมด
+                </button>
+            </div>
+            
+            <div class="overflow-x-auto">
+                <table class="w-full text-left border-collapse bg-gray-50 rounded-lg overflow-hidden text-sm">
+                    <thead>
+                        <tr class="bg-gray-200 text-gray-700">
+                            <th class="p-3">รายการ</th>
+                            <th class="p-3">คนจ่าย</th>
+                            <th class="p-3 text-right">จำนวนเงิน</th>
+                            <th class="p-3 text-center">จัดการ</th>
+                        </tr>
+                    </thead>
+                    <tbody id="expenseList">
+                        </tbody>
+                </table>
+            </div>
+        </div>
+
+        <button type="button" onclick="calculateFinalSplit()" class="w-full bg-indigo-600 text-white p-4 rounded-xl font-bold text-lg hover:bg-indigo-700 transition shadow-lg">
+            🧮 คำนวณสรุปยอดหักลบกลบหนี้!
+        </button>
+
+        <hr>
+
+        <div id="resultSection" class="hidden space-y-4">
+            <h3 class="font-bold text-xl text-gray-800 border-l-4 border-green-500 pl-2">📊 ผลการสรุปยอดรวม:</h3>
+            <div class="bg-gray-50 p-3 rounded-lg text-sm space-y-1 text-gray-600">
+                <p>💰 <b>ยอดรวมทั้งทริป:</b> <span id="totalTripAmount" class="text-indigo-600 font-bold">0</span> บาท</p>
+                <p>👤 <b>หารเฉลี่ยเท่ากัน:</b> ตกคนละ <span id="avgTripAmount" class="text-indigo-600 font-bold">0</span> บาท</p>
+            </div>
+            
+            <div id="transferResult" class="space-y-2 text-sm font-medium text-green-800">
+                </div>
+        </div>
+    </div>
+
+    <script>
+        // ข้อมูลเริ่มต้นให้เป็นว่างเปล่า
+        let expenses = [];
+
+        function updatePayerDropdown() {
+            const friendsStr = document.getElementById('friendsInput').value;
+            const friends = friendsStr.split(',').map(name => name.trim()).filter(name => name !== "");
+            const payerSelect = document.getElementById('expensePayer');
+            
+            const currentSelected = payerSelect.value;
+            payerSelect.innerHTML = "";
+            
+            friends.forEach(name => {
+                let option = document.createElement('option');
+                option.value = name;
+                option.text = name;
+                payerSelect.appendChild(option);
+            });
+
+            if (friends.includes(currentSelected)) {
+                payerSelect.value = currentSelected;
+            } else if (friends.length > 0) {
+                payerSelect.value = friends[0];
+            }
+        }
+
+        function renderExpenses() {
+            const tbody = document.getElementById('expenseList');
+            tbody.innerHTML = "";
+
+            if (expenses.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="4" class="p-3 text-center text-gray-400">ยังไม่มีรายการค่าใช้จ่ายในทริปนี้</td></tr>`;
+                document.getElementById('resultSection').classList.add('hidden');
+                return;
+            }
+
+            expenses.forEach((exp, index) => {
+                let row = `<tr class="border-b border-gray-100 hover:bg-gray-100 transition">
+                    <td class="p-3 font-medium text-gray-700">${exp.desc}</td>
+                    <td class="p-3 text-gray-600"><span class="bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded-full">${exp.payer}</span></td>
+                    <td class="p-3 text-right font-bold text-gray-900">${exp.amount.toFixed(2)} บาท</td>
+                    <td class="p-3 text-center space-x-3">
+                        <button type="button" onclick="startEditExpense(${index})" class="text-blue-500 hover:text-blue-700 font-bold text-xs">✍️ แก้ไข</button>
+                        <button type="button" onclick="deleteExpense(${index})" class="text-red-500 hover:text-red-700 font-bold text-xs">❌ ลบ</button>
+                    </td>
+                </tr>`;
+                tbody.innerHTML += row;
+            });
+        }
+
+        function saveExpense() {
+            const desc = document.getElementById('expenseDesc').value.trim();
+            const amount = parseFloat(document.getElementById('expenseAmount').value);
+            const payer = document.getElementById('expensePayer').value;
+            const editIndex = parseInt(document.getElementById('editIndex').value);
+
+            if (!desc || isNaN(amount) || amount <= 0 || !payer) {
+                return; // ระบบ HTML Form Validation จะช่วยเตือนผู้ใช้เองอัตโนมัติ
+            }
+
+            if (editIndex === -1) {
+                expenses.push({ desc: desc, amount: amount, payer: payer });
+            } else {
+                expenses[editIndex] = { desc: desc, amount: amount, payer: payer };
+                cancelEdit();
+            }
+
+            // ล้างข้อมูลเก่าออกหลังเพิ่มเสร็จ
+            document.getElementById('expenseDesc').value = "";
+            document.getElementById('expenseAmount').value = "";
+
+            renderExpenses();
+            calculateFinalSplit();
+        }
+
+        function startEditExpense(index) {
+            const target = expenses[index];
+            document.getElementById('expenseDesc').value = target.desc;
+            document.getElementById('expenseAmount').value = target.amount;
+            document.getElementById('expensePayer').value = target.payer;
+            document.getElementById('editIndex').value = index;
+
+            document.getElementById('formTitle').innerText = "✍️ แก้ไขยอดเงิน/รายการ";
+            document.getElementById('submitBtn').innerText = "💾 บันทึกการแก้ไข";
+            document.getElementById('submitBtn').className = "w-full bg-blue-600 text-white p-2 rounded-lg font-medium hover:bg-blue-700 transition shadow";
+            document.getElementById('editStatus').classList.remove('hidden');
+            document.getElementById('cancelBtn').classList.remove('hidden');
+        }
+
+        function cancelEdit() {
+            document.getElementById('expenseDesc').value = "";
+            document.getElementById('expenseAmount').value = "";
+            document.getElementById('editIndex').value = "-1";
+
+            document.getElementById('formTitle').innerText = "🍔 2. เพิ่มรายการค่าใช้จ่ายใหม่";
+            document.getElementById('submitBtn').innerText = "➕ เพิ่มรายการนี้ลงทริป";
+            document.getElementById('submitBtn').className = "w-full bg-amber-500 text-white p-2 rounded-lg font-medium hover:bg-amber-600 transition shadow";
+            document.getElementById('editStatus').classList.add('hidden');
+            document.getElementById('cancelBtn').classList.add('hidden');
+        }
+
+        function deleteExpense(index) {
+            expenses.splice(index, 1);
+            cancelEdit();
+            renderExpenses();
+            if (expenses.length > 0) {
+                calculateFinalSplit();
+            } else {
+                document.getElementById('resultSection').classList.add('hidden');
+            }
+        }
+
+        function clearAllExpenses() {
+            expenses = [];
+            cancelEdit();
+            renderExpenses();
+        }
+
+        function calculateFinalSplit() {
+            const friendsStr = document.getElementById('friendsInput').value;
+            const friends = friendsStr.split(',').map(name => name.trim()).filter(name => name !== "");
+
+            if (friends.length === 0 || expenses.length === 0) return;
+
+            let totalAmount = 0;
+            expenses.forEach(exp => totalAmount += exp.amount);
+            
+            const avg = totalAmount / friends.length;
+
+            document.getElementById('totalTripAmount').innerText = totalAmount.toLocaleString('th-TH', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+            document.getElementById('avgTripAmount').innerText = avg.toLocaleString('th-TH', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+
+            let balances = {};
+            friends.forEach(name => { balances[name] = -avg; });
+
+            expenses.forEach(exp => {
+                if (balances[exp.payer] !== undefined) balances[exp.payer] += exp.amount;
+            });
+
+            let debtors = [];
+            let creditors = [];
+
+            for (let name in balances) {
+                if (balances[name] < -0.01) {
+                    debtors.push({ name: name, amount: Math.abs(balances[name]) });
+                } else if (balances[name] > 0.01) {
+                    creditors.push({ name: name, amount: balances[name] });
+                }
+            }
+
+            let transferOutput = "";
+            let d = 0, c = 0;
+
+            while (d < debtors.length && c < creditors.length) {
+                let debtor = debtors[d];
+                let creditor = creditors[c];
+
+                let amountToTransfer = Math.min(debtor.amount, creditor.amount);
+
+                transferOutput += `
+                <div class="bg-green-50 p-3 rounded-xl border border-green-200 flex justify-between items-center shadow-sm">
+                    <div>💸 <b>${debtor.name}</b> ต้องโอนให้ <b>${creditor.name}</b></div>
+                    <div class="text-lg font-bold text-green-700">${amountToTransfer.toFixed(2)} บาท</div>
+                </div>`;
+
+                debtor.amount -= amountToTransfer;
+                creditor.amount -= amountToTransfer;
+
+                if (debtor.amount <= 0.1) d++;
+                if (creditor.amount <= 0.1) c++;
+            }
+
+            const transferDiv = document.getElementById('transferResult');
+            transferDiv.innerHTML = transferOutput || '<div class="text-center py-4 text-gray-500 bg-gray-50 rounded-lg">ทุกคนแชร์เงินเท่ากันลงตัวเป๊ะ ไม่ต้องโอนเงินเพิ่มครับ! 🎉</div>';
+            
+            document.getElementById('resultSection').classList.remove('hidden');
+        }
+
+        // โหลดข้อมูลเริ่มต้นครั้งแรก
+        updatePayerDropdown();
+        renderExpenses();
+    </script>
+</body>
+</html>
