@@ -3,23 +3,26 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Trip Splitter - 100% Stable</title>
+    <title>Trip Splitter - เวอร์ชันโปร</title>
+    <!-- ใช้ Tailwind CSS ตกแต่งหน้าจอ -->
     <script src="https://cdn.tailwindcss.com"></script>
 </head>
 <body class="bg-gray-100 p-4 md:p-8">
 
-    <div class="max-w-xl mx-auto bg-white p-6 rounded-2xl shadow-lg space-y-6">
-        <h1 class="text-3xl font-extrabold text-center text-indigo-600">🚀 Trip Splitter</h1>
-        <p class="text-gray-500 text-sm text-center -mt-4"></p>
+    <div class="max-w-2xl mx-auto bg-white p-6 rounded-2xl shadow-lg space-y-6">
+        <h1 class="text-3xl font-extrabold text-center text-indigo-600">💸 Trip Splitter (Pro)</h1>
+        <p class="text-gray-500 text-sm text-center -mt-4">เวอร์ชันจัดเต็ม: หารเท่ากัน, เลือกคนหาร, หารตามสัดส่วน, และระบุจำนวนเงินรายคน</p>
         
         <hr>
 
+        <!-- 1. ตั้งค่าสมาชิกทริป -->
         <div class="bg-indigo-50 p-4 rounded-xl border border-indigo-100">
             <label class="block text-sm font-bold text-indigo-900 mb-1">👥 1. รายชื่อเพื่อนในทริป (คั่นด้วยเครื่องหมายจุลภาค ,)</label>
-            <input type="text" id="friendsInput" value="A, B, C, D" oninput="updatePayerDropdown()" class="w-full p-2.5 border border-indigo-200 rounded-lg shadow-sm focus:outline-indigo-500">
+            <input type="text" id="friendsInput" value="A, B, C, D" oninput="handleFriendsChange()" class="w-full p-2.5 border border-indigo-200 rounded-lg shadow-sm focus:outline-indigo-500">
         </div>
 
-        <form id="expenseForm" onsubmit="event.preventDefault(); saveExpense();" class="bg-amber-50 p-4 rounded-xl border border-amber-100 space-y-3">
+        <!-- 2. ฟอร์มเพิ่มค่าใช้จ่าย -->
+        <form id="expenseForm" onsubmit="event.preventDefault(); saveExpense();" class="bg-amber-50 p-4 rounded-xl border border-amber-100 space-y-4">
             <div class="flex justify-between items-center">
                 <h3 id="formTitle" class="text-sm font-bold text-amber-900">🍔 2. เพิ่มรายการค่าใช้จ่ายใหม่</h3>
                 <span id="editStatus" class="hidden text-xs bg-red-100 text-red-700 px-2 py-0.5 rounded font-bold animate-pulse">กำลังแก้ไขรายการ...</span>
@@ -27,23 +30,49 @@
             
             <input type="hidden" id="editIndex" value="-1">
 
+            <!-- ข้อมูลพื้นฐาน -->
             <div class="grid grid-cols-1 sm:grid-cols-3 gap-2">
-                <input type="text" id="expenseDesc" placeholder="ชื่อรายการ (เช่น ค่าข้าว)" required class="p-2 border rounded-lg focus:outline-indigo-500 bg-white">
-                <input type="number" id="expenseAmount" placeholder="จำนวนเงิน (บาท)" required min="0.01" step="any" class="p-2 border rounded-lg focus:outline-indigo-500 bg-white">
-                <select id="expensePayer" class="p-2 border rounded-lg bg-white focus:outline-indigo-500">
-                    </select>
+                <div>
+                    <label class="text-xs font-bold text-gray-600">ชื่อรายการ</label>
+                    <input type="text" id="expenseDesc" placeholder="เช่น ค่าข้าว, ค่าเหล้า" required class="w-full p-2 border rounded-lg focus:outline-indigo-500 bg-white">
+                </div>
+                <div>
+                    <label class="text-xs font-bold text-gray-600">ยอดรวม (บาท)</label>
+                    <input type="number" id="expenseAmount" placeholder="ยอดรวมทั้งหมด" required min="0.01" step="any" oninput="calculateSplitPreview()" class="w-full p-2 border rounded-lg focus:outline-indigo-500 bg-white">
+                </div>
+                <div>
+                    <label class="text-xs font-bold text-gray-600">ใครจ่ายก่อน?</label>
+                    <select id="expensePayer" class="w-full p-2 border rounded-lg bg-white focus:outline-indigo-500"></select>
+                </div>
+            </div>
+
+            <!-- เมนูเลือกรูปแบบการหาร (Expense Split) -->
+            <div class="bg-white p-3 rounded-lg border border-amber-200 space-y-2">
+                <label class="block text-xs font-bold text-gray-700">⚙️ รูปแบบการหารเงิน (Split Option):</label>
+                <select id="splitType" onchange="renderSplitUI()" class="w-full p-2 border rounded-lg bg-gray-50 focus:outline-indigo-500">
+                    <option value="equally">A. หารเท่ากันทุกคน (Equally)</option>
+                    <option value="specific">B. เลือกคนหารเฉพาะบางคน (Specific Members)</option>
+                    <option value="shares">C. จ่ายไม่เท่ากันเป็นสัดส่วน (By Shares เช่น 2 ส่วน, 1 ส่วน)</option>
+                    <option value="exact">D. ระบุเป็นจำนวนเงินของแต่ละคน (By Exact Amount)</option>
+                </select>
+
+                <!-- พื้นที่สำหรับเปลี่ยน UI ตามตัวเลือกที่เลือก -->
+                <div id="splitUIContainer" class="p-2 bg-gray-50 rounded-lg space-y-2 text-sm max-h-48 overflow-y-auto">
+                    <!-- รายชื่อเพื่อนพร้อมช่องกรอกจะโผล่ตรงนี้ตาม Logic JS -->
+                </div>
             </div>
             
             <div class="flex gap-2">
-                <button type="submit" id="submitBtn" class="w-full bg-amber-500 text-white p-2 rounded-lg font-medium hover:bg-amber-600 transition shadow">
+                <button type="submit" id="submitBtn" class="w-full bg-amber-500 text-white p-2.5 rounded-lg font-bold hover:bg-amber-600 transition shadow">
                     ➕ เพิ่มรายการนี้ลงทริป
                 </button>
-                <button type="button" onclick="cancelEdit()" id="cancelBtn" class="hidden w-1/3 bg-gray-400 text-white p-2 rounded-lg font-medium hover:bg-gray-500 transition shadow">
+                <button type="button" onclick="cancelEdit()" id="cancelBtn" class="hidden w-1/3 bg-gray-400 text-white p-2.5 rounded-lg font-bold hover:bg-gray-500 transition shadow">
                     ยกเลิก
                 </button>
             </div>
         </form>
 
+        <!-- 3. ตารางแสดงรายการที่บันทึก -->
         <div>
             <div class="flex justify-between items-center mb-2">
                 <h3 class="font-bold text-gray-700">📋 รายการค่าใช้จ่ายทั้งหมดในทริป:</h3>
@@ -58,43 +87,55 @@
                         <tr class="bg-gray-200 text-gray-700">
                             <th class="p-3">รายการ</th>
                             <th class="p-3">คนจ่าย</th>
+                            <th class="p-3">รูปแบบการหาร</th>
                             <th class="p-3 text-right">จำนวนเงิน</th>
                             <th class="p-3 text-center">จัดการ</th>
                         </tr>
                     </thead>
                     <tbody id="expenseList">
-                        </tbody>
+                        <!-- รายการจะโผล่ตรงนี้ -->
+                    </tbody>
                 </table>
             </div>
         </div>
 
+        <!-- ปุ่มคำนวณใหญ่ -->
         <button type="button" onclick="calculateFinalSplit()" class="w-full bg-indigo-600 text-white p-4 rounded-xl font-bold text-lg hover:bg-indigo-700 transition shadow-lg">
             🧮 คำนวณสรุปยอดหักลบกลบหนี้!
         </button>
 
         <hr>
 
+        <!-- 4. ส่วนแสดงผลลัพธ์สุดท้าย -->
         <div id="resultSection" class="hidden space-y-4">
             <h3 class="font-bold text-xl text-gray-800 border-l-4 border-green-500 pl-2">📊 ผลการสรุปยอดรวม:</h3>
             <div class="bg-gray-50 p-3 rounded-lg text-sm space-y-1 text-gray-600">
                 <p>💰 <b>ยอดรวมทั้งทริป:</b> <span id="totalTripAmount" class="text-indigo-600 font-bold">0</span> บาท</p>
-                <p>👤 <b>หารเฉลี่ยเท่ากัน:</b> ตกคนละ <span id="avgTripAmount" class="text-indigo-600 font-bold">0</span> บาท</p>
             </div>
             
             <div id="transferResult" class="space-y-2 text-sm font-medium text-green-800">
-                </div>
+                <!-- รายการโอนเงินคืนจะมาโผล่ตรงนี้ -->
+            </div>
         </div>
     </div>
 
+    <!-- 🧠 JavaScript Logic -->
     <script>
-        // ข้อมูลเริ่มต้นให้เป็นว่างเปล่า
         let expenses = [];
 
-        function updatePayerDropdown() {
+        function getFriends() {
             const friendsStr = document.getElementById('friendsInput').value;
-            const friends = friendsStr.split(',').map(name => name.trim()).filter(name => name !== "");
+            return friendsStr.split(',').map(name => name.trim()).filter(name => name !== "");
+        }
+
+        function handleFriendsChange() {
+            updatePayerDropdown();
+            renderSplitUI();
+        }
+
+        function updatePayerDropdown() {
+            const friends = getFriends();
             const payerSelect = document.getElementById('expensePayer');
-            
             const currentSelected = payerSelect.value;
             payerSelect.innerHTML = "";
             
@@ -112,20 +153,73 @@
             }
         }
 
+        // 🛠️ ฟังก์ชันเปลี่ยนหน้าตาช่องกรอกตาม Option การหารที่เลือก
+        function renderSplitUI() {
+            const friends = getFriends();
+            const splitType = document.getElementById('splitType').value;
+            const container = document.getElementById('splitUIContainer');
+            container.innerHTML = "";
+
+            if (friends.length === 0) {
+                container.innerHTML = "<span class='text-red-500'>กรุณาใส่รายชื่อเพื่อนด้านบนก่อนครับ</span>";
+                return;
+            }
+
+            if (splitType === 'equally') {
+                container.innerHTML = "<p class='text-gray-500 text-xs'>ทุกคนหารเท่ากันหมดในมื้อนี้</p>";
+            } 
+            else if (splitType === 'specific') {
+                friends.forEach(name => {
+                    container.innerHTML += `
+                        <label class="flex items-center gap-2 py-1">
+                            <input type="checkbox" name="splitMember" value="${name}" checked class="w-4 h-4 text-indigo-600 rounded">
+                            <span>${name}</span>
+                        </label>`;
+                });
+            } 
+            else if (splitType === 'shares') {
+                friends.forEach(name => {
+                    container.innerHTML += `
+                        <div class="flex justify-between items-center py-1">
+                            <span>${name}</span>
+                            <div class="flex items-center gap-1">
+                                <input type="number" name="shareValue_${name}" value="1" min="0" class="w-16 p-1 border rounded text-center bg-white">
+                                <span class="text-xs text-gray-500">ส่วน</span>
+                            </div>
+                        </div>`;
+                });
+            } 
+            else if (splitType === 'exact') {
+                friends.forEach(name => {
+                    container.innerHTML += `
+                        <div class="flex justify-between items-center py-1">
+                            <span>${name}</span>
+                            <div class="flex items-center gap-1">
+                                <input type="number" name="exactValue_${name}" value="0" min="0" step="any" class="w-24 p-1 border rounded text-right bg-white">
+                                <span class="text-xs text-gray-500">บาท</span>
+                            </div>
+                        </div>`;
+                });
+            }
+        }
+
         function renderExpenses() {
             const tbody = document.getElementById('expenseList');
             tbody.innerHTML = "";
 
             if (expenses.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="4" class="p-3 text-center text-gray-400">ยังไม่มีรายการค่าใช้จ่ายในทริปนี้</td></tr>`;
+                tbody.innerHTML = `<tr><td colspan="5" class="p-3 text-center text-gray-400">ยังไม่มีรายการค่าใช้จ่ายในทริปนี้</td></tr>`;
                 document.getElementById('resultSection').classList.add('hidden');
                 return;
             }
+
+            const typeNames = { equally: "หารเท่ากัน", specific: "เลือกคนหาร", shares: "ตามสัดส่วน", exact: "ระบุรายคน" };
 
             expenses.forEach((exp, index) => {
                 let row = `<tr class="border-b border-gray-100 hover:bg-gray-100 transition">
                     <td class="p-3 font-medium text-gray-700">${exp.desc}</td>
                     <td class="p-3 text-gray-600"><span class="bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded-full">${exp.payer}</span></td>
+                    <td class="p-3 text-xs text-gray-500">${typeNames[exp.splitType]}</td>
                     <td class="p-3 text-right font-bold text-gray-900">${exp.amount.toFixed(2)} บาท</td>
                     <td class="p-3 text-center space-x-3">
                         <button type="button" onclick="startEditExpense(${index})" class="text-blue-500 hover:text-blue-700 font-bold text-xs">✍️ แก้ไข</button>
@@ -136,27 +230,66 @@
             });
         }
 
+        // เก็บข้อมูลหารเงินลงกระเป๋าตามเงื่อนไขที่ผู้ใช้กรอก
         function saveExpense() {
             const desc = document.getElementById('expenseDesc').value.trim();
             const amount = parseFloat(document.getElementById('expenseAmount').value);
             const payer = document.getElementById('expensePayer').value;
+            const splitType = document.getElementById('splitType').value;
             const editIndex = parseInt(document.getElementById('editIndex').value);
+            const friends = getFriends();
 
-            if (!desc || isNaN(amount) || amount <= 0 || !payer) {
-                return; // ระบบ HTML Form Validation จะช่วยเตือนผู้ใช้เองอัตโนมัติ
+            let splitDetails = {};
+
+            // ดึงค่าตามประเภทการหาร
+            if (splitType === 'equally') {
+                friends.forEach(name => { splitDetails[name] = amount / friends.length; });
+            } 
+            else if (splitType === 'specific') {
+                const checkboxes = document.querySelectorAll('input[name="splitMember"]:checked');
+                if (checkboxes.length === 0) { alert("ต้องเลือกอย่างน้อย 1 คนมาร่วมหารนะครับ"); return; }
+                const subAmount = amount / checkboxes.length;
+                friends.forEach(name => { splitDetails[name] = 0; });
+                checkboxes.forEach(cb => { splitDetails[cb.value] = subAmount; });
+            } 
+            else if (splitType === 'shares') {
+                let totalShares = 0;
+                friends.forEach(name => {
+                    let sh = parseFloat(document.querySelector(`input[name="shareValue_${name}"]`).value) || 0;
+                    totalShares += sh;
+                });
+                if (totalShares === 0) { alert("สัดส่วนรวมต้องมากกว่า 0 ครับ"); return; }
+                friends.forEach(name => {
+                    let sh = parseFloat(document.querySelector(`input[name="shareValue_${name}"]`).value) || 0;
+                    splitDetails[name] = (sh / totalShares) * amount;
+                });
+            } 
+            else if (splitType === 'exact') {
+                let currentTotal = 0;
+                friends.forEach(name => {
+                    let ex = parseFloat(document.querySelector(`input[name="exactValue_${name}"]`).value) || 0;
+                    splitDetails[name] = ex;
+                    currentTotal += ex;
+                });
+                // ตรวจสอบว่ายอดที่ระบุรายคนรวมกันแล้วตรงกับยอดรวมไหม เผื่อกรอกผิด
+                if (Math.abs(currentTotal - amount) > 0.1) {
+                    alert(`ยอดรวมรายคน (${currentTotal.toFixed(2)} บ.) ไม่ตรงกับยอดสุทธิที่คุณระบุไว้ข้างบน (${amount.toFixed(2)} บ.) กรุณาตรวจเช็กเลขอีกครั้งครับ`);
+                    return;
+                }
             }
 
+            const data = { desc, amount, payer, splitType, splitDetails };
+
             if (editIndex === -1) {
-                expenses.push({ desc: desc, amount: amount, payer: payer });
+                expenses.push(data);
             } else {
-                expenses[editIndex] = { desc: desc, amount: amount, payer: payer };
+                expenses[editIndex] = data;
                 cancelEdit();
             }
 
-            // ล้างข้อมูลเก่าออกหลังเพิ่มเสร็จ
             document.getElementById('expenseDesc').value = "";
             document.getElementById('expenseAmount').value = "";
-
+            
             renderExpenses();
             calculateFinalSplit();
         }
@@ -166,11 +299,34 @@
             document.getElementById('expenseDesc').value = target.desc;
             document.getElementById('expenseAmount').value = target.amount;
             document.getElementById('expensePayer').value = target.payer;
+            document.getElementById('splitType').value = target.splitType;
             document.getElementById('editIndex').value = index;
+
+            renderSplitUI();
+
+            // นำค่าเก่ากลับไปใส่ใน UI การหารด้วย
+            const friends = getFriends();
+            if (target.splitType === 'specific') {
+                friends.forEach(name => {
+                    const cb = document.querySelector(`input[name="splitMember"][value="${name}"]`);
+                    if (cb) cb.checked = target.splitDetails[name] > 0;
+                });
+            } else if (target.splitType === 'shares') {
+                // สำหรับโหมดแก้ไขของสัดส่วนและยอดเต็ม ยึดตามค่าตัวเงินที่เคยบันทึก
+                friends.forEach(name => {
+                    const input = document.querySelector(`input[name="shareValue_${name}"]`);
+                    if (input) input.value = target.splitDetails[name] > 0 ? 1 : 0; 
+                });
+            } else if (target.splitType === 'exact') {
+                friends.forEach(name => {
+                    const input = document.querySelector(`input[name="exactValue_${name}"]`);
+                    if (input) input.value = target.splitDetails[name] || 0;
+                });
+            }
 
             document.getElementById('formTitle').innerText = "✍️ แก้ไขยอดเงิน/รายการ";
             document.getElementById('submitBtn').innerText = "💾 บันทึกการแก้ไข";
-            document.getElementById('submitBtn').className = "w-full bg-blue-600 text-white p-2 rounded-lg font-medium hover:bg-blue-700 transition shadow";
+            document.getElementById('submitBtn').className = "w-full bg-blue-600 text-white p-2.5 rounded-lg font-medium hover:bg-blue-700 transition shadow";
             document.getElementById('editStatus').classList.remove('hidden');
             document.getElementById('cancelBtn').classList.remove('hidden');
         }
@@ -179,23 +335,21 @@
             document.getElementById('expenseDesc').value = "";
             document.getElementById('expenseAmount').value = "";
             document.getElementById('editIndex').value = "-1";
+            document.getElementById('splitType').value = "equally";
 
             document.getElementById('formTitle').innerText = "🍔 2. เพิ่มรายการค่าใช้จ่ายใหม่";
             document.getElementById('submitBtn').innerText = "➕ เพิ่มรายการนี้ลงทริป";
-            document.getElementById('submitBtn').className = "w-full bg-amber-500 text-white p-2 rounded-lg font-medium hover:bg-amber-600 transition shadow";
+            document.getElementById('submitBtn').className = "w-full bg-amber-500 text-white p-2.5 rounded-lg font-bold hover:bg-amber-600 transition shadow";
             document.getElementById('editStatus').classList.add('hidden');
             document.getElementById('cancelBtn').classList.add('hidden');
+            renderSplitUI();
         }
 
         function deleteExpense(index) {
             expenses.splice(index, 1);
             cancelEdit();
             renderExpenses();
-            if (expenses.length > 0) {
-                calculateFinalSplit();
-            } else {
-                document.getElementById('resultSection').classList.add('hidden');
-            }
+            if (expenses.length > 0) calculateFinalSplit();
         }
 
         function clearAllExpenses() {
@@ -204,30 +358,33 @@
             renderExpenses();
         }
 
+        // คำนวณสรุปยอดแบบ Net Balance ขั้นสูงสุด
         function calculateFinalSplit() {
-            const friendsStr = document.getElementById('friendsInput').value;
-            const friends = friendsStr.split(',').map(name => name.trim()).filter(name => name !== "");
-
+            const friends = getFriends();
             if (friends.length === 0 || expenses.length === 0) return;
 
-            let totalAmount = 0;
-            expenses.forEach(exp => totalAmount += exp.amount);
-            
-            const avg = totalAmount / friends.length;
-
-            document.getElementById('totalTripAmount').innerText = totalAmount.toLocaleString('th-TH', {minimumFractionDigits: 2, maximumFractionDigits: 2});
-            document.getElementById('avgTripAmount').innerText = avg.toLocaleString('th-TH', {minimumFractionDigits: 2, maximumFractionDigits: 2});
-
+            let totalTripAmount = 0;
             let balances = {};
-            friends.forEach(name => { balances[name] = -avg; });
+            friends.forEach(name => { balances[name] = 0; });
 
+            // วนลูปบวกเงิน: ใครจ่ายก่อนได้ (+) / ใครเป็นคนกิน/แชร์โดนลบ (-)
             expenses.forEach(exp => {
+                totalTripAmount += exp.amount;
+                // บวกเงินคืนให้คนออกก่อน
                 if (balances[exp.payer] !== undefined) balances[exp.payer] += exp.amount;
+                // หักเงินคนที่ร่วมแชร์กิน
+                friends.forEach(name => {
+                    if (exp.splitDetails[name] !== undefined) {
+                        balances[name] -= exp.splitDetails[name];
+                    }
+                });
             });
 
+            document.getElementById('totalTripAmount').innerText = totalTripAmount.toLocaleString('th-TH', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+
+            // แยกคนต้องจ่ายกับคนได้คืน
             let debtors = [];
             let creditors = [];
-
             for (let name in balances) {
                 if (balances[name] < -0.01) {
                     debtors.push({ name: name, amount: Math.abs(balances[name]) });
@@ -236,13 +393,13 @@
                 }
             }
 
+            // จับคู่หักลบหนี้
             let transferOutput = "";
             let d = 0, c = 0;
 
             while (d < debtors.length && c < creditors.length) {
                 let debtor = debtors[d];
                 let creditor = creditors[c];
-
                 let amountToTransfer = Math.min(debtor.amount, creditor.amount);
 
                 transferOutput += `
@@ -259,13 +416,14 @@
             }
 
             const transferDiv = document.getElementById('transferResult');
-            transferDiv.innerHTML = transferOutput || '<div class="text-center py-4 text-gray-500 bg-gray-50 rounded-lg">ทุกคนแชร์เงินเท่ากันลงตัวเป๊ะ ไม่ต้องโอนเงินเพิ่มครับ! 🎉</div>';
+            transferDiv.innerHTML = transferOutput || '<div class="text-center py-4 text-gray-500 bg-gray-50 rounded-lg">หักลบกันแล้วเจ๊ากันพอดี ไม่ต้องโอนเงินเพิ่มครับ! 🎉</div>';
             
             document.getElementById('resultSection').classList.remove('hidden');
         }
 
-        // โหลดข้อมูลเริ่มต้นครั้งแรก
+        // เริ่มต้นแอป
         updatePayerDropdown();
+        renderSplitUI();
         renderExpenses();
     </script>
 </body>
