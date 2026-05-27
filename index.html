@@ -309,33 +309,74 @@
             statusDiv.className = `inline-block px-3 py-1 rounded-full text-xs font-bold ${classes}`;
         }
 
-        function calculateFinalSplit() {
-            const friends = getFriends(); if (friends.length === 0 || expenses.length === 0) return;
-            let totalTripAmount = 0; let balances = {}; friends.forEach(name => { balances[name] = 0; });
-            
-            expenses.forEach(exp => {
-                totalTripAmount += exp.amount; if (balances[exp.payer] !== undefined) balances[exp.payer] += exp.amount;
-                friends.forEach(name => { if (exp.splitDetails[name] !== undefined) balances[name] -= exp.splitDetails[name]; });
-            });
-            
-            document.getElementById('totalTripAmount').innerText = totalTripAmount.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2});
-            let debtors = [], creditors = [];
-            for (let name in balances) {
-                if (balances[name] < -0.01) debtors.push({ name, amount: Math.abs(balances[name]) });
-                else if (balances[name] > 0.01) creditors.push({ name, amount: balances[name] });
-            }
-            
-            let transferOutput = ""; let d = 0, c = 0;
-            while (d < debtors.length && c < creditors.length) {
-                let debtor = debtors[d], creditor = creditors[c]; let amountToTransfer = Math.min(debtor.amount, creditor.amount);
-                transferOutput += `<div class="bg-emerald-50 p-3.5 rounded-xl border border-emerald-200 flex justify-between items-center shadow-sm"><div>💸 <span class="font-bold text-slate-800">${debtor.name}</span> ต้องโอนเงินให้ <span class="font-bold text-slate-800">${creditor.name}</span></div><div class="text-lg font-black text-emerald-700">${amountToTransfer.toFixed(2)} บาท</div></div>`;
-                debtor.amount -= amountToTransfer; creditor.amount -= amountToTransfer;
-                if (debtor.amount <= 0.1) d++; if (creditor.amount <= 0.1) c++;
-            }
-            
-            document.getElementById('transferResult').innerHTML = transferOutput || '<div class="text-center py-4 text-slate-500 bg-slate-50 rounded-xl border border-dashed border-slate-200 font-bold">🎉 เคลียร์ยอดลงตัวพอดี ไม่ต้องโอนเงินครับ!</div>';
-            document.getElementById('resultSection').classList.remove('hidden');
-        }
+// ฟังก์ชันคำนวณสรุปยอดรวมเวอร์ชันอัปเกรด: เพิ่มปุ่มติ๊ก "โอนเงินเรียบร้อยแล้ว"
+function calculateFinalSplit() {
+    const friends = getFriends(); if (friends.length === 0 || expenses.length === 0) return;
+    let totalTripAmount = 0; let balances = {}; friends.forEach(name => { balances[name] = 0; });
+    
+    expenses.forEach(exp => {
+        totalTripAmount += exp.amount; if (balances[exp.payer] !== undefined) balances[exp.payer] += exp.amount;
+        friends.forEach(name => { if (exp.splitDetails[name] !== undefined) balances[name] -= exp.splitDetails[name]; });
+    });
+    
+    document.getElementById('totalTripAmount').innerText = totalTripAmount.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2});
+    let debtors = [], creditors = [];
+    for (let name in balances) {
+        if (balances[name] < -0.01) debtors.push({ name, amount: Math.abs(balances[name]) });
+        else if (balances[name] > 0.01) creditors.push({ name, amount: balances[name] });
+    }
+    
+    let transferOutput = ""; let d = 0, c = 0;
+    let itemIndex = 0; // ตัวนับไอดีของแต่ละยอดโอน
+
+    while (d < debtors.length && c < creditors.length) {
+        let debtor = debtors[d], creditor = creditors[c]; let amountToTransfer = Math.min(debtor.amount, creditor.amount);
+        
+        // 🔥 ส่วนที่เพิ่มเข้ามา: สร้างโครงสร้างกล่องยอดโอนที่มีปุ่ม Checkbox ปุ่มติ๊กจ่ายแล้ว
+        transferOutput += `
+        <div id="transferItem_${itemIndex}" class="bg-emerald-50 p-3.5 rounded-xl border border-emerald-200 flex justify-between items-center shadow-sm transition-all duration-300">
+            <div class="flex items-center gap-3">
+                <!-- ปุ่มติ๊ก Checkbox -->
+                <input type="checkbox" onchange="togglePaidStatus(${itemIndex})" class="w-5 h-5 text-emerald-600 rounded border-emerald-300 focus:ring-emerald-500 cursor-pointer">
+                <div id="transferText_${itemIndex}" class="text-slate-800">
+                    💸 <span class="font-bold">${debtor.name}</span> ต้องโอนเงินให้ <span class="font-bold">${creditor.name}</span>
+                </div>
+            </div>
+            <div id="transferAmount_${itemIndex}" class="text-lg font-black text-emerald-700">
+                ${amountToTransfer.toFixed(2)} บาท
+            </div>
+        </div>`;
+        
+        debtor.amount -= amountToTransfer; creditor.amount -= amountToTransfer;
+        if (debtor.amount <= 0.1) d++; if (creditor.amount <= 0.1) c++;
+        itemIndex++;
+    }
+    
+    document.getElementById('transferResult').innerHTML = transferOutput || '<div class="text-center py-4 text-slate-500 bg-slate-50 rounded-xl border border-dashed border-slate-200 font-bold">🎉 เคลียร์ยอดลงตัวพอดี ไม่ต้องโอนเงินครับ!</div>';
+    document.getElementById('resultSection').classList.remove('hidden');
+}
+
+// 🔥 ฟังก์ชันสลับสถานะเมื่อกดติ๊ก "จ่ายแล้ว" (เปลี่ยนสีกล่อง + ขีดฆ่าตัวหนังสือ)
+function togglePaidStatus(id) {
+    const container = document.getElementById(`transferItem_${id}`);
+    const text = document.getElementById(`transferText_${id}`);
+    const amount = document.getElementById(`transferAmount_${id}`);
+    
+    // ตรวจสอบว่าถูกติ๊กเลือกอยู่หรือไม่
+    const isChecked = container.querySelector('input[type="checkbox"]').checked;
+    
+    if (isChecked) {
+        // สถานะ: จ่ายแล้ว -> เปลี่ยนกล่องเป็นสีเทาอ่อน, ตัวหนังสือจางลง และขีดฆ่า
+        container.className = "bg-slate-100 p-3.5 rounded-xl border border-slate-200 flex justify-between items-center shadow-inner opacity-60 transition-all duration-300";
+        text.classList.add('line-through', 'text-slate-400');
+        amount.className = "text-base font-bold text-slate-400 line-through";
+    } else {
+        // สถานะ: ยังไม่จ่าย -> ดึงสีเขียวสดใสกลับมาเหมือนเดิม
+        container.className = "bg-emerald-50 p-3.5 rounded-xl border border-emerald-200 flex justify-between items-center shadow-sm transition-all duration-300";
+        text.classList.remove('line-through', 'text-slate-400');
+        amount.className = "text-lg font-black text-emerald-700";
+    }
+}
 
         setDefaultDate();
         updatePayerDropdown();
