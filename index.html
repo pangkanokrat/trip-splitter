@@ -154,17 +154,39 @@
         let allGroups = []; 
 
         // เมื่อเปลี่ยนค่าใน Dropdown ให้เอาค่าไปใส่ในกล่องหลักรอซิงค์
-        function handleDropdownChange() {
-            const dropdown = document.getElementById('groupDropdown');
-            if (dropdown.value) {
-                document.getElementById('groupNameInput').value = dropdown.value;
-            }
+// 1. ปรับปรุงฟังก์ชันเมื่อเลือกเปลี่ยนทริปใน Dropdown
+function handleDropdownChange() {
+    const dropdown = document.getElementById('groupDropdown');
+    const groupInput = document.getElementById('groupNameInput');
+    
+    if (dropdown && dropdown.value) {
+        // เมื่อเลือกใน Dropdown ให้เอาชื่อกลุ่มไปแปะในช่องกรอก (Input) อัตโนมัติ
+        if (groupInput) {
+            groupInput.value = dropdown.value;
         }
+    }
+}
 
-        // ฟังก์ชันเมื่อกดปุ่มเรียกดูข้อมูล (ซิงค์กลุ่ม)
-        function switchGroup() { 
-            loadExpensesFromSheet(); 
+// 2. ปรับปรุงฟังก์ชันเมื่อกดปุ่ม "🔄 เรียกดูข้อมูลกลุ่มนี้"
+function switchGroup() {
+    const dropdown = document.getElementById('groupDropdown');
+    const groupInput = document.getElementById('groupNameInput');
+    
+    // ตรวจสอบว่าในดรอปดาวน์มีการเลือกกลุ่มไว้ไหม
+    if (dropdown && dropdown.value) {
+        // 🔥 จุดสำคัญ: สั่งเปลี่ยนตัวแปรกลุ่มหลักหลังบ้านให้เป็นชื่อกลุ่มที่เลือกจากดรอปดาวน์
+        groupName = dropdown.value; 
+        
+        if (groupInput) {
+            groupInput.value = dropdown.value;
         }
+        
+        // สั่งโหลดข้อมูลของกลุ่มนั้นจาก Google Sheet มาแสดงผลทันที
+        loadExpensesFromSheet();
+    } else {
+        alert("กรุณาเลือกกลุ่มทริปจากช่อง 'เลือกทริปที่มีอยู่เดิม' ก่อนครับ");
+    }
+}
 
         // 🌟 ฟังก์ชันใหม่ล่าสุด: เมื่อกดปุ่ม "สร้างกลุ่มใหม่"
         function createNewGroupClick() {
@@ -291,41 +313,39 @@ function loadExpensesFromSheet() {
         setSyncStatus("❌ ยังไม่ได้ใส่ลิงก์ SCRIPT_URL ในโค้ด", "bg-red-50 text-red-600 border-red-200");
         return;
     }
-    const groupName = getGroupName();
+    
+    // 🟢 เช็กให้ชัวร์ว่าใช้ชื่อกลุ่มจากตัวแปรหลัก (groupName) ที่เราเพิ่งอัปเดตค่ามา
+    if (!groupName || groupName.trim() === "") {
+        // ถ้าตอนโหลดครั้งแรกสุดยังไม่มีกลุ่ม ให้ดึงชื่อกลุ่มแรกในระบบมาเล่นก่อน หรือตั้งค่าเริ่มต้นไว้
+        groupName = document.getElementById('groupNameInput').value || "ทริปแรก";
+    }
+
     setSyncStatus(`🔄 กำลังโหลดข้อมูลกลุ่ม [ ${groupName} ]...`, "bg-amber-50 text-amber-600 border-amber-200");
     
-    fetch(`${SCRIPT_URL}?group=${encodeURIComponent(groupName)}&getGroups=true`)
+    fetch(`${SCRIPT_URL}?group=${encodeURIComponent(groupName)}`)
         .then(res => res.json())
         .then(data => {
             expenses = data.expenses || [];
             if (data.allGroups && data.allGroups.length > 0) {
                 allGroups = data.allGroups;
+                updateGroupDropdown(groupName); // อัปเดตรายชื่อในดรอปดาวน์ให้ครบถ้วน
             }
             
-            document.getElementById('groupNameInput').value = groupName;
-            updateGroupDropdown(groupName);
-
-            // 🟢 [จุดแก้ไข] ฟังก์ชันแกะรายชื่อเพื่อนอัตโนมัติจากข้อมูลในกลุ่ม
+            // นำข้อมูลรายชื่อเพื่อนและตารางมาเรนเดอร์แสดงผล
             let autoFriends = new Set();
             expenses.forEach(exp => {
-                if (exp.payer) autoFriends.add(exp.payer); // ดึงชื่อคนจ่าย
+                if (exp.payer) autoFriends.add(exp.payer);
                 if (exp.splitDetails) {
-                    Object.keys(exp.splitDetails).forEach(name => autoFriends.add(name)); // ดึงชื่อคนหาร
+                    Object.keys(exp.splitDetails).forEach(name => autoFriends.add(name));
                 }
             });
 
-            // ถ้ากลุ่มนี้มีข้อมูลเพื่อนเก่าอยู่ ให้เอามาใส่ในช่องกรอกอัติโนมัติ
             if (autoFriends.size > 0) {
                 document.getElementById('friendsInput').value = Array.from(autoFriends).join(', ');
-            } else {
-                // ถ้าเป็นกลุ่มใหม่เอี่ยมและยังไม่มีข้อมูล ให้ใส่รายชื่อเริ่มต้นไว้ให้ก่อน
-                document.getElementById('friendsInput').value = "แป้ง, บอย, ตาล, นัท";
             }
             
-            // อัปเดตเมนูเลือกคนจ่ายและรูปแบบการหารใหม่ให้ตรงกับเพื่อนกลุ่มนี้
             updatePayerDropdown();
             renderSplitUI();
-
             renderExpenses();
             calculateFinalSplit();
             setSyncStatus(`✅ กลุ่ม [ ${groupName} ] ซิงค์สำเร็จ`, "bg-emerald-50 text-emerald-600 border-emerald-200");
