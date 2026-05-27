@@ -118,13 +118,13 @@
                 <div class="w-full overflow-x-auto rounded-xl border border-slate-100">
                     <table class="w-full text-left border-collapse bg-slate-50 text-sm min-w-[600px]">
                         <thead>
-                            <tr class="bg-slate-200 text-slate-700 font-bold border-b border-slate-300">
-                                <th class="p-3 w-24">📅 วันที่</th>
-                                <th class="p-3">🍔 รายการ</th>
-                                <th class="p-3 w-20">👤 คนจ่าย</th>
-                                <th class="p-3 text-right w-24">💰 ยอดเงิน</th>
-                                <th class="p-3 text-center w-28">🛠️ จัดการ</th>
-                            </tr>
+                            <tr class="bg-slate-200 text-slate-700 font-bold border-b border-slate-300 text-[12px]">
+                            <th class="py-2 px-3 w-24">📅 วันที่</th>
+                            <th class="py-2 px-3">🍔 รายการ</th>
+                            <th class="py-2 px-3 w-20">👤 คนจ่าย</th>
+                            <th class="py-2 px-3 text-right w-24">💰 ยอดเงิน</th>
+                            <th class="py-2 px-3 text-center w-24">🛠️ จัดการ</th>
+                        </tr>
                         </thead>
                         <tbody id="expenseList" class="divide-y divide-slate-100">
                             <tr>
@@ -277,30 +277,31 @@ function switchGroup() {
             });
         }
 
-        function renderExpenses() {
-            const tbody = document.getElementById('expenseList'); tbody.innerHTML = "";
-            if (expenses.length === 0) { 
-                tbody.innerHTML = `<tr><td colspan="5" class="p-6 text-center text-slate-400 bg-white">ยังไม่มีข้อมูลใช้จ่ายในกลุ่มนี้ เริ่มกรอกรายการแรกได้เลยครับ</td></tr>`; 
-                document.getElementById('resultSection').classList.add('hidden'); 
-                return; 
-            }
-            
-            expenses.forEach((exp, index) => {
-                let displayDate = "-";
-                if (exp.date) { displayDate = (typeof exp.date === 'string' ? exp.date : new Date(exp.date).toISOString()).substring(0, 10); }
-                
-                tbody.innerHTML += `<tr class="bg-white hover:bg-slate-50 transition border-b border-slate-100">
-                    <td class="p-3 text-slate-600 font-mono text-xs font-bold">${displayDate}</td>
-                    <td class="p-3 font-semibold text-slate-700 text-xs sm:text-sm">${exp.desc}</td>
-                    <td class="p-3 text-slate-600"><span class="bg-blue-50 text-blue-700 text-xs px-2 py-0.5 rounded font-bold">${exp.payer}</span></td>
-                    <td class="p-3 text-right font-bold text-slate-900 text-xs sm:text-sm">${exp.amount.toFixed(2)} บ.</td>
-                    <td class="p-3 text-center space-x-1">
-                        <button type="button" onclick="startEditExpense(${index})" class="text-indigo-600 font-bold text-xs bg-indigo-50 px-1.5 py-1 rounded border border-indigo-200">✏️ แก้ไข</button>
-                        <button type="button" onclick="deleteExpense(${index})" class="text-red-600 font-bold text-xs bg-red-50 px-1.5 py-1 rounded border border-red-200">🗑️ ลบ</button>
-                    </td>
-                </tr>`;
-            });
-        }
+function renderExpenses() {
+    const tbody = document.getElementById('expenseList'); tbody.innerHTML = "";
+    if (expenses.length === 0) { 
+        tbody.innerHTML = `<tr><td colspan="5" class="p-6 text-center text-slate-400 bg-white">ยังไม่มีข้อมูลใช้จ่ายในกลุ่มนี้ เริ่มกรอกรายการแรกได้เลยครับ</td></tr>`; 
+        document.getElementById('resultSection').classList.add('hidden'); 
+        return; 
+    }
+    
+    expenses.forEach((exp, index) => {
+        let displayDate = "-";
+        if (exp.date) { displayDate = (typeof exp.date === 'string' ? exp.date : new Date(exp.date).toISOString()).substring(0, 10); }
+        
+        // 🟢 ปรับลดระยะห่างแถว (py-1.5 px-3) และปรับขนาดฟอนต์/ระยะขอบปุ่มกด ให้เล็กและชิดขึ้นสวยงาม
+        tbody.innerHTML += `<tr class="bg-white hover:bg-slate-50 transition border-b border-slate-100">
+            <td class="py-1.5 px-3 text-slate-600 font-mono text-[11px] font-bold">${displayDate}</td>
+            <td class="py-1.5 px-3 font-semibold text-slate-700 text-xs sm:text-sm">${exp.desc}</td>
+            <td class="py-1.5 px-3 text-slate-600"><span class="bg-blue-50 text-blue-700 text-[11px] px-1.5 py-0.5 rounded font-bold">${exp.payer}</span></td>
+            <td class="py-1.5 px-3 text-right font-bold text-slate-900 text-xs sm:text-sm">${exp.amount.toFixed(2)} บ.</td>
+            <td class="py-1.5 px-3 text-center space-x-0.5 whitespace-nowrap">
+                <button type="button" onclick="startEditExpense(${index})" class="text-indigo-600 font-bold text-[11px] bg-indigo-50 px-1.5 py-0.5 rounded border border-indigo-100 hover:bg-indigo-100 transition active:scale-95">✏️ แก้ไข</button>
+                <button type="button" onclick="deleteExpense(${index})" class="text-red-600 font-bold text-[11px] bg-red-50 px-1.5 py-0.5 rounded border border-red-100 hover:bg-red-100 transition active:scale-95">🗑️ ลบ</button>
+            </td>
+        </tr>`;
+    });
+}
 
 function loadExpensesFromSheet() {
     if (!SCRIPT_URL || SCRIPT_URL.trim() === "" || SCRIPT_URL.includes("ใส่ลิงก์")) {
