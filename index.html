@@ -3,129 +3,165 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Trip Splitter - Full Version with Edit & Delete</title>
+    <title>Multi-Group Trip Splitter - Tabbed Version</title>
     <script src="https://cdn.tailwindcss.com"></script>
 </head>
 <body class="bg-slate-100 p-4 md:p-8 text-slate-800">
 
     <div class="max-w-2xl mx-auto bg-white p-6 rounded-2xl shadow-xl space-y-6">
         <div class="text-center space-y-2">
-            <h1 class="text-3xl font-extrabold text-indigo-600">📊 Trip Splitter</h1>
-            <p class="text-slate-500 text-sm">เวอร์ชันสมบูรณ์</p>
+            <h1 class="text-3xl font-extrabold text-indigo-600">📊 Trip Splitter Dashboard</h1>
             <div id="syncStatus" class="inline-block px-3 py-1 rounded-full text-xs font-bold bg-slate-100 text-slate-600 border border-slate-200">
                 🔄 กำลังเชื่อมต่อฐานข้อมูล...
             </div>
         </div>
+
+        <div class="flex bg-slate-100 p-1 rounded-xl border border-slate-200">
+            <button id="tabBtn1" onclick="switchTab(1)" class="flex-1 py-2.5 text-sm font-bold rounded-lg transition-all text-indigo-600 bg-white shadow-sm">
+                ✍️ 1. หน้ากรอกค่าใช้จ่าย
+            </button>
+            <button id="tabBtn2" onclick="switchTab(2)" class="flex-1 py-2.5 text-sm font-bold rounded-lg transition-all text-slate-500 hover:text-slate-800">
+                📋 2. แสดงค่าใช้จ่าย & สรุปยอด
+            </button>
+        </div>
         
         <hr class="border-slate-100">
 
-        <div class="bg-indigo-50 p-4 rounded-xl border border-indigo-100">
-            <label class="block text-sm font-bold text-indigo-950 mb-1">👥 1. รายชื่อเพื่อนในทริป (คั่นด้วยเครื่องหมายจุลภาค ,)</label>
-            <input type="text" id="friendsInput" value="Pang,Now,Jajar,Mhee,P'Golf,Oam,Bell" oninput="handleFriendsChange()" class="w-full p-2.5 border border-indigo-200 rounded-lg shadow-sm focus:outline-indigo-500 font-medium">
-        </div>
-
-        <form id="expenseForm" onsubmit="event.preventDefault(); saveExpense();" class="bg-amber-50 p-4 rounded-xl border border-amber-100 space-y-4">
-            <h3 id="formTitle" class="text-sm font-bold text-amber-950">🍔 2. เพิ่มรายการค่าใช้จ่ายใหม่</h3>
-            <input type="hidden" id="editIndex" value="-1"> <div class="grid grid-cols-1 sm:grid-cols-4 gap-2">
-                <div>
-                    <label class="block text-xs font-bold text-slate-600 mb-1">📅 วันที่</label>
-                    <input type="date" id="expenseDate" required class="w-full p-2 border border-amber-200 rounded-lg focus:outline-indigo-500 bg-white text-sm font-medium">
-                </div>
-                <div>
-                    <label class="block text-xs font-bold text-slate-600 mb-1">🍔 ชื่อรายการ</label>
-                    <input type="text" id="expenseDesc" placeholder="เช่น ค่าข้าว" required class="w-full p-2 border border-amber-200 rounded-lg focus:outline-indigo-500 bg-white text-sm">
-                </div>
-                <div>
-                    <label class="block text-xs font-bold text-slate-600 mb-1">💰 ยอดรวม (บาท)</label>
-                    <input type="number" id="expenseAmount" placeholder="ยอดรวม" required min="0.01" step="any" class="w-full p-2 border border-amber-200 rounded-lg focus:outline-indigo-500 bg-white text-sm font-bold text-slate-700">
-                </div>
-                <div>
-                    <label class="block text-xs font-bold text-slate-600 mb-1">👤 ใครจ่ายก่อน?</label>
-                    <select id="expensePayer" class="w-full p-2 border border-amber-200 rounded-lg bg-white focus:outline-indigo-500 text-sm font-medium text-slate-700"></select>
-                </div>
-            </div>
-
-            <div class="bg-white p-3 rounded-lg border border-amber-200 space-y-2">
-                <label class="block text-xs font-bold text-slate-700">⚙️ รูปแบบการหารเงิน (Split Option):</label>
-                <select id="splitType" onchange="renderSplitUI()" class="w-full p-2 border border-slate-200 rounded-lg bg-slate-50 focus:outline-indigo-500 text-sm font-medium text-slate-700">
-                    <option value="equally">A. หารเท่ากันทุกคน (Equally)</option>
-                    <option value="specific">B. เลือกคนหารเฉพาะบางคน (Specific Members)</option>
-                    <option value="shares">C. จ่ายไม่เท่ากันเป็นสัดส่วน (By Shares)</option>
-                    <option value="exact">D. ระบุเป็นจำนวนเงินของแต่ละคน (By Exact Amount)</option>
-                </select>
-                <div id="splitUIContainer" class="p-2 bg-slate-50 rounded-lg space-y-2 text-sm max-h-48 overflow-y-auto border border-slate-100"></div>
-            </div>
-            
+        <div class="bg-violet-50 p-4 rounded-xl border border-violet-100 space-y-3">
+            <label class="block text-sm font-bold text-violet-950">📂 กลุ่มทริปปัจจุบัน</label>
             <div class="flex gap-2">
-                <button type="submit" id="submitBtn" class="flex-1 bg-amber-500 text-white p-2.5 rounded-lg font-bold hover:bg-amber-600 transition shadow-md active:scale-[0.99]">
-                    ➕ เพิ่มรายการนี้ลงทริป
+                <input type="text" id="groupNameInput" value="ทริปญี่ปุ่นปีนี้" placeholder="พิมพ์ชื่อกลุ่ม เช่น ทริปหัวหิน" class="flex-1 p-2.5 border border-violet-200 rounded-lg shadow-sm font-bold text-violet-700 focus:outline-violet-500">
+                <button onclick="switchGroup()" class="bg-violet-600 text-white px-4 rounded-lg font-bold hover:bg-violet-700 transition text-sm active:scale-95">
+                    🔄 ซิงค์กลุ่มนี้
                 </button>
-                <button type="button" id="cancelEditBtn" onclick="cancelEdit()" class="hidden bg-slate-400 text-white p-2.5 rounded-lg font-bold hover:bg-slate-500 transition shadow-md active:scale-[0.99]">
-                    ยกเลิก
-                </button>
-            </div>
-        </form>
-
-        <div class="space-y-2">
-            <div class="flex justify-between items-center">
-                <h3 class="font-bold text-slate-700 text-sm">📋 รายการค่าใช้จ่ายในทริปทั้งหมด:</h3>
-                <button type="button" onclick="clearAllExpenses()" class="text-xs font-bold text-red-500 hover:text-red-700 transition bg-red-50 px-2 py-1 rounded border border-red-200 active:scale-95">
-                    🗑️ ล้างรายการทั้งหมด
-                </button>
-            </div>
-            
-            <div class="overflow-x-auto rounded-xl border border-slate-200 shadow-sm">
-                <table class="w-full text-left border-collapse bg-slate-50 text-sm">
-                    <thead>
-                        <tr class="bg-slate-200 text-slate-700 font-bold border-b border-slate-300">
-                            <th class="p-3 w-28">📅 วันที่</th>
-                            <th class="p-3">🍔 รายการ</th>
-                            <th class="p-3 w-24">👤 คนจ่าย</th>
-                            <th class="p-3 w-24">⚙️ การหาร</th>
-                            <th class="p-3 text-right w-28">💰 จำนวนเงิน</th>
-                            <th class="p-3 text-center w-24">🛠️ จัดการ</th>
-                        </tr>
-                    </thead>
-                    <tbody id="expenseList" class="divide-y divide-slate-100">
-                        <tr>
-                            <td colspan="6" class="p-6 text-center text-slate-400 bg-white">🔄 กำลังดึงข้อมูลล่าสุด...</td>
-                        </tr>
-                    </tbody>
-                </table>
             </div>
         </div>
 
-        <button type="button" onclick="calculateFinalSplit()" class="w-full bg-indigo-600 text-white p-4 rounded-xl font-bold text-lg hover:bg-indigo-700 transition shadow-lg active:scale-[0.99]">
-            🧮 คำนวณสรุปยอดหักลบกลบหนี้!
-        </button>
-
-        <hr class="border-slate-100">
-
-        <div id="resultSection" class="hidden space-y-4">
-            <h3 class="font-bold text-xl text-slate-800 border-l-4 border-emerald-500 pl-2">📊 ผลการสรุปยอดรวม:</h3>
-            <div class="bg-slate-50 p-3 rounded-lg text-sm border border-slate-200">
-                <p class="text-slate-600">💰 <b>ยอดรวมทั้งทริป:</b> <span id="totalTripAmount" class="text-indigo-600 font-bold text-base">0</span> บาท</p>
+        <div id="page1" class="space-y-6">
+            <div class="bg-indigo-50 p-4 rounded-xl border border-indigo-100">
+                <label class="block text-sm font-bold text-indigo-950 mb-1">👥 รายชื่อเพื่อนในกลุ่มนี้ (คั่นด้วยเครื่องหมายจุลภาค ,)</label>
+                <input type="text" id="friendsInput" value="แป้ง, บอย, ตาล, นัท" oninput="handleFriendsChange()" class="w-full p-2.5 border border-indigo-200 rounded-lg shadow-sm focus:outline-indigo-500 font-medium">
             </div>
-            <div id="transferResult" class="space-y-2 text-sm font-medium text-emerald-900"></div>
+
+            <form id="expenseForm" onsubmit="event.preventDefault(); saveExpense();" class="bg-amber-50 p-4 rounded-xl border border-amber-100 space-y-4">
+                <h3 id="formTitle" class="text-sm font-bold text-amber-950">🍔 เพิ่มรายการค่าใช้จ่ายใหม่</h3>
+                <input type="hidden" id="editIndex" value="-1">
+                
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-xs font-bold text-slate-600 mb-1">📅 วันที่</label>
+                        <input type="date" id="expenseDate" required class="w-full p-2.5 border border-amber-200 rounded-lg focus:outline-indigo-500 bg-white text-sm font-medium">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-slate-600 mb-1">🍔 ชื่อรายการ</label>
+                        <input type="text" id="expenseDesc" placeholder="เช่น ค่าข้าวเที่ยง" required class="w-full p-2.5 border border-amber-200 rounded-lg focus:outline-indigo-500 bg-white text-sm">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-slate-600 mb-1">💰 ยอดรวม (บาท)</label>
+                        <input type="number" id="expenseAmount" placeholder="ยอดรวมทั้งหมด" required min="0.01" step="any" class="w-full p-2.5 border border-amber-200 rounded-lg focus:outline-indigo-500 bg-white text-sm font-bold text-slate-700">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-slate-600 mb-1">👤 ใครออกเงินไปก่อน?</label>
+                        <select id="expensePayer" class="w-full p-2.5 border border-amber-200 rounded-lg bg-white focus:outline-indigo-500 text-sm font-medium text-slate-700"></select>
+                    </div>
+                </div>
+
+                <div class="bg-white p-3 rounded-lg border border-amber-200 space-y-2">
+                    <label class="block text-xs font-bold text-slate-700">⚙️ รูปแบบการหารเงิน (Split Option):</label>
+                    <select id="splitType" onchange="renderSplitUI()" class="w-full p-2 border border-slate-200 rounded-lg bg-slate-50 focus:outline-indigo-500 text-sm font-medium text-slate-700">
+                        <option value="equally">A. หารเท่ากันทุกคน (Equally)</option>
+                        <option value="specific">B. เลือกคนหารเฉพาะบางคน (Specific Members)</option>
+                        <option value="shares">C. จ่ายไม่เท่ากันเป็นสัดส่วน (By Shares)</option>
+                        <option value="exact">D. ระบุเป็นจำนวนเงินของแต่ละคน (By Exact Amount)</option>
+                    </select>
+                    <div id="splitUIContainer" class="p-2 bg-slate-50 rounded-lg space-y-2 text-sm max-h-48 overflow-y-auto border border-slate-100"></div>
+                </div>
+                
+                <div class="flex gap-2">
+                    <button type="submit" id="submitBtn" class="flex-1 bg-amber-500 text-white p-3 rounded-lg font-bold hover:bg-amber-600 transition shadow-md active:scale-[0.99]">
+                        ➕ บันทึกรายการลงกลุ่ม
+                    </button>
+                    <button type="button" id="cancelEditBtn" onclick="cancelEdit()" class="hidden bg-slate-400 text-white p-3 rounded-lg font-bold hover:bg-slate-500 transition shadow-md active:scale-[0.99]">
+                        ยกเลิก
+                    </button>
+                </div>
+            </form>
+        </div>
+
+        <div id="page2" class="hidden space-y-6">
+            <div class="space-y-2">
+                <div class="flex justify-between items-center">
+                    <h3 class="font-bold text-slate-700 text-sm">📋 ตารางสรุปรายการในกลุ่มนี้:</h3>
+                    <button type="button" onclick="clearAllExpenses()" class="text-xs font-bold text-red-500 hover:text-red-700 transition bg-red-50 px-2 py-1 rounded border border-red-200 active:scale-95">
+                        🗑️ ล้างรายการทั้งหมดของกลุ่มนี้
+                    </button>
+                </div>
+                
+                <div class="overflow-x-auto rounded-xl border border-slate-200 shadow-sm">
+                    <table class="w-full text-left border-collapse bg-slate-50 text-sm">
+                        <thead>
+                            <tr class="bg-slate-200 text-slate-700 font-bold border-b border-slate-300">
+                                <th class="p-3 w-24">📅 วันที่</th>
+                                <th class="p-3">🍔 รายการ</th>
+                                <th class="p-3 w-20">👤 คนจ่าย</th>
+                                <th class="p-3 text-right w-24">💰 ยอดเงิน</th>
+                                <th class="p-3 text-center w-28">🛠️ จัดการ</th>
+                            </tr>
+                        </thead>
+                        <tbody id="expenseList" class="divide-y divide-slate-100">
+                            <tr>
+                                <td colspan="5" class="p-6 text-center text-slate-400 bg-white">🔄 กำลังซิงค์ข้อมูล...</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div id="resultSection" class="hidden space-y-4 pt-2">
+                <h3 class="font-bold text-xl text-slate-800 border-l-4 border-emerald-500 pl-2">📊 สรุปยอดโอนเงินหักลบกลบหนี้:</h3>
+                <div class="bg-indigo-50 p-3.5 rounded-xl text-sm border border-indigo-100 flex justify-between items-center">
+                    <span class="text-indigo-950 font-bold">💰 ยอดรวมสะสมของกลุ่มนี้:</span>
+                    <span class="text-xl font-black text-indigo-600"><span id="totalTripAmount">0</span> บาท</span>
+                </div>
+                <div id="transferResult" class="space-y-2 text-sm font-medium text-emerald-900"></div>
+            </div>
         </div>
     </div>
 
     <script>
         // ⚠️ บรรทัดนี้: วางลิงก์ Web App URL จาก Google Sheets ของคุณที่นี่ครับ
-        const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzdCh2yabLMxeFfsGu0YH3pOFnjGHEVFXuTBAR7AOdOEj2I_YCpj1MncCHsuKjkXYs-/exec"; 
+        const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyK20f8-JPmAxy2_kEAgJcmxAsh-50sYNm0ke9gJUUydVJhdG1bYMR9ZDa4vXrBzbJi/exec"; 
 
         let expenses = [];
 
-        function setDefaultDate() {
-            const today = new Date().toISOString().split('T')[0];
-            document.getElementById('expenseDate').value = today;
+        // 🌟 ฟังก์ชันใหม่: สลับหน้าจอแถบเมนู (Tabs)
+        function switchTab(tabNum) {
+            const btn1 = document.getElementById('tabBtn1');
+            const btn2 = document.getElementById('tabBtn2');
+            const page1 = document.getElementById('page1');
+            const page2 = document.getElementById('page2');
+
+            if (tabNum === 1) {
+                // เปิดหน้า 1 ซ่อนหน้า 2
+                page1.classList.remove('hidden');
+                page2.classList.add('hidden');
+                btn1.className = "flex-1 py-2.5 text-sm font-bold rounded-lg transition-all text-indigo-600 bg-white shadow-sm";
+                btn2.className = "flex-1 py-2.5 text-sm font-bold rounded-lg transition-all text-slate-500 hover:text-slate-800";
+            } else {
+                // เปิดหน้า 2 ซ่อนหน้า 1
+                page2.classList.remove('hidden');
+                page1.classList.add('hidden');
+                btn2.className = "flex-1 py-2.5 text-sm font-bold rounded-lg transition-all text-indigo-600 bg-white shadow-sm";
+                btn1.className = "flex-1 py-2.5 text-sm font-bold rounded-lg transition-all text-slate-500 hover:text-slate-800";
+                // บังคับให้คำนวณและอัปเดตยอดใหม่ทุกครั้งที่เปิดเข้าหน้ารายงาน
+                calculateFinalSplit();
+            }
         }
 
-        function getFriends() {
-            const friendsStr = document.getElementById('friendsInput').value;
-            return friendsStr.split(',').map(name => name.trim()).filter(name => name !== "");
-        }
-
+        function getGroupName() { return document.getElementById('groupNameInput').value.trim() || "DefaultGroup"; }
+        function switchGroup() { loadExpensesFromSheet(); }
+        function setDefaultDate() { document.getElementById('expenseDate').value = new Date().toISOString().split('T')[0]; }
+        function getFriends() { return document.getElementById('friendsInput').value.split(',').map(name => name.trim()).filter(name => name !== ""); }
         function handleFriendsChange() { updatePayerDropdown(); renderSplitUI(); }
 
         function updatePayerDropdown() {
@@ -152,61 +188,53 @@
             if(callback) callback();
         }
 
-        // คืนชีพตารางและปุ่ม แก้ไข (✏️) / ลบ (🗑️) ประจำรายแถวข้อมูลจริง
-        // ฟังก์ชันจัดการตารางเวอร์ชันตัดเวลาทิ้ง 100%
-    function renderExpenses() {
-    const tbody = document.getElementById('expenseList'); tbody.innerHTML = "";
-    if (expenses.length === 0) { 
-        tbody.innerHTML = `<tr><td colspan="6" class="p-6 text-center text-slate-400 bg-white">ไม่มีรายการค่าใช้จ่าย (ตารางว่างเปล่า)</td></tr>`; 
-        document.getElementById('resultSection').classList.add('hidden'); 
-        return; 
-    }
-    const typeNames = { equally: "หารเท่ากัน", specific: "เลือกคนหาร", shares: "ตามสัดส่วน", exact: "ระบุรายคน" };
-    
-    expenses.forEach((exp, index) => {
-        // 🔥 จุดแก้ไข: ไม่ว่า Google Sheet จะส่งอะไรมา บังคับตัดเอาเฉพาะ 10 ตัวอักษรแรก (YYYY-MM-DD) เท่านั้น
-        let displayDate = "-";
-        if (exp.date) {
-            let dateStr = typeof exp.date === 'string' ? exp.date : new Date(exp.date).toISOString();
-            displayDate = dateStr.substring(0, 10); // ตัดส่วนเวลาและตัว T ทิ้งไปเลย
+        function renderExpenses() {
+            const tbody = document.getElementById('expenseList'); tbody.innerHTML = "";
+            if (expenses.length === 0) { 
+                tbody.innerHTML = `<tr><td colspan="5" class="p-6 text-center text-slate-400 bg-white">ไม่มีข้อมูลในกลุ่มนี้ เริ่มเปิดหน้า 1 เพื่อเพิ่มรายการได้เลยครับ</td></tr>`; 
+                document.getElementById('resultSection').classList.add('hidden'); 
+                return; 
+            }
+            const typeNames = { equally: "หารเท่ากัน", specific: "เลือกคนหาร", shares: "ตามสัดส่วน", exact: "ระบุรายคน" };
+            
+            expenses.forEach((exp, index) => {
+                let displayDate = "-";
+                if (exp.date) { displayDate = (typeof exp.date === 'string' ? exp.date : new Date(exp.date).toISOString()).substring(0, 10); }
+                
+                tbody.innerHTML += `<tr class="bg-white hover:bg-slate-50 transition border-b border-slate-100">
+                    <td class="p-3 text-slate-600 font-mono text-xs font-bold">${displayDate}</td>
+                    <td class="p-3 font-semibold text-slate-700 text-xs sm:text-sm">${exp.desc}</td>
+                    <td class="p-3 text-slate-600"><span class="bg-blue-50 text-blue-700 text-xs px-2 py-0.5 rounded font-bold">${exp.payer}</span></td>
+                    <td class="p-3 text-right font-bold text-slate-900 text-xs sm:text-sm">${exp.amount.toFixed(2)} บ.</td>
+                    <td class="p-3 text-center space-x-1">
+                        <button type="button" onclick="startEditExpense(${index})" class="text-indigo-600 font-bold text-xs bg-indigo-50 px-1.5 py-1 rounded border border-indigo-200">✏️ แก้ไข</button>
+                        <button type="button" onclick="deleteExpense(${index})" class="text-red-600 font-bold text-xs bg-red-50 px-1.5 py-1 rounded border border-red-200">🗑️ ลบ</button>
+                    </td>
+                </tr>`;
+            });
         }
-        
-        tbody.innerHTML += `<tr class="bg-white hover:bg-slate-50 transition border-b border-slate-100">
-            <td class="p-3 text-slate-600 font-mono text-xs font-bold">${displayDate}</td>
-            <td class="p-3 font-semibold text-slate-700">${exp.desc}</td>
-            <td class="p-3 text-slate-600"><span class="bg-blue-50 text-blue-700 text-xs px-2.5 py-0.5 rounded-full font-bold border border-blue-100">${exp.payer}</span></td>
-            <td class="p-3 text-xs text-slate-500 font-medium">${typeNames[exp.splitType]}</td>
-            <td class="p-3 text-right font-bold text-slate-900">${exp.amount.toFixed(2)} บาท</td>
-            <td class="p-3 text-center space-x-1 flex justify-center items-center">
-                <button onclick="startEditExpense(${index})" class="text-indigo-600 hover:text-indigo-900 font-bold text-xs bg-indigo-50 px-2 py-1 rounded border border-indigo-200">✏️ แก้ไข</button>
-                <button onclick="deleteExpense(${index})" class="text-red-600 hover:text-red-900 font-bold text-xs bg-red-50 px-2 py-1 rounded border border-red-200">🗑️ ลบ</button>
-            </td>
-        </tr>`;
-    });
-}
 
         function loadExpensesFromSheet() {
             if (!SCRIPT_URL || SCRIPT_URL.trim() === "" || SCRIPT_URL.includes("ใส่ลิงก์")) {
                 setSyncStatus("❌ ยังไม่ได้ใส่ลิงก์ SCRIPT_URL ในโค้ด", "bg-red-50 text-red-600 border-red-200");
                 return;
             }
+            const groupName = getGroupName();
+            setSyncStatus(`🔄 กำลังโหลดข้อมูลกลุ่ม [ ${groupName} ]...`, "bg-amber-50 text-amber-600 border-amber-200");
             
-            setSyncStatus("🔄 กำลังซิงค์กับ Google Sheet...", "bg-amber-50 text-amber-600 border-amber-200");
-            fetch(SCRIPT_URL)
+            fetch(`${SCRIPT_URL}?group=${encodeURIComponent(groupName)}`)
                 .then(res => res.json())
                 .then(data => {
                     expenses = data;
                     renderExpenses();
-                    if(expenses.length > 0) calculateFinalSplit();
-                    setSyncStatus("✅ เชื่อมต่อ Google Sheet สำเร็จ", "bg-emerald-50 text-emerald-600 border-emerald-200");
+                    calculateFinalSplit();
+                    setSyncStatus(`✅ กลุ่ม [ ${groupName} ] ซิงค์สำเร็จ`, "bg-emerald-50 text-emerald-600 border-emerald-200");
                 })
                 .catch(err => {
-                    setSyncStatus("❌ ตรวจพบข้อผิดพลาดการดึงข้อมูล", "bg-red-50 text-red-600 border-red-200");
-                    console.error(err);
+                    setSyncStatus("❌ เกิดข้อผิดพลาดในการดึงข้อมูล", "bg-red-50 text-red-600 border-red-200");
                 });
         }
 
-        // ฟังก์ชันสั่งให้ฟอร์มดึงค่าแถวนั้นๆ ขึ้นมาเตรียมแก้ไข
         function startEditExpense(index) {
             const exp = expenses[index];
             document.getElementById('editIndex').value = index;
@@ -216,15 +244,13 @@
             document.getElementById('expensePayer').value = exp.payer;
             document.getElementById('splitType').value = exp.splitType;
             
-            document.getElementById('formTitle').innerText = "✏️ แก้ไขรายการค่าใช้จ่าย";
+            document.getElementById('formTitle').innerText = "✏️ แก้ไขรายการ";
             document.getElementById('submitBtn').innerText = "💾 บันทึกการแก้ไข";
             document.getElementById('cancelEditBtn').classList.remove('hidden');
 
             renderSplitUI(() => {
                 if (exp.splitType === 'specific') {
-                    document.querySelectorAll('input[name="splitMember"]').forEach(cb => {
-                        cb.checked = exp.splitDetails[cb.value] > 0;
-                    });
+                    document.querySelectorAll('input[name="splitMember"]').forEach(cb => { cb.checked = exp.splitDetails[cb.value] > 0; });
                 } else if (exp.splitType === 'shares' || exp.splitType === 'exact') {
                     const prefix = exp.splitType === 'shares' ? 'shareValue_' : 'exactValue_';
                     for(let name in exp.splitDetails) {
@@ -233,7 +259,7 @@
                     }
                 }
             });
-            window.scrollTo({ top: 0, behavior: 'smooth' });
+            switchTab(1); // เมื่อกดแก้ไข ให้สลับกลับมาหน้าฟอร์มกรอกอัตโนมัติ
         }
 
         function cancelEdit() {
@@ -241,9 +267,9 @@
             document.getElementById('expenseDesc').value = "";
             document.getElementById('expenseAmount').value = "";
             setDefaultDate();
-            document.getElementById('formTitle').innerText = "🍔 2. เพิ่มรายการค่าใช้จ่ายใหม่";
-            document.getElementById('submitBtn').innerText = "➕ เพิ่มรายการนี้ลงทริป";
-            document.getElementById('cancelEditBtn').add('hidden');
+            document.getElementById('formTitle').innerText = "🍔 เพิ่มรายการค่าใช้จ่ายใหม่";
+            document.getElementById('submitBtn').innerText = "➕ บันทึกรายการลงกลุ่ม";
+            document.getElementById('cancelEditBtn').classList.add('hidden');
             renderSplitUI();
         }
 
@@ -255,6 +281,7 @@
             const payer = document.getElementById('expensePayer').value;
             const splitType = document.getElementById('splitType').value;
             const friends = getFriends();
+            const groupName = getGroupName();
             let splitDetails = {};
 
             if (splitType === 'equally') { friends.forEach(name => { splitDetails[name] = amount / friends.length; }); } 
@@ -272,33 +299,31 @@
                 if (Math.abs(currentTotal - amount) > 0.1) { alert("ยอดรวมเงินกรอกไม่ตรงกับยอดเงินสุทธิครับ!"); return; }
             }
 
-            const payload = { 
-                action: editIndex > -1 ? "edit" : "insert", 
-                index: editIndex,
-                date, desc, amount, payer, splitType, splitDetails 
-            };
+            const payload = { action: editIndex > -1 ? "edit" : "insert", index: editIndex, groupName, date, desc, amount, payer, splitType, splitDetails };
             
-            setSyncStatus("⏳ กำลังบันทึกข้อมูลลง Google Sheet...", "bg-amber-50 text-amber-600 border-amber-200");
+            setSyncStatus("⏳ กำลังบันทึกข้อมูล...", "bg-amber-50 text-amber-600 border-amber-200");
             fetch(SCRIPT_URL, { method: "POST", body: JSON.stringify(payload) })
                 .then(() => {
                     cancelEdit();
                     loadExpensesFromSheet();
+                    switchTab(2); // บันทึกเสร็จปุ๊บ ให้เด้งสลับไปหน้าสรุปยอดดูตารางทันที!
                 });
         }
 
-        // ฟังก์ชันลบรายการรายบรรทัดแบบเรียลไทม์
         function deleteExpense(index) {
+            const groupName = getGroupName();
             if (confirm(`คุณต้องการลบรายการ "${expenses[index].desc}" ใช่หรือไม่?`)) {
-                setSyncStatus("⏳ กำลังลบรายการจาก Google Sheet...", "bg-red-50 text-red-600 border-red-200");
-                fetch(SCRIPT_URL, { method: "POST", body: JSON.stringify({ action: "delete", index: index }) })
+                setSyncStatus("⏳ กำลังลบรายการ...", "bg-red-50 text-red-600 border-red-200");
+                fetch(SCRIPT_URL, { method: "POST", body: JSON.stringify({ action: "delete", index: index, groupName: groupName }) })
                     .then(() => { loadExpensesFromSheet(); });
             }
         }
 
         function clearAllExpenses() {
-            if (confirm("คุณต้องการล้างรายการค่าใช้จ่ายทั้งหมดใน Google Sheet ใช่หรือไม่?")) {
-                setSyncStatus("⏳ กำลังล้างฐานข้อมูลระบบ...", "bg-red-50 text-red-600 border-red-200");
-                fetch(SCRIPT_URL, { method: "POST", body: JSON.stringify({action: "clear"}) })
+            const groupName = getGroupName();
+            if (confirm(`คุณต้องการล้างรายการของกลุ่ม "${groupName}" ใช่หรือไม่?`)) {
+                setSyncStatus("⏳ กำลังล้างข้อมูลกลุ่ม...", "bg-red-50 text-red-600 border-red-200");
+                fetch(SCRIPT_URL, { method: "POST", body: JSON.stringify({ action: "clear", groupName: groupName }) })
                     .then(() => { loadExpensesFromSheet(); });
             }
         }
@@ -309,74 +334,55 @@
             statusDiv.className = `inline-block px-3 py-1 rounded-full text-xs font-bold ${classes}`;
         }
 
-// ฟังก์ชันคำนวณสรุปยอดรวมเวอร์ชันอัปเกรด: เพิ่มปุ่มติ๊ก "โอนเงินเรียบร้อยแล้ว"
-function calculateFinalSplit() {
-    const friends = getFriends(); if (friends.length === 0 || expenses.length === 0) return;
-    let totalTripAmount = 0; let balances = {}; friends.forEach(name => { balances[name] = 0; });
-    
-    expenses.forEach(exp => {
-        totalTripAmount += exp.amount; if (balances[exp.payer] !== undefined) balances[exp.payer] += exp.amount;
-        friends.forEach(name => { if (exp.splitDetails[name] !== undefined) balances[name] -= exp.splitDetails[name]; });
-    });
-    
-    document.getElementById('totalTripAmount').innerText = totalTripAmount.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2});
-    let debtors = [], creditors = [];
-    for (let name in balances) {
-        if (balances[name] < -0.01) debtors.push({ name, amount: Math.abs(balances[name]) });
-        else if (balances[name] > 0.01) creditors.push({ name, amount: balances[name] });
-    }
-    
-    let transferOutput = ""; let d = 0, c = 0;
-    let itemIndex = 0; // ตัวนับไอดีของแต่ละยอดโอน
+        function calculateFinalSplit() {
+            const friends = getFriends(); if (friends.length === 0 || expenses.length === 0) return;
+            let totalTripAmount = 0; let balances = {}; friends.forEach(name => { balances[name] = 0; });
+            
+            expenses.forEach(exp => {
+                totalTripAmount += exp.amount; if (balances[exp.payer] !== undefined) balances[exp.payer] += exp.amount;
+                friends.forEach(name => { if (exp.splitDetails[name] !== undefined) balances[name] -= exp.splitDetails[name]; });
+            });
+            
+            document.getElementById('totalTripAmount').innerText = totalTripAmount.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2});
+            let debtors = [], creditors = [];
+            for (let name in balances) {
+                if (balances[name] < -0.01) debtors.push({ name, amount: Math.abs(balances[name]) });
+                else if (balances[name] > 0.01) creditors.push({ name, amount: balances[name] });
+            }
+            
+            let transferOutput = ""; let d = 0, c = 0; let itemIndex = 0;
+            while (d < debtors.length && c < creditors.length) {
+                let debtor = debtors[d], creditor = creditors[c]; let amountToTransfer = Math.min(debtor.amount, creditor.amount);
+                transferOutput += `
+                <div id="transferItem_${itemIndex}" class="bg-emerald-50 p-3.5 rounded-xl border border-emerald-200 flex justify-between items-center shadow-sm transition-all duration-300">
+                    <div class="flex items-center gap-3">
+                        <input type="checkbox" onchange="togglePaidStatus(${itemIndex})" class="w-5 h-5 text-emerald-600 rounded border-emerald-300 cursor-pointer">
+                        <div id="transferText_${itemIndex}" class="text-slate-800">
+                            💸 <span class="font-bold">${debtor.name}</span> ต้องโอนให้ <span class="font-bold">${creditor.name}</span>
+                        </div>
+                    </div>
+                    <div id="transferAmount_${itemIndex}" class="text-sm sm:text-base font-black text-emerald-700">${amountToTransfer.toFixed(2)} บาท</div>
+                </div>`;
+                debtor.amount -= amountToTransfer; creditor.amount -= amountToTransfer;
+                if (debtor.amount <= 0.1) d++; if (creditor.amount <= 0.1) c++; itemIndex++;
+            }
+            document.getElementById('transferResult').innerHTML = transferOutput || '<div class="text-center py-4 text-slate-500 bg-slate-50 rounded-xl border border-dashed border-slate-200 font-bold">🎉 เคลียร์ยอดลงตัวพอดี ไม่ต้องโอนเงินครับ!</div>';
+            document.getElementById('resultSection').classList.remove('hidden');
+        }
 
-    while (d < debtors.length && c < creditors.length) {
-        let debtor = debtors[d], creditor = creditors[c]; let amountToTransfer = Math.min(debtor.amount, creditor.amount);
-        
-        // 🔥 ส่วนที่เพิ่มเข้ามา: สร้างโครงสร้างกล่องยอดโอนที่มีปุ่ม Checkbox ปุ่มติ๊กจ่ายแล้ว
-        transferOutput += `
-        <div id="transferItem_${itemIndex}" class="bg-emerald-50 p-3.5 rounded-xl border border-emerald-200 flex justify-between items-center shadow-sm transition-all duration-300">
-            <div class="flex items-center gap-3">
-                <!-- ปุ่มติ๊ก Checkbox -->
-                <input type="checkbox" onchange="togglePaidStatus(${itemIndex})" class="w-5 h-5 text-emerald-600 rounded border-emerald-300 focus:ring-emerald-500 cursor-pointer">
-                <div id="transferText_${itemIndex}" class="text-slate-800">
-                    💸 <span class="font-bold">${debtor.name}</span> ต้องโอนเงินให้ <span class="font-bold">${creditor.name}</span>
-                </div>
-            </div>
-            <div id="transferAmount_${itemIndex}" class="text-lg font-black text-emerald-700">
-                ${amountToTransfer.toFixed(2)} บาท
-            </div>
-        </div>`;
-        
-        debtor.amount -= amountToTransfer; creditor.amount -= amountToTransfer;
-        if (debtor.amount <= 0.1) d++; if (creditor.amount <= 0.1) c++;
-        itemIndex++;
-    }
-    
-    document.getElementById('transferResult').innerHTML = transferOutput || '<div class="text-center py-4 text-slate-500 bg-slate-50 rounded-xl border border-dashed border-slate-200 font-bold">🎉 เคลียร์ยอดลงตัวพอดี ไม่ต้องโอนเงินครับ!</div>';
-    document.getElementById('resultSection').classList.remove('hidden');
-}
-
-// 🔥 ฟังก์ชันสลับสถานะเมื่อกดติ๊ก "จ่ายแล้ว" (เปลี่ยนสีกล่อง + ขีดฆ่าตัวหนังสือ)
-function togglePaidStatus(id) {
-    const container = document.getElementById(`transferItem_${id}`);
-    const text = document.getElementById(`transferText_${id}`);
-    const amount = document.getElementById(`transferAmount_${id}`);
-    
-    // ตรวจสอบว่าถูกติ๊กเลือกอยู่หรือไม่
-    const isChecked = container.querySelector('input[type="checkbox"]').checked;
-    
-    if (isChecked) {
-        // สถานะ: จ่ายแล้ว -> เปลี่ยนกล่องเป็นสีเทาอ่อน, ตัวหนังสือจางลง และขีดฆ่า
-        container.className = "bg-slate-100 p-3.5 rounded-xl border border-slate-200 flex justify-between items-center shadow-inner opacity-60 transition-all duration-300";
-        text.classList.add('line-through', 'text-slate-400');
-        amount.className = "text-base font-bold text-slate-400 line-through";
-    } else {
-        // สถานะ: ยังไม่จ่าย -> ดึงสีเขียวสดใสกลับมาเหมือนเดิม
-        container.className = "bg-emerald-50 p-3.5 rounded-xl border border-emerald-200 flex justify-between items-center shadow-sm transition-all duration-300";
-        text.classList.remove('line-through', 'text-slate-400');
-        amount.className = "text-lg font-black text-emerald-700";
-    }
-}
+        function togglePaidStatus(id) {
+            const container = document.getElementById(`transferItem_${id}`);
+            const text = document.getElementById(`transferText_${id}`);
+            const amount = document.getElementById(`transferAmount_${id}`);
+            const isChecked = container.querySelector('input[type="checkbox"]').checked;
+            if (isChecked) {
+                container.className = "bg-slate-100 p-3.5 rounded-xl border border-slate-200 flex justify-between items-center shadow-inner opacity-60 transition-all duration-300";
+                text.classList.add('line-through', 'text-slate-400'); amount.className = "text-xs font-bold text-slate-400 line-through";
+            } else {
+                container.className = "bg-emerald-50 p-3.5 rounded-xl border border-emerald-200 flex justify-between items-center shadow-sm transition-all duration-300";
+                text.classList.remove('line-through', 'text-slate-400'); amount.className = "text-sm sm:text-base font-black text-emerald-700";
+            }
+        }
 
         setDefaultDate();
         updatePayerDropdown();
