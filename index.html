@@ -287,14 +287,21 @@ function renderExpenses() {
     
     expenses.forEach((exp, index) => {
         let displayDate = "-";
-        if (exp.date) { displayDate = (typeof exp.date === 'string' ? exp.date : new Date(exp.date).toISOString()).substring(0, 10); }
+        if (exp.date) { 
+            const d = new Date(exp.date);
+            // เติมเลข 0 ข้างหน้าถ้าเป็นเลขหลักเดียว เพื่อความเป๊ะสวยงาม
+            const day = String(d.getDate()).padStart(2, '0');
+            const month = String(d.getMonth() + 1).padStart(2, '0');
+            const year = d.getFullYear();
+            displayDate = `${day}/${month}/${year}`; 
+        }
         
         // 🟢 ปรับลดระยะห่างแถว (py-1.5 px-3) และปรับขนาดฟอนต์/ระยะขอบปุ่มกด ให้เล็กและชิดขึ้นสวยงาม
         tbody.innerHTML += `<tr class="bg-white hover:bg-slate-50 transition border-b border-slate-100">
             <td class="py-1.5 px-3 text-slate-600 font-mono text-[11px] font-bold">${displayDate}</td>
             <td class="py-1.5 px-3 font-semibold text-slate-700 text-xs sm:text-sm">${exp.desc}</td>
             <td class="py-1.5 px-3 text-slate-600"><span class="bg-blue-50 text-blue-700 text-[11px] px-1.5 py-0.5 rounded font-bold">${exp.payer}</span></td>
-            <td class="py-1.5 px-3 text-right font-bold text-slate-900 text-xs sm:text-sm">${exp.amount.toFixed(2)} บ.</td>
+            <td class="py-1.5 px-3 text-right font-bold text-slate-900 text-xs sm:text-sm">${exp.amount.toFixed(2)} .-</td>
             <td class="py-1.5 px-3 text-center space-x-0.5 whitespace-nowrap">
                 <button type="button" onclick="startEditExpense(${index})" class="text-indigo-600 font-bold text-[11px] bg-indigo-50 px-1.5 py-0.5 rounded border border-indigo-100 hover:bg-indigo-100 transition active:scale-95">✏️</button>
                 <button type="button" onclick="deleteExpense(${index})" class="text-red-600 font-bold text-[11px] bg-red-50 px-1.5 py-0.5 rounded border border-red-100 hover:bg-red-100 transition active:scale-95">🗑️</button>
