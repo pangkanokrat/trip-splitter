@@ -172,16 +172,15 @@ function switchGroup() {
     const dropdown = document.getElementById('groupDropdown');
     const groupInput = document.getElementById('groupNameInput');
     
-    // ตรวจสอบว่าในดรอปดาวน์มีการเลือกกลุ่มไว้ไหม
     if (dropdown && dropdown.value) {
-        // 🔥 จุดสำคัญ: สั่งเปลี่ยนตัวแปรกลุ่มหลักหลังบ้านให้เป็นชื่อกลุ่มที่เลือกจากดรอปดาวน์
+        // อัปเดตตัวแปรกลุ่มหลักหลังบ้าน
         groupName = dropdown.value; 
         
+        // 🔥 จุดแก้ไข: สั่งให้กล่องพิมพ์ทริปใหม่เป็นค่าว่างเปล่าล้างออกไปเลย ไม่ต้องโชว์ชื่อกลุ่มซ้ำ
         if (groupInput) {
-            groupInput.value = dropdown.value;
+            groupInput.value = ""; 
         }
         
-        // สั่งโหลดข้อมูลของกลุ่มนั้นจาก Google Sheet มาแสดงผลทันที
         loadExpensesFromSheet();
     } else {
         alert("กรุณาเลือกกลุ่มทริปจากช่อง 'เลือกทริปที่มีอยู่เดิม' ก่อนครับ");
@@ -340,7 +339,13 @@ function loadExpensesFromSheet() {
             expenses = data.expenses || [];
             if (data.allGroups && data.allGroups.length > 0) {
                 allGroups = data.allGroups;
-                updateGroupDropdown(currentGroup);
+                updateGroupDropdown(groupName);
+            }
+
+            // 🔥 จุดแก้ไข: ป้องกันไม่ให้ชื่อกลุ่มวิ่งกลับมาโชว์ในช่องกรอกตอนโหลดเสร็จ
+            const groupInput = document.getElementById('groupNameInput');
+            if (groupInput) {
+                groupInput.value = ""; // บังคับให้เป็นค่าว่างเสมอ
             }
             
             // จัดการรายชื่อเพื่อน
