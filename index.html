@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Trip Splitter - Full Version</title>
+    <title>Trip Splitter - Full Version with Edit & Delete</title>
     <script src="https://cdn.tailwindcss.com"></script>
 </head>
 <body class="bg-slate-100 p-4 md:p-8 text-slate-800">
@@ -11,7 +11,7 @@
     <div class="max-w-2xl mx-auto bg-white p-6 rounded-2xl shadow-xl space-y-6">
         <div class="text-center space-y-2">
             <h1 class="text-3xl font-extrabold text-indigo-600">📊 Trip Splitter + Google Sheet</h1>
-            <p class="text-slate-500 text-sm">ระบบคำนวณและบันทึกข้อมูลทริปเวอร์ชันสมบูรณ์</p>
+            <p class="text-slate-500 text-sm">เวอร์ชันสมบูรณ์: รองรับการเพิ่ม แก้ไข ลบ และแสดงวันที่</p>
             <div id="syncStatus" class="inline-block px-3 py-1 rounded-full text-xs font-bold bg-slate-100 text-slate-600 border border-slate-200">
                 🔄 กำลังเชื่อมต่อฐานข้อมูล...
             </div>
@@ -25,9 +25,8 @@
         </div>
 
         <form id="expenseForm" onsubmit="event.preventDefault(); saveExpense();" class="bg-amber-50 p-4 rounded-xl border border-amber-100 space-y-4">
-            <h3 class="text-sm font-bold text-amber-950">🍔 2. เพิ่มรายการค่าใช้จ่ายใหม่</h3>
-            
-            <div class="grid grid-cols-1 sm:grid-cols-4 gap-2">
+            <h3 id="formTitle" class="text-sm font-bold text-amber-950">🍔 2. เพิ่มรายการค่าใช้จ่ายใหม่</h3>
+            <input type="hidden" id="editIndex" value="-1"> <div class="grid grid-cols-1 sm:grid-cols-4 gap-2">
                 <div>
                     <label class="block text-xs font-bold text-slate-600 mb-1">📅 วันที่</label>
                     <input type="date" id="expenseDate" required class="w-full p-2 border border-amber-200 rounded-lg focus:outline-indigo-500 bg-white text-sm font-medium">
@@ -57,9 +56,14 @@
                 <div id="splitUIContainer" class="p-2 bg-slate-50 rounded-lg space-y-2 text-sm max-h-48 overflow-y-auto border border-slate-100"></div>
             </div>
             
-            <button type="submit" class="w-full bg-amber-500 text-white p-2.5 rounded-lg font-bold hover:bg-amber-600 transition shadow-md active:scale-[0.99]">
-                ➕ เพิ่มรายการนี้ลงทริป
-            </button>
+            <div class="flex gap-2">
+                <button type="submit" id="submitBtn" class="flex-1 bg-amber-500 text-white p-2.5 rounded-lg font-bold hover:bg-amber-600 transition shadow-md active:scale-[0.99]">
+                    ➕ เพิ่มรายการนี้ลงทริป
+                </button>
+                <button type="button" id="cancelEditBtn" onclick="cancelEdit()" class="hidden bg-slate-400 text-white p-2.5 rounded-lg font-bold hover:bg-slate-500 transition shadow-md active:scale-[0.99]">
+                    ยกเลิก
+                </button>
+            </div>
         </form>
 
         <div class="space-y-2">
@@ -79,11 +83,12 @@
                             <th class="p-3 w-24">👤 คนจ่าย</th>
                             <th class="p-3 w-24">⚙️ การหาร</th>
                             <th class="p-3 text-right w-28">💰 จำนวนเงิน</th>
+                            <th class="p-3 text-center w-24">🛠️ จัดการ</th>
                         </tr>
                     </thead>
                     <tbody id="expenseList" class="divide-y divide-slate-100">
                         <tr>
-                            <td colspan="5" class="p-6 text-center text-slate-400 bg-white">🔄 กำลังดึงข้อมูลล่าสุด...</td>
+                            <td colspan="6" class="p-6 text-center text-slate-400 bg-white">🔄 กำลังดึงข้อมูลล่าสุด...</td>
                         </tr>
                     </tbody>
                 </table>
@@ -106,8 +111,8 @@
     </div>
 
     <script>
-        // ⚠️ วางลิงก์ Web App URL จาก Google Sheets ของคุณที่นี่ครับ
-        const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxWha6PN8Hg0SO4AhwugLoqKP0S8CK-krXCxrCivgDK9evVUx80pZ2QMBeDx99V75Cz/exec"; 
+        // ⚠️ บรรทัดนี้: วางลิงก์ Web App URL จาก Google Sheets ของคุณที่นี่ครับ
+        const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzdCh2yabLMxeFfsGu0YH3pOFnjGHEVFXuTBAR7AOdOEj2I_YCpj1MncCHsuKjkXYs-/exec"; 
 
         let expenses = [];
 
@@ -131,7 +136,7 @@
             else if (friends.length > 0) payerSelect.value = friends[0];
         }
 
-        function renderSplitUI() {
+        function renderSplitUI(callback) {
             const friends = getFriends(); const splitType = document.getElementById('splitType').value;
             const container = document.getElementById('splitUIContainer'); container.innerHTML = "";
             if (friends.length === 0) { container.innerHTML = "<span class='text-red-500 font-bold text-xs'>❌ กรุณาพิมพ์รายชื่อเพื่อนก่อนครับ</span>"; return; }
@@ -144,29 +149,32 @@
             } else if (splitType === 'exact') {
                 friends.forEach(name => { container.innerHTML += `<div class="flex justify-between items-center py-1"><span>${name}</span><div class="flex items-center gap-1"><input type="number" name="exactValue_${name}" value="0" min="0" step="any" class="w-24 p-1 border rounded text-right bg-white font-bold text-slate-700"> บาท</div></div>`; });
             }
+            if(callback) callback();
         }
 
-        // คืนชีพตารางแบบแสดงผลวันที่นิ่งๆ พร้อมปุ่มแสดงดีเทล
+        // คืนชีพตารางและปุ่ม แก้ไข (✏️) / ลบ (🗑️) ประจำรายแถวข้อมูลจริง
         function renderExpenses() {
             const tbody = document.getElementById('expenseList'); tbody.innerHTML = "";
             if (expenses.length === 0) { 
-                tbody.innerHTML = `<tr><td colspan="5" class="p-6 text-center text-slate-400 bg-white">ไม่มีรายการค่าใช้จ่าย (ตารางใน Google Sheet ว่างเปล่า)</td></tr>`; 
+                tbody.innerHTML = `<tr><td colspan="6" class="p-6 text-center text-slate-400 bg-white">ไม่มีรายการค่าใช้จ่าย (ตารางว่างเปล่า)</td></tr>`; 
                 document.getElementById('resultSection').classList.add('hidden'); 
                 return; 
             }
             const typeNames = { equally: "หารเท่ากัน", specific: "เลือกคนหาร", shares: "ตามสัดส่วน", exact: "ระบุรายคน" };
             
-            expenses.forEach((exp) => {
+            expenses.forEach((exp, index) => {
                 let displayDate = exp.date ? exp.date.split('T')[0] : "-";
                 
                 tbody.innerHTML += `<tr class="bg-white hover:bg-slate-50 transition border-b border-slate-100">
                     <td class="p-3 text-slate-600 font-mono text-xs font-bold">${displayDate}</td>
-                    <td class="p-3">
-                        <div class="font-semibold text-slate-700">${exp.desc}</div>
-                    </td>
+                    <td class="p-3 font-semibold text-slate-700">${exp.desc}</td>
                     <td class="p-3 text-slate-600"><span class="bg-blue-50 text-blue-700 text-xs px-2.5 py-0.5 rounded-full font-bold border border-blue-100">${exp.payer}</span></td>
                     <td class="p-3 text-xs text-slate-500 font-medium">${typeNames[exp.splitType]}</td>
                     <td class="p-3 text-right font-bold text-slate-900">${exp.amount.toFixed(2)} บาท</td>
+                    <td class="p-3 text-center space-x-1 flex justify-center items-center">
+                        <button onclick="startEditExpense(${index})" class="text-indigo-600 hover:text-indigo-900 font-bold text-xs bg-indigo-50 px-2 py-1 rounded border border-indigo-200">✏️ แก้ไข</button>
+                        <button onclick="deleteExpense(${index})" class="text-red-600 hover:text-red-900 font-bold text-xs bg-red-50 px-2 py-1 rounded border border-red-200">🗑️ ลบ</button>
+                    </td>
                 </tr>`;
             });
         }
@@ -187,12 +195,54 @@
                     setSyncStatus("✅ เชื่อมต่อ Google Sheet สำเร็จ", "bg-emerald-50 text-emerald-600 border-emerald-200");
                 })
                 .catch(err => {
-                    setSyncStatus("❌ ตรวจพบการตั้งค่าสิทธิ์ผิดพลาด (กรุณาอัพเดท Deploy ใหม่)", "bg-red-50 text-red-600 border-red-200");
+                    setSyncStatus("❌ ตรวจพบข้อผิดพลาดการดึงข้อมูล", "bg-red-50 text-red-600 border-red-200");
                     console.error(err);
                 });
         }
 
+        // ฟังก์ชันสั่งให้ฟอร์มดึงค่าแถวนั้นๆ ขึ้นมาเตรียมแก้ไข
+        function startEditExpense(index) {
+            const exp = expenses[index];
+            document.getElementById('editIndex').value = index;
+            document.getElementById('expenseDate').value = exp.date;
+            document.getElementById('expenseDesc').value = exp.desc;
+            document.getElementById('expenseAmount').value = exp.amount;
+            document.getElementById('expensePayer').value = exp.payer;
+            document.getElementById('splitType').value = exp.splitType;
+            
+            document.getElementById('formTitle').innerText = "✏️ แก้ไขรายการค่าใช้จ่าย";
+            document.getElementById('submitBtn').innerText = "💾 บันทึกการแก้ไข";
+            document.getElementById('cancelEditBtn').classList.remove('hidden');
+
+            renderSplitUI(() => {
+                if (exp.splitType === 'specific') {
+                    document.querySelectorAll('input[name="splitMember"]').forEach(cb => {
+                        cb.checked = exp.splitDetails[cb.value] > 0;
+                    });
+                } else if (exp.splitType === 'shares' || exp.splitType === 'exact') {
+                    const prefix = exp.splitType === 'shares' ? 'shareValue_' : 'exactValue_';
+                    for(let name in exp.splitDetails) {
+                        let inputEl = document.querySelector(`input[name="${prefix}${name}"]`);
+                        if(inputEl) inputEl.value = exp.splitDetails[name];
+                    }
+                }
+            });
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        function cancelEdit() {
+            document.getElementById('editIndex').value = "-1";
+            document.getElementById('expenseDesc').value = "";
+            document.getElementById('expenseAmount').value = "";
+            setDefaultDate();
+            document.getElementById('formTitle').innerText = "🍔 2. เพิ่มรายการค่าใช้จ่ายใหม่";
+            document.getElementById('submitBtn').innerText = "➕ เพิ่มรายการนี้ลงทริป";
+            document.getElementById('cancelEditBtn').add('hidden');
+            renderSplitUI();
+        }
+
         function saveExpense() {
+            const editIndex = parseInt(document.getElementById('editIndex').value);
             const date = document.getElementById('expenseDate').value;
             const desc = document.getElementById('expenseDesc').value.trim();
             const amount = parseFloat(document.getElementById('expenseAmount').value);
@@ -216,16 +266,27 @@
                 if (Math.abs(currentTotal - amount) > 0.1) { alert("ยอดรวมเงินกรอกไม่ตรงกับยอดเงินสุทธิครับ!"); return; }
             }
 
-            const payload = { action: "insert", date, desc, amount, payer, splitType, splitDetails };
+            const payload = { 
+                action: editIndex > -1 ? "edit" : "insert", 
+                index: editIndex,
+                date, desc, amount, payer, splitType, splitDetails 
+            };
             
-            setSyncStatus("⏳ กำลังบันทึกยอดลง Google Sheet...", "bg-amber-50 text-amber-600 border-amber-200");
+            setSyncStatus("⏳ กำลังบันทึกข้อมูลลง Google Sheet...", "bg-amber-50 text-amber-600 border-amber-200");
             fetch(SCRIPT_URL, { method: "POST", body: JSON.stringify(payload) })
                 .then(() => {
-                    document.getElementById('expenseDesc').value = "";
-                    document.getElementById('expenseAmount').value = "";
-                    setDefaultDate();
+                    cancelEdit();
                     loadExpensesFromSheet();
                 });
+        }
+
+        // ฟังก์ชันลบรายการรายบรรทัดแบบเรียลไทม์
+        function deleteExpense(index) {
+            if (confirm(`คุณต้องการลบรายการ "${expenses[index].desc}" ใช่หรือไม่?`)) {
+                setSyncStatus("⏳ กำลังลบรายการจาก Google Sheet...", "bg-red-50 text-red-600 border-red-200");
+                fetch(SCRIPT_URL, { method: "POST", body: JSON.stringify({ action: "delete", index: index }) })
+                    .then(() => { loadExpensesFromSheet(); });
+            }
         }
 
         function clearAllExpenses() {
