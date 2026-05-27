@@ -3,13 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Multi-Group Trip Splitter - Tabbed & Dropdown Version</title>
+    <title>Multi-Group Trip Splitter - Separate Create Button</title>
     <script src="https://cdn.tailwindcss.com"></script>
 </head>
 <body class="bg-slate-100 p-4 md:p-8 text-slate-800">
 
     <div class="max-w-2xl mx-auto bg-white p-6 rounded-2xl shadow-xl space-y-6">
-        <!-- ส่วนหัวข้อหลัก -->
         <div class="text-center space-y-2">
             <h1 class="text-3xl font-extrabold text-indigo-600">📊 Trip Splitter Dashboard</h1>
             <div id="syncStatus" class="inline-block px-3 py-1 rounded-full text-xs font-bold bg-slate-100 text-slate-600 border border-slate-200">
@@ -17,7 +16,6 @@
             </div>
         </div>
 
-        <!-- ส่วนปุ่มเมนูเลือกสลับหน้าจอ (Tab Navigation) -->
         <div class="flex bg-slate-100 p-1 rounded-xl border border-slate-200">
             <button id="tabBtn1" onclick="switchTab(1)" class="flex-1 py-2.5 text-sm font-bold rounded-lg transition-all text-indigo-600 bg-white shadow-sm">
                 ✍️ 1. หน้ากรอกค่าใช้จ่าย
@@ -29,38 +27,40 @@
         
         <hr class="border-slate-100">
 
-        <!-- 🌟 ส่วนที่ปรับปรุง: กล่องเลือกกลุ่มทริปแบบ Dropdown + เพิ่มกลุ่มใหม่ -->
-        <div class="bg-violet-50 p-4 rounded-xl border border-violet-100 space-y-3">
-            <label class="block text-sm font-bold text-violet-950">📂 เลือกกลุ่มทริปที่ต้องการทำงาน</label>
-            <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+        <div class="bg-violet-50 p-4 rounded-xl border border-violet-100 space-y-4">
+            <h2 class="text-sm font-bold text-violet-950">📂 จัดการกลุ่มทริป</h2>
+            
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 border-b border-violet-100 pb-3">
                 <div>
-                    <label class="block text-[10px] font-bold text-violet-400 mb-0.5">เลือกจากกลุ่มที่มีอยู่:</label>
+                    <label class="block text-[11px] font-bold text-violet-500 mb-1">เลือกทริปที่มีอยู่เดิม:</label>
                     <select id="groupDropdown" onchange="handleDropdownChange()" class="w-full p-2.5 border border-violet-200 rounded-lg shadow-sm font-bold text-violet-700 bg-white focus:outline-violet-500 text-sm">
-                        <!-- รายชื่อกลุ่มจะถูกดึงจาก Google Sheet มาใส่ตรงนี้อัตโนมัติ -->
                         <option value="">กำลังโหลดกลุ่ม...</option>
                     </select>
                 </div>
-                <div>
-                    <label class="block text-[10px] font-bold text-violet-400 mb-0.5">หรือพิมพ์ชื่อกลุ่มใหม่เพื่อเพิ่ม:</label>
-                    <div class="flex gap-1">
-                        <input type="text" id="groupNameInput" placeholder="" class="flex-1 p-2.5 border border-violet-200 rounded-lg shadow-sm font-bold text-violet-700 focus:outline-violet-500 text-sm">
-                        <button onclick="switchGroup()" class="bg-violet-600 text-white px-3 rounded-lg font-bold hover:bg-violet-700 transition text-xs active:scale-95">
-                            🔄 ซิงค์กลุ่ม
-                        </button>
-                    </div>
+                <div class="flex items-end">
+                    <button onclick="switchGroup()" class="w-full bg-violet-600 text-white p-2.5 rounded-lg font-bold hover:bg-violet-700 transition text-sm active:scale-95 shadow-sm">
+                        🔄 เรียกดูข้อมูลกลุ่มนี้
+                    </button>
+                </div>
+            </div>
+
+            <div>
+                <label class="block text-[11px] font-bold text-violet-500 mb-1">ต้องการเปิดทริปใหม่ (พิมพ์ชื่อกลุ่มแล้วกดสร้าง):</label>
+                <div class="flex gap-2">
+                    <input type="text" id="groupNameInput" placeholder="เช่น ทริปเชียงใหม่ปีหน้า" class="flex-1 p-2.5 border border-violet-200 rounded-lg shadow-sm font-bold text-violet-700 focus:outline-violet-500 text-sm bg-white">
+                    <button onclick="createNewGroupClick()" class="bg-emerald-600 text-white px-5 rounded-lg font-bold hover:bg-emerald-700 transition text-sm active:scale-95 shadow-sm">
+                        ➕ สร้างกลุ่มใหม่
+                    </button>
                 </div>
             </div>
         </div>
 
-        <!-- ==================== หน้าจอที่ 1: ฝั่งกรอกข้อมูล ==================== -->
         <div id="page1" class="space-y-6">
-            <!-- ตั้งค่าสมาชิกทริป -->
             <div class="bg-indigo-50 p-4 rounded-xl border border-indigo-100">
                 <label class="block text-sm font-bold text-indigo-950 mb-1">👥 รายชื่อเพื่อนในกลุ่มนี้ (คั่นด้วยเครื่องหมายจุลภาค ,)</label>
                 <input type="text" id="friendsInput" value="แป้ง, บอย, ตาล, นัท" oninput="handleFriendsChange()" class="w-full p-2.5 border border-indigo-200 rounded-lg shadow-sm focus:outline-indigo-500 font-medium">
             </div>
 
-            <!-- ฟอร์มเพิ่ม/แก้ไขค่าใช้จ่าย -->
             <form id="expenseForm" onsubmit="event.preventDefault(); saveExpense();" class="bg-amber-50 p-4 rounded-xl border border-amber-100 space-y-4">
                 <h3 id="formTitle" class="text-sm font-bold text-amber-950">🍔 เพิ่มรายการค่าใช้จ่ายใหม่</h3>
                 <input type="hidden" id="editIndex" value="-1">
@@ -72,7 +72,7 @@
                     </div>
                     <div>
                         <label class="block text-xs font-bold text-slate-600 mb-1">🍔 ชื่อรายการ</label>
-                        <input type="text" id="expenseDesc" placeholder="" required class="w-full p-2.5 border border-amber-200 rounded-lg focus:outline-indigo-500 bg-white text-sm">
+                        <input type="text" id="expenseDesc" placeholder="เช่น ค่าข้าวเที่ยง" required class="w-full p-2.5 border border-amber-200 rounded-lg focus:outline-indigo-500 bg-white text-sm">
                     </div>
                     <div>
                         <label class="block text-xs font-bold text-slate-600 mb-1">💰 ยอดรวม (บาท)</label>
@@ -84,7 +84,6 @@
                     </div>
                 </div>
 
-                <!-- เมนูตัวเลือกการหาร -->
                 <div class="bg-white p-3 rounded-lg border border-amber-200 space-y-2">
                     <label class="block text-xs font-bold text-slate-700">⚙️ รูปแบบการหารเงิน (Split Option):</label>
                     <select id="splitType" onchange="renderSplitUI()" class="w-full p-2 border border-slate-200 rounded-lg bg-slate-50 focus:outline-indigo-500 text-sm font-medium text-slate-700">
@@ -107,9 +106,7 @@
             </form>
         </div>
 
-        <!-- ==================== หน้าจอที่ 2: ฝั่งตารางและการสรุปยอด ==================== -->
         <div id="page2" class="hidden space-y-6">
-            <!-- ตารางแสดงรายการพร้อมปุ่มจัดการ -->
             <div class="space-y-2">
                 <div class="flex justify-between items-center">
                     <h3 class="font-bold text-slate-700 text-sm">📋 ตารางสรุปรายการในกลุ่มนี้:</h3>
@@ -138,7 +135,6 @@
                 </div>
             </div>
 
-            <!-- ส่วนแสดงผลลัพธ์การหักหนี้ -->
             <div id="resultSection" class="hidden space-y-4 pt-2">
                 <h3 class="font-bold text-xl text-slate-800 border-l-4 border-emerald-500 pl-2">📊 สรุปยอดโอนเงินหักลบกลบหนี้:</h3>
                 <div class="bg-indigo-50 p-3.5 rounded-xl text-sm border border-indigo-100 flex justify-between items-center">
@@ -152,21 +148,52 @@
 
     <script>
         // ⚠️ บรรทัดนี้: วางลิงก์ Web App URL จาก Google Sheets ของคุณที่นี่ครับ
-        const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzNokIPzdJn6KVNRYtT2c1kglFgCuWrNw4PJ-GOEUmWkNftfo1HTeipnBZf8p1ZAdEz/exec"; 
+        const SCRIPT_URL = "ใส่ลิงก์_WEB_APP_URL_ตรงนี้"; 
 
         let expenses = [];
-        let allGroups = []; // เก็บรายชื่อกลุ่มทั้งหมดเพื่อไปแสดงใน Dropdown
+        let allGroups = []; 
 
-        // ฟังก์ชันใหม่: เมื่อผู้ใช้งานเลือกกลุ่มทริปจาก Dropdown
+        // เมื่อเปลี่ยนค่าใน Dropdown ให้เอาค่าไปใส่ในกล่องหลักรอซิงค์
         function handleDropdownChange() {
             const dropdown = document.getElementById('groupDropdown');
             if (dropdown.value) {
                 document.getElementById('groupNameInput').value = dropdown.value;
-                loadExpensesFromSheet();
             }
         }
 
-        // ฟังก์ชันเมื่อเปลี่ยนแท็บหน้าจอ
+        // ฟังก์ชันเมื่อกดปุ่มเรียกดูข้อมูล (ซิงค์กลุ่ม)
+        function switchGroup() { 
+            loadExpensesFromSheet(); 
+        }
+
+        // 🌟 ฟังก์ชันใหม่ล่าสุด: เมื่อกดปุ่ม "สร้างกลุ่มใหม่"
+        function createNewGroupClick() {
+            const newGroup = document.getElementById('groupNameInput').value.trim();
+            if (!newGroup) {
+                alert("❌ กรุณาพิมพ์ชื่อกลุ่มทริปใหม่ที่ต้องการสร้างก่อนครับ");
+                return;
+            }
+            if (allGroups.includes(newGroup)) {
+                alert(`⚠️ กลุ่ม "${newGroup}" มีอยู่ในระบบแล้ว ระบบจะสลับไปที่กลุ่มนี้ให้ทันทีครับ`);
+                loadExpensesFromSheet();
+                return;
+            }
+            
+            // เคลียร์ค่าข้อมูลในหน้าจอเพื่อเตรียมรับกลุ่มใหม่แกะกล่อง
+            expenses = [];
+            renderExpenses();
+            document.getElementById('resultSection').classList.add('hidden');
+            
+            // เพิ่มกลุ่มใหม่นี้เข้าไปใน Array ชั่วคราวเพื่อให้เลือกได้
+            if(!allGroups.includes(newGroup)){
+                allGroups.push(newGroup);
+            }
+            updateGroupDropdown(newGroup);
+            
+            alert(`🎉 สร้างกลุ่ม "${newGroup}" สำเร็จบนหน้าเว็บแล้ว! เริ่มกรอกข้อมูลรายการแรกใน หน้า 1 ได้เลยครับ (ชื่อกลุ่มนี้จะบันทึกเข้าคอลัมน์ A ทันทีที่คุณกดบันทึกรายการแรกครับ)`);
+            switchTab(1); // เด้งมาหน้ากรอกข้อมูลให้ทันที
+        }
+
         function switchTab(tabNum) {
             const btn1 = document.getElementById('tabBtn1');
             const btn2 = document.getElementById('tabBtn2');
@@ -186,11 +213,7 @@
         }
 
         function getGroupName() { 
-            return document.getElementById('groupNameInput').value.trim() || ""; 
-        }
-        
-        function switchGroup() { 
-            loadExpensesFromSheet(); 
+            return document.getElementById('groupNameInput').value.trim() || "ทริปญี่ปุ่นปีนี้"; 
         }
         
         function setDefaultDate() { document.getElementById('expenseDate').value = new Date().toISOString().split('T')[0]; }
@@ -221,12 +244,10 @@
             if(callback) callback();
         }
 
-        // 🌟 ฟังก์ชันใหม่: อัปเดตตัวเลือกใน Dropdown เมื่อโหลดข้อมูลเสร็จ
         function updateGroupDropdown(currentGroup) {
             const dropdown = document.getElementById('groupDropdown');
             dropdown.innerHTML = "";
             
-            // หาชื่อกลุ่มที่มีอยู่ทั้งหมดแบบไม่ซ้ำ โดยดูจากรายการที่เคยบันทึกไว้ในชีต (จะถูกส่งมาพร้อมข้อมููล)
             if (allGroups.length === 0 && currentGroup) {
                 allGroups.push(currentGroup);
             }
@@ -243,7 +264,7 @@
         function renderExpenses() {
             const tbody = document.getElementById('expenseList'); tbody.innerHTML = "";
             if (expenses.length === 0) { 
-                tbody.innerHTML = `<tr><td colspan="5" class="p-6 text-center text-slate-400 bg-white">ไม่มีข้อมูลในกลุ่มนี้ เริ่มเปิดหน้า 1 เพื่อเพิ่มรายการได้เลยครับ</td></tr>`; 
+                tbody.innerHTML = `<tr><td colspan="5" class="p-6 text-center text-slate-400 bg-white">ยังไม่มีข้อมูลใช้จ่ายในกลุ่มนี้ เริ่มกรอกรายการแรกได้เลยครับ</td></tr>`; 
                 document.getElementById('resultSection').classList.add('hidden'); 
                 return; 
             }
@@ -265,7 +286,6 @@
             });
         }
 
-        // 🌟 ปรับปรุง: ตอนดึงข้อมูล จะโหลดรายชื่อกลุ่มทริปทั้งหมดติดมาด้วย
         function loadExpensesFromSheet() {
             if (!SCRIPT_URL || SCRIPT_URL.trim() === "" || SCRIPT_URL.includes("ใส่ลิงก์")) {
                 setSyncStatus("❌ ยังไม่ได้ใส่ลิงก์ SCRIPT_URL ในโค้ด", "bg-red-50 text-red-600 border-red-200");
@@ -274,7 +294,6 @@
             const groupName = getGroupName();
             setSyncStatus(`🔄 กำลังโหลดข้อมูลกลุ่ม [ ${groupName} ]...`, "bg-amber-50 text-amber-600 border-amber-200");
             
-            // ส่ง parameter ดึงกลุ่มทั้งหมดไปด้วย
             fetch(`${SCRIPT_URL}?group=${encodeURIComponent(groupName)}&getGroups=true`)
                 .then(res => res.json())
                 .then(data => {
@@ -283,7 +302,6 @@
                         allGroups = data.allGroups;
                     }
                     
-                    // ปรับค่าในช่อง Input เผื่อผู้ใช้สลับจากหน้า dropdown
                     document.getElementById('groupNameInput').value = groupName;
                     
                     updateGroupDropdown(groupName);
@@ -342,7 +360,13 @@
             const payer = document.getElementById('expensePayer').value;
             const splitType = document.getElementById('splitType').value;
             const friends = getFriends();
+            
             const groupName = getGroupName();
+            if (!groupName) {
+                alert("❌ เกิดข้อผิดพลาด: ไม่พบชื่อกลุ่มในการบันทึกข้อมูล");
+                return;
+            }
+
             let splitDetails = {};
 
             if (splitType === 'equally') { friends.forEach(name => { splitDetails[name] = amount / friends.length; }); } 
@@ -362,7 +386,7 @@
 
             const payload = { action: editIndex > -1 ? "edit" : "insert", index: editIndex, groupName, date, desc, amount, payer, splitType, splitDetails };
             
-            setSyncStatus("⏳ กำลังบันทึกข้อมูล...", "bg-amber-50 text-amber-600 border-amber-200");
+            setSyncStatus("⏳ กำลังบันทึกข้อมูลลงคอลัมน์ A...", "bg-amber-50 text-amber-600 border-amber-200");
             fetch(SCRIPT_URL, { method: "POST", body: JSON.stringify(payload) })
                 .then(() => {
                     cancelEdit();
@@ -445,8 +469,7 @@
             }
         }
 
-        // เริ่มต้นระบบเริ่มต้นเมื่อเปิดหน้าเว็บ
-        document.getElementById('groupNameInput').value = ""; // ค่าตั้งต้นเริ่มต้น
+        document.getElementById('groupNameInput').value = "ทริปญี่ปุ่นปีนี้"; 
         setDefaultDate();
         updatePayerDropdown();
         renderSplitUI();
