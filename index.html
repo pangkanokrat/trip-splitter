@@ -312,10 +312,22 @@ function renderExpenses() {
         return; 
     }
     
+    // 🎨 อาเรย์ชุดสีพาสเทลแบบฝังในตัวฟังก์ชัน ป้องกันเรียกหาฟังก์ชันอื่นไม่เจอ
+    const colorPalette = [
+        { bg: 'bg-blue-50', text: 'text-blue-700', border: 'border-blue-200' },
+        { bg: 'bg-emerald-50', text: 'text-emerald-700', border: 'border-emerald-200' },
+        { bg: 'bg-amber-50', text: 'text-amber-700', border: 'border-amber-200' },
+        { bg: 'bg-rose-50', text: 'text-rose-700', border: 'border-rose-200' },
+        { bg: 'bg-purple-50', text: 'text-purple-700', border: 'border-purple-200' },
+        { bg: 'bg-cyan-50', text: 'text-cyan-700', border: 'border-cyan-200' },
+        { bg: 'bg-fuchsia-50', text: 'text-fuchsia-700', border: 'border-fuchsia-200' },
+        { bg: 'bg-orange-50', text: 'text-orange-700', border: 'border-orange-200' }
+    ];
+
     expenses.forEach((exp, index) => {
         let displayDate = "-";
         
-        // 1. จัดการฟอร์แมตวันที่แบบไม้ตาย (แกะมือป้องกันทุกเออร์เร่อ)
+        // 1. จัดการฟอร์แมตวันที่แบบแกะมือ
         if (exp.date) {
             const dateStr = exp.date.toString().trim();
             if (dateStr.includes('Jan') || dateStr.includes('Feb') || dateStr.includes('Mar') || 
@@ -343,10 +355,19 @@ function renderExpenses() {
             }
         }
         
-        // 2. เรียกใช้ฟังก์ชันสุ่มสีประจำชื่อคนจ่าย
-        const colors = getFriendColorClasses(exp.payer);
+        // 🟢 2. คำนวณสีจากชื่อตรงนี้เลย (สายตรง ไม่พึ่งพาฟังก์ชันนอก)
+        let colors = { bg: 'bg-slate-50', text: 'text-slate-700', border: 'border-slate-200' };
+        if (exp.payer) {
+            let hash = 0;
+            const nameStr = exp.payer.toString();
+            for (let i = 0; i < nameStr.length; i++) {
+                hash = nameStr.charCodeAt(i) + ((hash << 5) - hash);
+            }
+            const colorIndex = Math.abs(hash) % colorPalette.length;
+            colors = colorPalette[colorIndex];
+        }
         
-        // 3. พิมพ์แถวตารางที่มีระยะชิดกระชับ (py-1.5 px-3) ปุ่มเล็ก และสีแยกชื่อ
+        // 3. พิมพ์แถวตาราง
         tbody.innerHTML += `<tr class="bg-white hover:bg-slate-50 transition border-b border-slate-100">
             <td class="py-1.5 px-3 text-slate-600 font-mono text-[11px] font-bold">${displayDate}</td>
             <td class="py-1.5 px-3 font-semibold text-slate-700 text-xs sm:text-sm">${exp.desc}</td>
@@ -359,8 +380,8 @@ function renderExpenses() {
             
             <td class="py-1.5 px-3 text-right font-bold text-slate-900 text-xs sm:text-sm">${exp.amount.toFixed(2)} บ.</td>
             <td class="py-1.5 px-3 text-center space-x-0.5 whitespace-nowrap">
-                <button type="button" onclick="startEditExpense(${index})" class="text-indigo-600 font-bold text-[11px] bg-indigo-50 px-1.5 py-0.5 rounded border border-indigo-100 hover:bg-indigo-100 transition active:scale-95">✏️ แก้ไข</button>
-                <button type="button" onclick="deleteExpense(${index})" class="text-red-600 font-bold text-[11px] bg-red-50 px-1.5 py-0.5 rounded border border-red-100 hover:bg-red-100 transition active:scale-95">🗑️ ลบ</button>
+                <button type="button" onclick="startEditExpense(${index})" class="text-indigo-600 font-bold text-[11px] bg-indigo-50 px-1.5 py-0.5 rounded border border-indigo-100 hover:bg-indigo-100 transition active:scale-95">✏️</button>
+                <button type="button" onclick="deleteExpense(${index})" class="text-red-600 font-bold text-[11px] bg-red-50 px-1.5 py-0.5 rounded border border-red-100 hover:bg-red-100 transition active:scale-95">🗑️</button>
             </td>
         </tr>`;
     });
