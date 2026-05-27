@@ -106,6 +106,22 @@
         </div>
 
         <div id="page2" class="hidden space-y-6">
+        <div class="bg-violet-50 p-4 rounded-xl border border-violet-100 space-y-4">
+            <h2 class="text-sm font-bold text-violet-950">📂 จัดการกลุ่มทริป</h2>
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 border-b border-violet-100 pb-3">
+                <div>
+                    <label class="block text-[11px] font-bold text-violet-500 mb-1">เลือกทริปที่มีอยู่เดิม:</label>
+                    <select id="groupDropdown" onchange="handleDropdownChange()" class="w-full p-2.5 border border-violet-200 rounded-lg shadow-sm font-bold text-violet-700 bg-white focus:outline-violet-500 text-sm">
+                        <option value="">กำลังโหลดกลุ่ม...</option>
+                    </select>
+                </div>
+                <div class="flex items-end">
+                    <button onclick="switchGroup()" class="w-full bg-violet-600 text-white p-2.5 rounded-lg font-bold hover:bg-violet-700 transition text-sm active:scale-95 shadow-sm">
+                        🔄 เรียกดูข้อมูลกลุ่มนี้
+                    </button>
+                </div>
+            </div>
+        </div>
             <div class="space-y-2">
                 <div class="flex justify-between items-center">
                     <h3 class="font-bold text-slate-700 text-sm">📋 ตารางสรุปรายการในกลุ่มนี้:</h3>
