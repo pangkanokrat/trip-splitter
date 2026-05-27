@@ -153,31 +153,37 @@
         }
 
         // คืนชีพตารางและปุ่ม แก้ไข (✏️) / ลบ (🗑️) ประจำรายแถวข้อมูลจริง
-        function renderExpenses() {
-            const tbody = document.getElementById('expenseList'); tbody.innerHTML = "";
-            if (expenses.length === 0) { 
-                tbody.innerHTML = `<tr><td colspan="6" class="p-6 text-center text-slate-400 bg-white">ไม่มีรายการค่าใช้จ่าย (ตารางว่างเปล่า)</td></tr>`; 
-                document.getElementById('resultSection').classList.add('hidden'); 
-                return; 
-            }
-            const typeNames = { equally: "หารเท่ากัน", specific: "เลือกคนหาร", shares: "ตามสัดส่วน", exact: "ระบุรายคน" };
-            
-            expenses.forEach((exp, index) => {
-                let displayDate = exp.date ? exp.date.split('T')[0] : "-";
-                
-                tbody.innerHTML += `<tr class="bg-white hover:bg-slate-50 transition border-b border-slate-100">
-                    <td class="p-3 text-slate-600 font-mono text-xs font-bold">${displayDate}</td>
-                    <td class="p-3 font-semibold text-slate-700">${exp.desc}</td>
-                    <td class="p-3 text-slate-600"><span class="bg-blue-50 text-blue-700 text-xs px-2.5 py-0.5 rounded-full font-bold border border-blue-100">${exp.payer}</span></td>
-                    <td class="p-3 text-xs text-slate-500 font-medium">${typeNames[exp.splitType]}</td>
-                    <td class="p-3 text-right font-bold text-slate-900">${exp.amount.toFixed(2)} บาท</td>
-                    <td class="p-3 text-center space-x-1 flex justify-center items-center">
-                        <button onclick="startEditExpense(${index})" class="text-indigo-600 hover:text-indigo-900 font-bold text-xs bg-indigo-50 px-2 py-1 rounded border border-indigo-200">✏️ แก้ไข</button>
-                        <button onclick="deleteExpense(${index})" class="text-red-600 hover:text-red-900 font-bold text-xs bg-red-50 px-2 py-1 rounded border border-red-200">🗑️ ลบ</button>
-                    </td>
-                </tr>`;
-            });
+        // ฟังก์ชันจัดการตารางเวอร์ชันตัดเวลาทิ้ง 100%
+    function renderExpenses() {
+    const tbody = document.getElementById('expenseList'); tbody.innerHTML = "";
+    if (expenses.length === 0) { 
+        tbody.innerHTML = `<tr><td colspan="6" class="p-6 text-center text-slate-400 bg-white">ไม่มีรายการค่าใช้จ่าย (ตารางว่างเปล่า)</td></tr>`; 
+        document.getElementById('resultSection').classList.add('hidden'); 
+        return; 
+    }
+    const typeNames = { equally: "หารเท่ากัน", specific: "เลือกคนหาร", shares: "ตามสัดส่วน", exact: "ระบุรายคน" };
+    
+    expenses.forEach((exp, index) => {
+        // 🔥 จุดแก้ไข: ไม่ว่า Google Sheet จะส่งอะไรมา บังคับตัดเอาเฉพาะ 10 ตัวอักษรแรก (YYYY-MM-DD) เท่านั้น
+        let displayDate = "-";
+        if (exp.date) {
+            let dateStr = typeof exp.date === 'string' ? exp.date : new Date(exp.date).toISOString();
+            displayDate = dateStr.substring(0, 10); // ตัดส่วนเวลาและตัว T ทิ้งไปเลย
         }
+        
+        tbody.innerHTML += `<tr class="bg-white hover:bg-slate-50 transition border-b border-slate-100">
+            <td class="p-3 text-slate-600 font-mono text-xs font-bold">${displayDate}</td>
+            <td class="p-3 font-semibold text-slate-700">${exp.desc}</td>
+            <td class="p-3 text-slate-600"><span class="bg-blue-50 text-blue-700 text-xs px-2.5 py-0.5 rounded-full font-bold border border-blue-100">${exp.payer}</span></td>
+            <td class="p-3 text-xs text-slate-500 font-medium">${typeNames[exp.splitType]}</td>
+            <td class="p-3 text-right font-bold text-slate-900">${exp.amount.toFixed(2)} บาท</td>
+            <td class="p-3 text-center space-x-1 flex justify-center items-center">
+                <button onclick="startEditExpense(${index})" class="text-indigo-600 hover:text-indigo-900 font-bold text-xs bg-indigo-50 px-2 py-1 rounded border border-indigo-200">✏️ แก้ไข</button>
+                <button onclick="deleteExpense(${index})" class="text-red-600 hover:text-red-900 font-bold text-xs bg-red-50 px-2 py-1 rounded border border-red-200">🗑️ ลบ</button>
+            </td>
+        </tr>`;
+    });
+}
 
         function loadExpensesFromSheet() {
             if (!SCRIPT_URL || SCRIPT_URL.trim() === "" || SCRIPT_URL.includes("ใส่ลิงก์")) {
