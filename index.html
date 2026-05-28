@@ -343,18 +343,18 @@ if (exp.date) {
         const parts = dateStr.substring(0, 10).split('-');
         displayDate = `${parts[2]}/${parts[1]}/${parts[0]}`;
     } 
-    // เคสที่ 3: ฟอร์แมตเก่าจาก Sheets (เช่น "Wed May 27 2026..." หรือ "Wed, May 27, 2026")
+    // เคสที่ 3: ดึง "ชื่อเดือน + วันที่" (เช่น May 27) ออกมาจากก้อนข้อความยาวๆ ของ Sheets
     else if (/[a-zA-Z]/.test(dateStr)) {
-        // หั่นเอาคำแรกออก (เช่น Wed หรือ Wed,) แล้วเอาข้อความที่เหลือมาใช้เลย
-        const parts = dateStr.split(' ');
-        if (parts.length > 1) {
-            // ดึงตั้งแต่ช่องว่างแรกเป็นต้นไป เช่น "May 27 2026"
-            displayDate = parts.slice(1).join(' '); 
+        // ใช้ Regex ค้นหาแพทเทิร์น ตัวอักษร 3 ตัว (ชื่อเดือน) ตามด้วยช่องว่าง และตัวเลข 1-2 หลัก (วันที่)
+        const match = dateStr.match(/([a-zA-Z]{3})\s(\d{1,2})/);
+        
+        if (match) {
+            displayDate = match[0]; // จะได้ "May 27" ออกมาตรงๆ เลยครับ
         } else {
-            displayDate = dateStr; // ถ้าหั่นไม่ได้ ให้ใช้ค่าเดิมกันพัง
+            displayDate = dateStr; // ถ้าหาไม่เจอจริงๆ ให้แสดงค่าเดิมกันพัง
         }
     }
-    // เคสที่ 4: ฟอร์แมตอื่นๆ 
+    // เคสที่ 4: ฟอร์แมตอื่นๆ
     else {
         displayDate = dateStr; 
     }
