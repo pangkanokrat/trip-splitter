@@ -327,42 +327,34 @@ function renderExpenses() {
     expenses.forEach((exp, index) => {
         let displayDate = "-";
         
-// 1. จัดการฟอร์แมตวันที่แบบเด็ดขาด
+// 1. จัดการฟอร์แมตวันที่แบบเด็ดขาด (ถ้าค่าว่างเปล่า ให้ใช้วันที่ของวันนี้แทนทันที)
 const todayStr = new Date().toLocaleDateString('en-GB'); // DD/MM/YYYY
 displayDate = todayStr; 
 
 if (exp.date) {
     let dateStr = exp.date.toString().trim();
     
-    // เคสที่ 1: ค่าว่าง/ไม่ระบุ
+    // เคสที่ 1: ถ้าเป็นค่าว่าง หรือขีด
     if (dateStr === "" || dateStr === "-" || dateStr === "undefined" || dateStr === "null") {
         displayDate = todayStr;
     }
-    // เคสที่ 2: ฟอร์แมต ปี-เดือน-วัน (เช่น 2026-05-28)
+    // เคสที่ 2: ฟอร์แมตรายการใหม่ ปี-เดือน-วัน (เช่น 2026-05-28)
     else if (dateStr.includes('-') && dateStr.split('-')[0].length === 4) {
         const parts = dateStr.substring(0, 10).split('-');
         displayDate = `${parts[2]}/${parts[1]}/${parts[0]}`;
     } 
-    // เคสที่ 3: ฟอร์แมตจาก Google Sheets (เช่น Wed May 28... หรือ มีชื่อเดือนภาษาอังกฤษ)
-    else if (/[a-zA-Z]/.test(dateStr)) { 
-        // ใช้ Regex เช็คว่าถ้ามีตัวอักษรภาษาอังกฤษ (ย่อมาจากชื่อวันหรือชื่อเดือน)
-        try {
-            const parsedDate = new Date(dateStr);
-            if (!isNaN(parsedDate.getTime())) {
-                // จัดฟอร์แมตเองมือ เพื่อไม่ให้เพี้ยนตาม Zone ของเครื่อง
-                const dd = String(parsedDate.getDate()).padStart(2, '0');
-                const mm = String(parsedDate.getMonth() + 1).padStart(2, '0');
-                const yyyy = parsedDate.getFullYear();
-                displayDate = `${dd}/${mm}/${yyyy}`;
-            } else {
-                // ถ้ามีตัวอักษรแต่ parse ไม่ผ่าน ให้ลองตัดเฉพาะส่วนที่จำเป็น หรือใช้ค่าเดิมไปก่อน
-                displayDate = dateStr; 
-            }
-        } catch (e) {
-            displayDate = dateStr;
+    // เคสที่ 3: ฟอร์แมตเก่าจาก Sheets (เช่น "Wed May 27 2026..." หรือ "Wed, May 27, 2026")
+    else if (/[a-zA-Z]/.test(dateStr)) {
+        // หั่นเอาคำแรกออก (เช่น Wed หรือ Wed,) แล้วเอาข้อความที่เหลือมาใช้เลย
+        const parts = dateStr.split(' ');
+        if (parts.length > 1) {
+            // ดึงตั้งแต่ช่องว่างแรกเป็นต้นไป เช่น "May 27 2026"
+            displayDate = parts.slice(1).join(' '); 
+        } else {
+            displayDate = dateStr; // ถ้าหั่นไม่ได้ ให้ใช้ค่าเดิมกันพัง
         }
     }
-    // เคสที่ 4: มาเป็นวันที่ตรงๆ อยู่แล้ว หรือฟอร์แมตอื่น (เช่น 28/05/2026)
+    // เคสที่ 4: ฟอร์แมตอื่นๆ 
     else {
         displayDate = dateStr; 
     }
