@@ -327,17 +327,27 @@ function renderExpenses() {
     expenses.forEach((exp, index) => {
         let displayDate = "-";
         
-        // 1. จัดการฟอร์แมตวันที่แบบแกะมือ
+// 1. จัดการฟอร์แมตวันที่แบบแกะมือ (เวอร์ชันแก้ไขดักจับข้อความที่ถูกตัดสั้น)
         if (exp.date) {
             const dateStr = exp.date.toString().trim();
+            
             if (dateStr.includes('Jan') || dateStr.includes('Feb') || dateStr.includes('Mar') || 
                 dateStr.includes('Apr') || dateStr.includes('May') || dateStr.includes('Jun') || 
                 dateStr.includes('Jul') || dateStr.includes('Aug') || dateStr.includes('Sep') || 
                 dateStr.includes('Oct') || dateStr.includes('Nov') || dateStr.includes('Dec')) {
                 
                 const parts = dateStr.split(' ');
-                if (parts.length >= 4) {
-                    const months = { 'Jan':'01','Feb':'02','Mar':'03','Apr':'04','May':'05','Jun':'06','Jul':'07','Aug':'08','Sep':'09','Oct':'10','Nov':'11','Dec':'12' };
+                const months = { 'Jan':'01','Feb':'02','Mar':'03','Apr':'04','May':'05','Jun':'06','Jul':'07','Aug':'08','Sep':'09','Oct':'10','Nov':'11','Dec':'12' };
+                
+                // 🟢 เคสที่ 1.1: ถ้าโดนตัดมาสั้น (เช่น "Wed May 27") จะมี 3 ส่วน -> ให้เติมปีปัจจุบัน (2026) เข้าไปเองเลย
+                if (parts.length === 3) {
+                    const day = parts[2].padStart(2, '0');
+                    const month = months[parts[1]] || '01';
+                    const year = '2026'; // เติมปีปัจจุบันเข้าไปให้สมบูรณ์
+                    displayDate = `${day}/${month}/${year}`;
+                } 
+                // 🟢 เคสที่ 1.2: ถ้ามาแบบยาวเต็มสูบ (เช่น "Wed May 27 2026") มี 4 ส่วนขึ้นไป
+                else if (parts.length >= 4) {
                     const day = parts[2].padStart(2, '0');
                     const month = months[parts[1]] || '01';
                     const year = parts[3];
