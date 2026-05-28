@@ -148,7 +148,7 @@
 
     <script>
         // ⚠️ บรรทัดนี้: วางลิงก์ Web App URL จาก Google Sheets ของคุณที่นี่ครับ
-        const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyB_d79csOXivzTRoKdaBqENzpqmJ119kxtpz2rpKGS6I4AlcBd0M572wL9iPpswAX8/exec"; 
+        const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwn53b6i2yiuA1W8BZw-ctFaTjMPYR2RVrdTvjeL95dZngnrtcfJNy9e67d709qu_-Y/exec"; 
 
         let expenses = [];
         let allGroups = []; 
@@ -552,23 +552,62 @@ function loadExpensesFromSheet() {
                 });
         }
 
-        function deleteExpense(index) {
-            const groupName = getGroupName();
-            if (confirm(`คุณต้องการลบรายการ "${expenses[index].desc}" ใช่หรือไม่?`)) {
-                setSyncStatus("⏳ กำลังลบรายการ...", "bg-red-50 text-red-600 border-red-200");
-                fetch(SCRIPT_URL, { method: "POST", body: JSON.stringify({ action: "delete", index: index, groupName: groupName }) })
-                    .then(() => { loadExpensesFromSheet(); });
-            }
-        }
+function deleteExpense(index) {
+    const groupName = getGroupName();
+    const itemToDelete = expenses[index]; // ดึงข้อมูลเต็มๆ ของรายการที่จะลบ
+    
+    if (confirm(`คุณต้องการลบรายการ "${itemToDelete.desc}" ใช่หรือไม่?`)) {
+        setSyncStatus("⏳ กำลังลบรายการ...", "bg-red-50 text-red-600 border-red-200");
+        
+        // ส่งเป็น JSON Object ส่งค่าไปค้นหาแฝดใน Sheet ป้องกันการลบผิดแถว
+        const payload = {
+            action: "delete",
+            groupName: groupName,
+            index: index,
+            desc: itemToDelete.desc,
+            amount: itemToDelete.amount,
+            date: itemToDelete.date
+        };
 
-        function clearAllExpenses() {
-            const groupName = getGroupName();
-            if (confirm(`คุณต้องการล้างรายการของกลุ่ม "${groupName}" ใช่หรือไม่?`)) {
-                setSyncStatus("⏳ กำลังล้างข้อมูลกลุ่ม...", "bg-red-50 text-red-600 border-red-200");
-                fetch(SCRIPT_URL, { method: "POST", body: JSON.stringify({ action: "clear", groupName: groupName }) })
-                    .then(() => { loadExpensesFromSheet(); });
-            }
-        }
+        fetch(SCRIPT_URL, { 
+            method: "POST", 
+            body: JSON.stringify(payload) 
+        })
+        .then(() => { 
+            setSyncStatus("✅ ลบรายการสำเร็จ", "bg-green-50 text-green-600 border-green-200");
+            loadExpensesFromSheet(); 
+        })
+        .catch(err => {
+            console.error("Delete error:", err);
+            setSyncStatus("❌ ลบไม่สำเร็จ กรุณาลองใหม่", "bg-red-50 text-red-600 border-red-200");
+        });
+    }
+}
+
+function clearAllExpenses() {
+    const groupName = getGroupName();
+    if (confirm(`⚠️ คุณต้องการล้างรายการทั้งหมดของกลุ่ม "${groupName}" ใช่หรือไม่?\n(ข้อมูลในกลุ่มนี้จะถูกลบถาวร)`)) {
+        setSyncStatus("⏳ กำลังล้างข้อมูลกลุ่ม...", "bg-red-50 text-red-600 border-red-200");
+        
+        const payload = {
+            action: "clear",
+            groupName: groupName
+        };
+
+        fetch(SCRIPT_URL, { 
+            method: "POST", 
+            body: JSON.stringify(payload) 
+        })
+        .then(() => { 
+            setSyncStatus("✅ ล้างข้อมูลกลุ่มสำเร็จ", "bg-green-50 text-green-600 border-green-200");
+            loadExpensesFromSheet(); 
+        })
+        .catch(err => {
+            console.error("Clear error:", err);
+            setSyncStatus("❌ ล้างข้อมูลไม่สำเร็จ กรุณาลองใหม่", "bg-red-50 text-red-600 border-red-200");
+        });
+    }
+}
 
         function setSyncStatus(text, classes) {
             const statusDiv = document.getElementById('syncStatus');
