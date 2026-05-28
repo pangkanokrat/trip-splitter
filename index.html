@@ -327,42 +327,25 @@ function renderExpenses() {
     expenses.forEach((exp, index) => {
         let displayDate = "-";
         
-// 1. จัดการฟอร์แมตวันที่แบบ Hybrid (รองรับทั้ง Record เก่า และ Record ที่เพิ่งกดเพิ่มใหม่)
+// 1. จัดการฟอร์แมตวันที่แบบเด็ดขาด (ถ้าค่าว่างเปล่า ให้ใช้วันที่ของวันนี้แทนทันที)
+        // สร้างตัวแปรดึงค่าวันที่ปัจจุบันเผื่อไว้กรณีฉุกเฉิน
+        const todayStr = new Date().toLocaleDateString('en-GB'); // ได้ฟอร์แมต DD/MM/YYYY ตรงๆ
+        
         if (exp.date) {
             let dateStr = exp.date.toString().trim();
             
-            // 🟢 [ดักจับรายการใหม่] ถ้าข้อมูลเพิ่งเพิ่มเข้ามาใหม่สดๆ และเป็นฟอร์แมตมาตรฐาน ยีห้อ ปี-เดือน-วัน (เช่น 2026-05-28)
-            if (dateStr.includes('-') && dateStr.split('-')[0].length === 4) {
-                const parts = dateStr.substring(0, 10).split('-');
-                displayDate = `${parts[2]}/${parts[1]}/${parts[0]}`; // สลับเป็น วัน/เดือน/ปี
-            } 
-            // 🟢 [ดักจับรายการเก่า] ถ้าข้อมูลดั้งเดิมโดนแปลงเป็นภาษาอังกฤษยาวๆ มาก่อน (เช่น Wed May 28...)
-            else if (dateStr.includes('Jan') || dateStr.includes('Feb') || dateStr.includes('Mar') || 
-                     dateStr.includes('Apr') || dateStr.includes('May') || dateStr.includes('Jun') || 
-                     dateStr.includes('Jul') || dateStr.includes('Aug') || dateStr.includes('Sep') || 
-                     dateStr.includes('Oct') || dateStr.includes('Nov') || dateStr.includes('Dec')) {
-                
-                const parts = dateStr.split(' ');
-                const months = { 'Jan':'01','Feb':'02','Mar':'03','Apr':'04','May':'05','Jun':'06','Jul':'07','Aug':'08','Sep':'09','Oct':'10','Nov':'11','Dec':'12' };
-                
-                if (parts.length === 3) {
-                    const day = parts[2].padStart(2, '0');
-                    const month = months[parts[1]] || '01';
-                    displayDate = `${day}/${month}/2026`;
-                } else if (parts.length >= 4) {
-                    const day = parts[2].padStart(2, '0');
-                    const month = months[parts[1]] || '01';
-                    const year = parts[3];
-                    displayDate = `${day}/${month}/${year}`;
-                } else {
-                    displayDate = dateStr.substring(0, 10);
-                }
-            } 
-            // 🟢 ถ้าระบบส่งมาเป็น วัน/เดือน/ปี อยู่แล้ว หรือรูปแบบอื่น ปล่อยผ่านตรงๆ
-            else {
-                displayDate = dateStr.substring(0, 10);
+            // เคสที่ 1: ถ้าเป็นค่าว่าง หรือขีด หรือส่งมาแต่ช่องว่าง
+            if (dateStr === "" || dateStr === "-" || dateStr === "undefined") {
+                displayDate = todayStr;
             }
-        }
+            // เคสที่ 2: ฟอร์แมตรายการใหม่ ปี-เดือน-วัน (เช่น 2026-05-28)
+            else if (dateStr.includes('-') && dateStr.split('-')[0].length === 4) {
+                const parts = dateStr.substring(0, 10).split('-');
+                displayDate = `${parts[2]}/${parts[1]}/${parts[0]}`;
+            } 
+            // เคสที่ 3: ฟอร์แมตภาษาอังกฤษของรายการเก่า (เช่น Wed May 28...)
+            else if (dateStr.includes('Jan') || dateStr.includes('Feb') || dateStr.includes('Mar') || 
+                     dateStr.includes('Apr') || dateStr.includes('May') || dateStr.includes('Jun') ||
         
         // 🟢 2. คำนวณสีจากชื่อตรงนี้เลย (สายตรง ไม่พึ่งพาฟังก์ชันนอก)
         let colors = { bg: 'bg-slate-50', text: 'text-slate-700', border: 'border-slate-200' };
