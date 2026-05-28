@@ -330,7 +330,7 @@ function renderExpenses() {
 // 1. จัดการฟอร์แมตวันที่แบบเด็ดขาด (ถ้าค่าว่างเปล่า ให้ใช้วันที่ของวันนี้แทนทันที)
 // สร้างตัวแปรดึงค่าวันที่ปัจจุบันเผื่อไว้กรณีฉุกเฉิน
 const todayStr = new Date().toLocaleDateString('en-GB'); // ได้ฟอร์แมต DD/MM/YYYY ตรงๆ
-let displayDate = todayStr; // ตั้งค่าเริ่มต้นไว้ก่อนกันเหนียว
+     displayDate = todayStr; // ตั้งค่าเริ่มต้นไว้ก่อนกันเหนียว
 
 if (exp.date) {
     let dateStr = exp.date.toString().trim();
