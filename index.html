@@ -327,19 +327,16 @@ function renderExpenses() {
     expenses.forEach((exp, index) => {
         let displayDate = "-";
         
-// 1. จัดการฟอร์แมตวันที่แบบแกะมือ (เวอร์ชันดักจับชื่อตัวแปรทุกรูปแบบจาก Google Sheet)
-        // ดักฟังทุกลักษณะชื่อที่ระบบหลังบ้านอาจจะส่งมา เช่น date, expenseDate, timestamp, DateTime
-        const rawDate = exp.date || exp.expenseDate || exp.timestamp || exp.DateTime || exp.datetime;
-        
-        if (rawDate) {
-            const dateStr = rawDate.toString().trim();
+// 1. จัดการฟอร์แมตวันที่แบบ Hybrid (รองรับทั้ง Record เก่า และ Record ที่เพิ่งกดเพิ่มใหม่)
+        if (exp.date) {
+            let dateStr = exp.date.toString().trim();
             
-            // เคสที่ 1: ถ้าใน Google Sheets ส่งมาเป็น ยี่ห้อมาตรฐาน ปี-เดือน-วัน (เช่น 2026-05-28)
+            // 🟢 [ดักจับรายการใหม่] ถ้าข้อมูลเพิ่งเพิ่มเข้ามาใหม่สดๆ และเป็นฟอร์แมตมาตรฐาน ยีห้อ ปี-เดือน-วัน (เช่น 2026-05-28)
             if (dateStr.includes('-') && dateStr.split('-')[0].length === 4) {
                 const parts = dateStr.substring(0, 10).split('-');
                 displayDate = `${parts[2]}/${parts[1]}/${parts[0]}`; // สลับเป็น วัน/เดือน/ปี
             } 
-            // เคสที่ 2: ถ้าข้อมูลแอบโดนแปลงเป็นภาษาอังกฤษ (เช่น Wed May 28...)
+            // 🟢 [ดักจับรายการเก่า] ถ้าข้อมูลดั้งเดิมโดนแปลงเป็นภาษาอังกฤษยาวๆ มาก่อน (เช่น Wed May 28...)
             else if (dateStr.includes('Jan') || dateStr.includes('Feb') || dateStr.includes('Mar') || 
                      dateStr.includes('Apr') || dateStr.includes('May') || dateStr.includes('Jun') || 
                      dateStr.includes('Jul') || dateStr.includes('Aug') || dateStr.includes('Sep') || 
@@ -361,20 +358,9 @@ function renderExpenses() {
                     displayDate = dateStr.substring(0, 10);
                 }
             } 
-            // เคสที่ 3: ถ้ามาเป็น วัน/เดือน/ปี อยู่แล้ว หรือรูปแบบอื่น ปล่อยผ่านตรงๆ
+            // 🟢 ถ้าระบบส่งมาเป็น วัน/เดือน/ปี อยู่แล้ว หรือรูปแบบอื่น ปล่อยผ่านตรงๆ
             else {
                 displayDate = dateStr.substring(0, 10);
-            }
-        } else {
-            // เคสฉุกเฉิน: ถ้าหาคีย์ชื่อวันที่ไม่เจอเลย ให้ดึงข้อมูลช่องแรกของแถวมาเดาว่าเป็นวันที่
-            try {
-                const firstKey = Object.keys(exp)[0]; // ดึงคีย์ตัวแรกสุดใน Object ข้อมูล
-                if (firstKey && exp[firstKey].toString().includes('-')) {
-                    const parts = exp[firstKey].toString().substring(0, 10).split('-');
-                    displayDate = `${parts[2]}/${parts[1]}/${parts[0]}`;
-                }
-            } catch(e) {
-                displayDate = "-";
             }
         }
         
