@@ -328,25 +328,40 @@ function renderExpenses() {
         let displayDate = "-";
         
 // 1. จัดการฟอร์แมตวันที่แบบเด็ดขาด (ถ้าค่าว่างเปล่า ให้ใช้วันที่ของวันนี้แทนทันที)
-        // สร้างตัวแปรดึงค่าวันที่ปัจจุบันเผื่อไว้กรณีฉุกเฉิน
-        const todayStr = new Date().toLocaleDateString('en-GB'); // ได้ฟอร์แมต DD/MM/YYYY ตรงๆ
-        
-        if (exp.date) {
-            let dateStr = exp.date.toString().trim();
-            
-            // เคสที่ 1: ถ้าเป็นค่าว่าง หรือขีด หรือส่งมาแต่ช่องว่าง
-            if (dateStr === "" || dateStr === "-" || dateStr === "undefined") {
-                displayDate = todayStr;
+// สร้างตัวแปรดึงค่าวันที่ปัจจุบันเผื่อไว้กรณีฉุกเฉิน
+const todayStr = new Date().toLocaleDateString('en-GB'); // ได้ฟอร์แมต DD/MM/YYYY ตรงๆ
+let displayDate = todayStr; // ตั้งค่าเริ่มต้นไว้ก่อนกันเหนียว
+
+if (exp.date) {
+    let dateStr = exp.date.toString().trim();
+    
+    // เคสที่ 1: ถ้าเป็นค่าว่าง หรือขีด หรือส่งมาแต่ช่องว่าง หรือ string 'undefined' / 'null'
+    if (dateStr === "" || dateStr === "-" || dateStr === "undefined" || dateStr === "null") {
+        displayDate = todayStr;
+    }
+    // เคสที่ 2: ฟอร์แมตรายการใหม่ ปี-เดือน-วัน (เช่น 2026-05-28)
+    else if (dateStr.includes('-') && dateStr.split('-')[0].length === 4) {
+        const parts = dateStr.substring(0, 10).split('-');
+        displayDate = `${parts[2]}/${parts[1]}/${parts[0]}`;
+    } 
+    // เคสที่ 3: ฟอร์แมตภาษาอังกฤษของรายการเก่า (เช่น Wed May 28 2026...)
+    else {
+        try {
+            const parsedDate = new Date(dateStr);
+            // ตรวจสอบว่าแปลงเป็นวันที่สำเร็จไหม (Not a Number หรือเปล่า)
+            if (!isNaN(parsedDate.getTime())) {
+                displayDate = parsedDate.toLocaleDateString('en-GB'); // แปลงเป็น DD/MM/YYYY ให้ทันที
+            } else {
+                displayDate = todayStr; // ถ้า Parse ไม่ผ่านจริงๆ ให้ทบยอดไปที่วันนี้
             }
-            // เคสที่ 2: ฟอร์แมตรายการใหม่ ปี-เดือน-วัน (เช่น 2026-05-28)
-            else if (dateStr.includes('-') && dateStr.split('-')[0].length === 4) {
-                const parts = dateStr.substring(0, 10).split('-');
-                displayDate = `${parts[2]}/${parts[1]}/${parts[0]}`;
-            } 
-            // เคสที่ 3: ฟอร์แมตภาษาอังกฤษของรายการเก่า (เช่น Wed May 28...)
-            else if (dateStr.includes('Jan') || dateStr.includes('Feb') || dateStr.includes('Mar') || 
-                     dateStr.includes('Apr') || dateStr.includes('May') || dateStr.includes('Jun') ||
+        } catch (e) {
+            displayDate = todayStr; // กันเหนียวถ้ามี Error หลุดมา
         }
+    }
+} else {
+    // กรณี exp.date เป็น null, undefined หรือไม่มี property นี้
+    displayDate = todayStr;
+}
         
         // 🟢 2. คำนวณสีจากชื่อตรงนี้เลย (สายตรง ไม่พึ่งพาฟังก์ชันนอก)
         let colors = { bg: 'bg-slate-50', text: 'text-slate-700', border: 'border-slate-200' };
