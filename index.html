@@ -1,584 +1,713 @@
-<!DOCTYPE html>
+import os
+
+# Define HTML content for Index.html
+html_content = """<!DOCTYPE html>
 <html lang="th">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Multi-Group Trip Splitter - Fixed Index & Group Logic</title>
-    <script src="https://cdn.tailwindcss.com"></script>
+    <title>Trip Split-Bill Web App</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <style>
+        body {
+            background-color: #f4f7f6;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 0;
+        }
+        .login-container {
+            max-width: 400px;
+            margin: 80px auto;
+        }
+        .card {
+            border: none;
+            border-radius: 15px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+        }
+        .sidebar {
+            height: 100vh;
+            background-color: #1e293b;
+            color: #fff;
+            position: fixed;
+            width: 260px;
+            padding-top: 20px;
+        }
+        .sidebar .nav-link {
+            color: #cbd5e1;
+            padding: 12px 20px;
+            border-radius: 8px;
+            margin: 4px 15px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            transition: all 0.3s;
+        }
+        .sidebar .nav-link:hover, .sidebar .nav-link.active {
+            background-color: #334155;
+            color: #fff;
+        }
+        .main-content {
+            margin-left: 260px;
+            padding: 40px;
+            min-height: 100vh;
+        }
+        .navbar-top {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+        }
+        .stat-card {
+            background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+            color: white;
+        }
+        .stat-card.owe {
+            background: linear-gradient(135deg, #ef4444, #b91c1c);
+        }
+        .stat-card.owed {
+            background: linear-gradient(135deg, #10b981, #047857);
+        }
+        .badge-custom {
+            font-size: 0.9rem;
+            padding: 6px 12px;
+            border-radius: 20px;
+        }
+        .hidden {
+            display: none !important;
+        }
+        @media (max-width: 768px) {
+            .sidebar {
+                width: 100%;
+                height: auto;
+                position: relative;
+            }
+            .main-content {
+                margin-left: 0;
+                padding: 20px;
+            }
+        }
+    </style>
 </head>
-<body class="bg-slate-100 p-4 md:p-8 text-slate-800">
+<body>
 
-    <div class="w-full max-w-2xl mx-auto bg-white p-4 sm:p-6 rounded-2xl shadow-xl space-y-6">
-        <div class="text-center space-y-2">
-            <h1 class="text-3xl font-extrabold text-indigo-600">📊 Trip Splitter Dashboard</h1>
-            <div id="syncStatus" class="inline-block px-3 py-1 rounded-full text-xs font-bold bg-slate-100 text-slate-600 border border-slate-200">
-                🔄 กำลังเชื่อมต่อฐานข้อมูล...
+    <div id="authSection" class="container login-container">
+        <div id="loginCard" class="card p-4">
+            <h3 class="text-center mb-4 fw-bold text-primary"><i class="fa-solid fa-wallet me-2"></i>Trip Split-Bill</h3>
+            <h5 class="card-title mb-3">เข้าสู่ระบบ</h5>
+            <div class="mb-3">
+                <label class="form-label">Username</label>
+                <input type="text" id="loginUser" class="form-content form-control" placeholder="กรอกชื่อผู้ใช้งาน">
             </div>
+            <div class="mb-3">
+                <label class="form-label">Password</label>
+                <input type="password" id="loginPass" class="form-content form-control" placeholder="กรอกรหัสผ่าน">
+            </div>
+            <button onclick="handleLogin()" class="btn btn-primary w-100 mb-3">เข้าสู่ระบบ</button>
+            <p class="text-center small">ยังไม่มีบัญชี? <a href="#" onclick="toggleAuthMode(true)">สมัครสมาชิกที่นี่</a></p>
         </div>
 
-        <div class="flex bg-slate-100 p-1 rounded-xl border border-slate-200">
-            <button id="tabBtn1" onclick="switchTab(1)" class="flex-1 py-2.5 text-sm font-bold rounded-lg transition-all text-indigo-600 bg-white shadow-sm">
-                ✍️ 1. หน้ากรอกค่าใช้จ่าย
-            </button>
-            <button id="tabBtn2" onclick="switchTab(2)" class="flex-1 py-2.5 text-sm font-bold rounded-lg transition-all text-slate-500 hover:text-slate-800">
-                📋 2. แสดงค่าใช้จ่าย & สรุปยอด
-            </button>
+        <div id="registerCard" class="card p-4 hidden">
+            <h3 class="text-center mb-4 fw-bold text-success"><i class="fa-solid fa-user-plus me-2"></i>สมัครใช้งาน</h3>
+            <div class="mb-3">
+                <label class="form-label">ชื่อที่แสดง (Display Name)</label>
+                <input type="text" id="regDisplay" class="form-content form-control" placeholder="เช่น นนท์, กาย">
+            </div>
+            <div class="mb-3">
+                <label class="form-label">Username</label>
+                <input type="text" id="regUser" class="form-content form-control" placeholder="สำหรับใช้ล็อกอิน">
+            </div>
+            <div class="mb-3">
+                <label class="form-label">Password</label>
+                <input type="password" id="regPass" class="form-content form-control" placeholder="ตั้งรหัสผ่าน">
+            </div>
+            <button onclick="handleRegister()" class="btn btn-success w-100 mb-3">สร้างบัญชีผู้ใช้</button>
+            <p class="text-center small">มีบัญชีอยู่แล้ว? <a href="#" onclick="toggleAuthMode(false)">กลับไปหน้าล็อกอิน</a></p>
         </div>
-        
-        <hr class="border-slate-100">
+    </div>
 
-        <div class="bg-violet-50 p-4 rounded-xl border border-violet-100 space-y-4">
-            <h2 class="text-sm font-bold text-violet-950">📂 จัดการกลุ่มทริป</h2>
-            
-            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                <div>
-                    <label class="block text-[11px] font-bold text-violet-500 mb-1">เลือกทริปที่มีอยู่เดิม:</label>
-                    <select id="groupDropdown" onchange="handleDropdownChange()" class="w-full p-2.5 border border-violet-200 rounded-lg shadow-sm font-bold text-violet-700 bg-white focus:outline-violet-500 text-sm">
-                        <option value="">กำลังโหลดกลุ่ม...</option>
-                    </select>
-                </div>
-                <div class="flex items-end">
-                    <button onclick="switchGroup()" class="w-full bg-violet-600 text-white p-2.5 rounded-lg font-bold hover:bg-violet-700 transition text-sm active:scale-95 shadow-sm">
-                        🔄 เรียกดูข้อมูลกลุ่มนี้
-                    </button>
-                </div>
+    <div id="appSection" class="hidden">
+        <div class="sidebar">
+            <div class="px-4 mb-4">
+                <h4 class="fw-bold"><i class="fa-solid fa-wallet text-warning me-2"></i>Split Bill</h4>
+                <p class="small text-muted" id="userDisplay"></p>
             </div>
-
-            <div id="createGroupZone" class="border-t border-violet-100 pt-3">
-                <label class="block text-[11px] font-bold text-violet-500 mb-1">ต้องการเปิดทริปใหม่ (พิมพ์ชื่อกลุ่มแล้วกดสร้าง):</label>
-                <div class="flex flex-col sm:flex-row gap-2">
-                    <input type="text" id="groupNameInput" placeholder="" class="flex-1 p-2.5 border border-violet-200 rounded-lg shadow-sm font-bold text-violet-700 focus:outline-violet-500 text-sm bg-white">
-                    <button onclick="createNewGroupClick()" class="bg-emerald-600 text-white px-5 rounded-lg font-bold hover:bg-emerald-700 transition text-sm active:scale-95 shadow-sm">
-                        ➕ สร้างกลุ่มใหม่
-                    </button>
-                </div>
-            </div>
+            <nav class="nav flex-column">
+                <a class="nav-link active" href="#" id="menuDashboard" onclick="switchTab('dashboard')"><i class="fa-solid fa-chart-pie"></i> สรุปแดชบอร์ด</a>
+                <a class="nav-link" href="#" id="menuGroups" onclick="switchTab('groups')"><i class="fa-solid fa-users-rectangle"></i> กลุ่มทริป/ห้อง</a>
+                <a class="nav-link" href="#" id="menuFriends" onclick="switchTab('friends')"><i class="fa-solid fa-user-group"></i> รายชื่อเพื่อน</a>
+            </nav>
         </div>
 
-        <div id="page1" class="space-y-6">
-            <div class="bg-indigo-50 p-4 rounded-xl border border-indigo-100">
-                <label class="block text-sm font-bold text-indigo-950 mb-1">👥 รายชื่อเพื่อนในกลุ่มนี้ (คั่นด้วยเครื่องหมายจุลภาค ,)</label>
-                <input type="text" id="friendsInput" value="" oninput="handleFriendsChange()" class="w-full p-2.5 border border-indigo-200 rounded-lg shadow-sm focus:outline-indigo-500 font-medium">
+        <div class="main-content">
+            <div class="navbar-top">
+                <h2 id="pageTitle" class="fw-bold text-dark">สรุปแดชบอร์ด</h2>
+                <button onclick="handleLogout()" class="btn btn-outline-danger btn-sm"><i class="fa-solid fa-right-from-bracket me-1"></i> ออกจากระบบ</button>
             </div>
 
-            <form id="expenseForm" onsubmit="event.preventDefault(); saveExpense();" class="bg-amber-50 p-4 rounded-xl border border-amber-100 space-y-4">
-                <h3 id="formTitle" class="text-sm font-bold text-amber-950">🍔 เพิ่มรายการค่าใช้จ่ายใหม่</h3>
-                <input type="hidden" id="editIndex" value="-1">
-                
-                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                    <div>
-                        <label class="block text-xs font-bold text-slate-600 mb-1">📅 วันที่</label>
-                        <input type="date" id="expenseDate" required class="w-full p-2.5 border border-amber-200 rounded-lg focus:outline-indigo-500 bg-white text-sm font-medium">
-                    </div>
-                    <div>
-                        <label class="block text-xs font-bold text-slate-600 mb-1">🍔 ชื่อรายการ</label>
-                        <input type="text" id="expenseDesc" placeholder="เช่น ค่าข้าวเที่ยง" required class="w-full p-2.5 border border-amber-200 rounded-lg focus:outline-indigo-500 bg-white text-sm">
-                    </div>
-                    <div>
-                        <label class="block text-xs font-bold text-slate-600 mb-1">💰 ยอดรวม (บาท)</label>
-                        <input type="number" id="expenseAmount" placeholder="ยอดรวมทั้งหมด" required min="0.01" step="any" class="w-full p-2.5 border border-amber-200 rounded-lg focus:outline-indigo-500 bg-white text-sm font-bold text-slate-700">
-                    </div>
-                    <div>
-                        <label class="block text-xs font-bold text-slate-600 mb-1">👤 ใครออกเงินไปก่อน?</label>
-                        <select id="expensePayer" class="w-full p-2.5 border border-amber-200 rounded-lg bg-white focus:outline-indigo-500 text-sm font-medium text-slate-700"></select>
+            <div id="tabDashboard" class="tab-view">
+                <div class="card p-3 mb-4 bg-white">
+                    <div class="row align-items-center">
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold"><i class="fa-solid fa-layer-group text-primary me-2"></i>เลือกกลุ่มทริปเพื่อดูสรุปยอด</label>
+                            <select id="dashGroupSelect" class="form-select" onchange="loadDashboardData()">
+                                <option value="">-- โปรดเลือกกลุ่มทริป --</option>
+                            </select>
+                        </div>
                     </div>
                 </div>
 
-                <div class="bg-white p-3 rounded-lg border border-amber-200 space-y-2">
-                    <label class="block text-xs font-bold text-slate-700">⚙️ รูปแบบการหารเงิน (Split Option):</label>
-                    <select id="splitType" onchange="renderSplitUI()" class="w-full p-2 border border-slate-200 rounded-lg bg-slate-50 focus:outline-indigo-500 text-sm font-medium text-slate-700">
-                        <option value="equally">A. หารเท่ากันทุกคน (Equally)</option>
-                        <option value="specific">B. เลือกคนหารเฉพาะบางคน (Specific Members)</option>
-                        <option value="shares">C. จ่ายไม่เท่ากันเป็นสัดส่วน (By Shares)</option>
-                        <option value="exact">D. ระบุเป็นจำนวนเงินของแต่ละคน (By Exact Amount)</option>
-                    </select>
-                    <div id="splitUIContainer" class="p-2 bg-slate-50 rounded-lg space-y-2 text-sm max-h-48 overflow-y-auto border border-slate-100"></div>
-                </div>
-                
-                <div class="flex gap-2">
-                    <button type="submit" id="submitBtn" class="flex-1 bg-amber-500 text-white p-3 rounded-lg font-bold hover:bg-amber-600 transition shadow-md active:scale-[0.99]">
-                        ➕ บันทึกรายการลงกลุ่ม
-                    </button>
-                    <button type="button" id="cancelEditBtn" onclick="cancelEdit()" class="hidden bg-slate-400 text-white p-3 rounded-lg font-bold hover:bg-slate-500 transition shadow-md active:scale-[0.99]">
-                        ยกเลิก
-                    </button>
-                </div>
-            </form>
-        </div>
+                <div id="dashStatsArea" class="hidden">
+                    <div class="row g-4 mb-4">
+                        <div class="col-md-6">
+                            <div class="card stat-card p-4">
+                                <h6 class="text-uppercase opacity-75">สถานะของกลุ่มทริปนี้</h6>
+                                <h3 class="fw-bold" id="groupStatusSummary">กำลังคำนวณ...</h3>
+                            </div>
+                        </div>
+                    </div>
 
-        <div id="page2" class="hidden space-y-6">
-            <div class="space-y-2">
-                <div class="flex justify-between items-center">
-                    <h3 class="font-bold text-slate-700 text-sm">📋 ตารางสรุปรายการในกลุ่มนี้:</h3>
-                    <button type="button" onclick="clearAllExpenses()" class="text-xs font-bold text-red-500 hover:text-red-700 transition bg-red-50 px-2 py-1 rounded border border-red-200 active:scale-95">
-                        🗑️ ล้างรายการทั้งหมดของกลุ่มนี้
-                    </button>
-                </div>
-                
-                <div class="w-full overflow-x-auto rounded-xl border border-slate-100">
-                    <table class="w-full text-left border-collapse bg-slate-50 text-sm min-w-[600px]">
-                        <thead>
-                            <tr class="bg-slate-200 text-slate-700 font-bold border-b border-slate-300 text-[12px]">
-                                <th class="py-2 px-3 w-24">📅 วันที่</th>
-                                <th class="py-2 px-3">🍔 รายการ</th>
-                                <th class="py-2 px-3 w-20">👤 คนจ่าย</th>
-                                <th class="py-2 px-3 text-right w-24">💰 ยอดเงิน</th>
-                                <th class="py-2 px-3 text-center w-24">🛠️ จัดการ</th>
-                            </tr>
-                        </thead>
-                        <tbody id="expenseList" class="divide-y divide-slate-100">
-                            <tr>
-                                <td colspan="5" class="p-6 text-center text-slate-400 bg-white">🔄 กำลังซิงค์ข้อมูล...</td>
-                            </tr>
-                        </tbody>
-                    </table>
+                    <div class="row">
+                        <div class="col-md-7 mb-4">
+                            <div class="card p-4">
+                                <div class="d-flex justify-content-between align-items-center mb-3">
+                                    <h5 class="fw-bold m-0"><i class="fa-solid fa-receipt text-secondary me-2"></i>สรุปการล้างหนี้ (Who Owes Who)</h5>
+                                    <button class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#addExpenseModal"><i class="fa-solid fa-plus me-1"></i>เพิ่มค่าใช้จ่าย</button>
+                                </div>
+                                <div id="settleList" class="list-group list-group-flush">
+                                    </div>
+                            </div>
+                        </div>
+
+                        <div class="col-md-5 mb-4">
+                            <div class="card p-4">
+                                <h5 class="fw-bold mb-3"><i class="fa-solid fa-history text-secondary me-2"></i>รายการใช้จ่ายล่าสุด</h5>
+                                <div id="expenseHistoryList" class="list-group list-group-flush">
+                                    </div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
 
-            <div id="resultSection" class="hidden space-y-4 pt-2">
-                <h3 class="font-bold text-xl text-slate-800 border-l-4 border-emerald-500 pl-2">📊 สรุปยอดโอนเงินหักลบกลบหนี้:</h3>
-                <div class="bg-indigo-50 p-3.5 rounded-xl text-sm border border-indigo-100 flex justify-between items-center">
-                    <span class="text-indigo-950 font-bold">💰 ยอดรวมสะสมของกลุ่มนี้:</span>
-                    <span class="text-xl font-black text-indigo-600"><span id="totalTripAmount">0</span> บาท</span>
+            <div id="tabGroups" class="tab-view hidden">
+                <div class="card p-4 mb-4">
+                    <h5 class="fw-bold mb-3">สร้างกลุ่มทริปใหม่</h5>
+                    <div class="row g-3">
+                        <div class="col-md-5">
+                            <input type="text" id="groupNameInput" class="form-control" placeholder="ชื่อกลุ่ม/ทริป เช่น ทริปเชียงใหม่ 2026">
+                        </div>
+                        <div class="col-md-5">
+                            <input type="text" id="groupDescInput" class="form-control" placeholder="คำอธิบายสั้นๆ">
+                        </div>
+                        <div class="col-md-2">
+                            <button onclick="createNewGroup()" class="btn btn-primary w-100">สร้างกลุ่ม</button>
+                        </div>
+                    </div>
                 </div>
-                <div id="transferResult" class="space-y-2 text-sm font-medium text-emerald-900"></div>
+
+                <div class="card p-4">
+                    <h5 class="fw-bold mb-3">กลุ่มทริปทั้งหมดของคุณ</h5>
+                    <div class="table-responsive">
+                        <table class="table align-middle">
+                            <thead>
+                                <tr>
+                                    <th>ชื่อกลุ่ม</th>
+                                    <th>รายละเอียด</th>
+                                    <th>จัดการสมาชิก</th>
+                                </tr>
+                            </thead>
+                            <tbody id="groupTableBody">
+                                </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <div id="tabFriends" class="tab-view hidden">
+                <div class="card p-4 mb-4">
+                    <h5 class="fw-bold mb-3">รายชื่อเพื่อนทั้งหมดในระบบ</h5>
+                    <div id="friendsList" class="row row-cols-1 row-cols-md-3 g-3">
+                        </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <div class="modal fade" id="addExpenseModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title fw-bold"><i class="fa-solid fa-cash-register text-success me-2"></i>บันทึกรายการใช้จ่าย</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="row g-3 mb-3">
+                        <div class="col-md-6">
+                            <label class="form-label">ชื่อรายการใช้จ่าย</label>
+                            <input type="text" id="expDesc" class="form-control" placeholder="เช่น ค่าอาหารกลางวัน, ค่าที่พัก">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">จำนวนเงินทั้งหมด (บาท)</label>
+                            <input type="number" id="expAmount" class="form-control" placeholder="0.00" oninput="recalculateSplits()">
+                        </div>
+                    </div>
+                    <div class="row g-3 mb-4">
+                        <div class="col-md-6">
+                            <label class="form-label">ใครเป็นคนจ่ายเงินก่อน?</label>
+                            <select id="expPaidBy" class="form-select">
+                                </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">รูปแบบการหารเงิน</label>
+                            <select id="expSplitType" class="form-select" onchange="handleSplitTypeChange()">
+                                <option value="EQUAL">หารเท่ากันทุกคน (Equal)</option>
+                                <option value="EXACT">ระบุจำนวนเงินจริงของแต่ละคน (Exact)</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <h6 class="fw-bold border-bottom pb-2 mb-3">เลือกคนร่วมหารเงินค่านี่</h6>
+                    <div id="splitMembersArea">
+                        </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">ยกเลิก</button>
+                    <button type="button" onclick="submitExpenseForm()" class="btn btn-success">บันทึกรายการ</button>
+                </div>
             </div>
         </div>
     </div>
 
+    <div class="modal fade" id="groupMembersModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title fw-bold" id="memberModalTitle">จัดการสมาชิกกลุ่ม</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <input type="hidden" id="memberModalGroupId">
+                    <div class="mb-4">
+                        <label class="form-label fw-bold">ดึงเพื่อนเข้าร่วมกลุ่มนี้</label>
+                        <div class="input-group">
+                            <select id="addMemberSelect" class="form-select">
+                                </select>
+                            <button class="btn btn-primary" onclick="addFriendToGroup()">เพิ่มเข้ากลุ่ม</button>
+                        </div>
+                    </div>
+                    <h6 class="fw-bold border-bottom pb-2">รายชื่อสมาชิกปัจจุบัน</h6>
+                    <ul id="currentGroupMembersList" class="list-group list-group-flush">
+                        </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
     <script>
-        // ⚠️ ลิงก์เชื่อมโยงไปยัง Google Sheets Apps Script ของคุณ
-        const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzVehpGpwzUk_7x0V6mgrLjwDLgCQFInwlesgFEovuTE2GYzEvWDgx7XpD3WEusjaM4/exec"; 
+        let currentUser = null;
+        let activeTab = 'dashboard';
+        let currentGroupMembers = []; 
 
-        let expenses = [];
-        let allGroups = []; 
-        let globalGroupName = ""; // ตัวแปรหลักกลางของระบบสำหรับจำชื่อกลุ่มที่เลือก
-
-        function handleDropdownChange() {
-            // ปล่อยว่างไว้ตามดีไซน์ของคุณ
-        }
-
-        function switchGroup() {
-            const dropdown = document.getElementById('groupDropdown');
-            const groupInput = document.getElementById('groupNameInput');
-            
-            if (dropdown && dropdown.value) {
-                globalGroupName = dropdown.value; 
-                if (groupInput) groupInput.value = ""; 
-                loadExpensesFromSheet();
+        // Initial running check
+        window.onload = function() {
+            const savedUser = localStorage.getItem('trip_user');
+            if (savedUser) {
+                currentUser = JSON.parse(savedUser);
+                showMainApp();
             } else {
-                alert("กรุณาเลือกกลุ่มทริปจากช่อง 'เลือกทริปที่มีอยู่เดิม' ก่อนครับ");
+                showAuthSection();
             }
+        };
+
+        function showAuthSection() {
+            document.getElementById('authSection').classList.remove('hidden');
+            document.getElementById('appSection').classList.add('hidden');
         }
 
-        function createNewGroupClick() {
-            const groupInput = document.getElementById('groupNameInput');
-            if (!groupInput || groupInput.value.trim() === "") {
-                alert("กรุณาพิมพ์ชื่อกลุ่มทริปใหม่ก่อนกดสร้างครับ");
-                return;
-            }
+        function showMainApp() {
+            document.getElementById('authSection').classList.add('hidden');
+            document.getElementById('appSection').classList.remove('hidden');
+            document.getElementById('userDisplay').innerHTML = `<i class="fa-solid fa-circle-user text-success me-1"></i> สวัสดี, ${currentUser.displayName}`;
             
-            const newGroup = groupInput.value.trim();
-            globalGroupName = newGroup; 
-            
-            expenses = [];
-            renderExpenses();
-            document.getElementById('resultSection').classList.add('hidden');
-            
-            if(!allGroups.includes(newGroup)){
-                allGroups.push(newGroup);
-            }
-            updateGroupDropdown(newGroup);
-            
-            alert(`🎉 สร้างกลุ่ม "${newGroup}" สำเร็จบนหน้าเว็บแล้ว! เริ่มกรอกข้อมูลรายการแรกได้เลยครับ`);
-            switchTab(1);
+            // Fetch initial master lists from sheets
+            loadGroupSelects();
+            switchTab('dashboard');
         }
 
-        function switchTab(tabNum) {
-            const btn1 = document.getElementById('tabBtn1');
-            const btn2 = document.getElementById('tabBtn2');
-            const page1 = document.getElementById('page1');
-            const page2 = document.getElementById('page2');
-
-            if (tabNum === 1) {
-                page1.classList.remove('hidden'); page2.classList.add('hidden');
-                btn1.className = "flex-1 py-2.5 text-sm font-bold rounded-lg transition-all text-indigo-600 bg-white shadow-sm";
-                btn2.className = "flex-1 py-2.5 text-sm font-bold rounded-lg transition-all text-slate-500 hover:text-slate-800";
+        function toggleAuthMode(isRegister) {
+            if (isRegister) {
+                document.getElementById('loginCard').classList.add('hidden');
+                document.getElementById('registerCard').classList.remove('hidden');
             } else {
-                page2.classList.remove('hidden'); page1.classList.add('hidden');
-                btn2.className = "flex-1 py-2.5 text-sm font-bold rounded-lg transition-all text-indigo-600 bg-white shadow-sm";
-                btn1.className = "flex-1 py-2.5 text-sm font-bold rounded-lg transition-all text-slate-500 hover:text-slate-800";
-                calculateFinalSplit();
+                document.getElementById('loginCard').classList.remove('hidden');
+                document.getElementById('registerCard').classList.add('hidden');
             }
         }
 
-        // ✨ แก้ไขจุดตาย: ให้ไปดึงจากตัวแปรโกลบอลกลาง หรืออิงตาม dropdown ปัจจุบัน ป้องกันค่าหลุดหาย
-        function getGroupName() { 
-            if (globalGroupName) return globalGroupName;
-            const dropdown = document.getElementById('groupDropdown');
-            if (dropdown && dropdown.value) return dropdown.value;
-            const groupInput = document.getElementById('groupNameInput');
-            return groupInput ? groupInput.value.trim() : "";
-        }
-        
-        function setDefaultDate() { document.getElementById('expenseDate').value = new Date().toISOString().split('T')[0]; }
-        function getFriends() { return document.getElementById('friendsInput').value.split(',').map(name => name.trim()).filter(name => name !== ""); }
-        function handleFriendsChange() { updatePayerDropdown(); renderSplitUI(); }
+        // --- AUTH ACTION HANDLERS ---
+        function handleLogin() {
+            const user = document.getElementById('loginUser').value;
+            const pass = document.getElementById('loginPass').value;
+            if(!user || !pass) return alert("กรุณากรอกข้อมูลให้ครบถ้วน");
 
-        function updatePayerDropdown() {
-            const friends = getFriends(); const payerSelect = document.getElementById('expensePayer');
-            const currentSelected = payerSelect.value; payerSelect.innerHTML = "";
-            friends.forEach(name => { let option = document.createElement('option'); option.value = name; option.text = name; payerSelect.appendChild(option); });
-            if (friends.includes(currentSelected)) payerSelect.value = currentSelected;
-            else if (friends.length > 0) payerSelect.value = friends[0];
-        }
-
-        function renderSplitUI(callback) {
-            const friends = getFriends(); const splitType = document.getElementById('splitType').value;
-            const container = document.getElementById('splitUIContainer'); container.innerHTML = "";
-            if (friends.length === 0) { container.innerHTML = "<span class='text-red-500 font-bold text-xs'>❌ กรุณาพิมพ์รายชื่อเพื่อนก่อนครับ</span>"; return; }
-            
-            if (splitType === 'equally') container.innerHTML = "<p class='text-slate-400 text-xs py-1'>ทุกคนจ่ายหารเท่ากันหมดในทริปนี้</p>";
-            else if (splitType === 'specific') {
-                friends.forEach(name => { container.innerHTML += `<label class="flex items-center gap-2 py-1 cursor-pointer select-none"><input type="checkbox" name="splitMember" value="${name}" checked class="w-4 h-4 text-indigo-600 rounded border-slate-300"><span>${name}</span></label>`; });
-            } else if (splitType === 'shares') {
-                friends.forEach(name => { container.innerHTML += `<div class="flex justify-between items-center py-1"><span>${name}</span><div class="flex items-center gap-1"><input type="number" name="shareValue_${name}" value="1" min="0" class="w-16 p-1 border rounded text-center bg-white font-medium"> ส่วน</div></div>`; });
-            } else if (splitType === 'exact') {
-                friends.forEach(name => { container.innerHTML += `<div class="flex justify-between items-center py-1"><span>${name}</span><div class="flex items-center gap-1"><input type="number" name="exactValue_${name}" value="0" min="0" step="any" class="w-24 p-1 border rounded text-right bg-white font-bold text-slate-700"> บาท</div></div>`; });
-            }
-            if(callback) callback();
-        }
-
-        function updateGroupDropdown(currentGroup) {
-            const dropdown = document.getElementById('groupDropdown');
-            dropdown.innerHTML = "";
-            
-            if (allGroups.length === 0 && currentGroup) {
-                allGroups.push(currentGroup);
-            }
-            
-            allGroups.forEach(group => {
-                let option = document.createElement('option');
-                option.value = group;
-                option.text = group;
-                if (group === currentGroup) option.selected = true;
-                dropdown.appendChild(option);
-            });
-        }
-        
-        function renderExpenses() {
-            const tbody = document.getElementById('expenseList'); tbody.innerHTML = "";
-            if (expenses.length === 0) { 
-                tbody.innerHTML = `<tr><td colspan="5" class="p-6 text-center text-slate-400 bg-white">ยังไม่มีข้อมูลใช้จ่ายในกลุ่มนี้ เริ่มกรอกรายการแรกได้เลยครับ</td></tr>`; 
-                document.getElementById('resultSection').classList.add('hidden'); 
-                return; 
-            }
-            
-            const colorPalette = [
-                { bg: 'bg-blue-50', text: 'text-blue-700', border: 'border-blue-200' },
-                { bg: 'bg-emerald-50', text: 'text-emerald-700', border: 'border-emerald-200' },
-                { bg: 'bg-amber-50', text: 'text-amber-700', border: 'border-amber-200' },
-                { bg: 'bg-rose-50', text: 'text-rose-700', border: 'border-rose-200' },
-                { bg: 'bg-purple-50', text: 'text-purple-700', border: 'border-purple-200' },
-                { bg: 'bg-cyan-50', text: 'text-cyan-700', border: 'border-cyan-200' },
-                { bg: 'bg-fuchsia-50', text: 'text-fuchsia-700', border: 'border-fuchsia-200' },
-                { bg: 'bg-orange-50', text: 'text-orange-700', border: 'border-orange-200' }
-            ];
-
-            expenses.forEach((exp, index) => {
-                let displayDate = "-";
-                const todayStr = new Date().toLocaleDateString('en-GB'); 
-                displayDate = todayStr; 
-
-                if (exp.date) {
-                    let dateStr = exp.date.toString().trim();
-                    if (dateStr === "" || dateStr === "-" || dateStr === "undefined" || dateStr === "null") {
-                        displayDate = todayStr;
-                    }
-                    else if (dateStr.includes('-') && dateStr.split('-')[0].length === 4) {
-                        const parts = dateStr.substring(0, 10).split('-');
-                        displayDate = `${parts[2]}/${parts[1]}/${parts[0]}`;
-                    } 
-                    else if (/[a-zA-Z]/.test(dateStr)) {
-                        const match = dateStr.match(/([a-zA-Z]{3})\s(\d{1,2})/);
-                        if (match) displayDate = match[0];
-                        else displayDate = dateStr;
-                    }
-                    else {
-                        displayDate = dateStr; 
-                    }
+            // Google Apps Script Call
+            google.script.run.withSuccessHandler(function(response) {
+                if(response.success) {
+                    currentUser = response.user;
+                    localStorage.setItem('trip_user', JSON.stringify(currentUser));
+                    showMainApp();
+                } else {
+                    alert(response.message);
                 }
-
-                let colors = { bg: 'bg-slate-50', text: 'text-slate-700', border: 'border-slate-200' };
-                if (exp.payer) {
-                    let hash = 0;
-                    const nameStr = exp.payer.toString();
-                    for (let i = 0; i < nameStr.length; i++) {
-                        hash = nameStr.charCodeAt(i) + ((hash << 5) - hash);
-                    }
-                    const colorIndex = Math.abs(hash) % colorPalette.length;
-                    colors = colorPalette[colorIndex];
-                }
-                
-                tbody.innerHTML += `<tr class="bg-white hover:bg-slate-50 transition border-b border-slate-100">
-                    <td class="py-1.5 px-3 text-slate-600 font-mono text-[11px] font-bold">${displayDate}</td>
-                    <td class="py-1.5 px-3 font-semibold text-slate-700 text-xs sm:text-sm">${exp.desc}</td>
-                    <td class="py-1.5 px-3 text-slate-600">
-                        <span class="${colors.bg} ${colors.text} ${colors.border} border text-[11px] px-1.5 py-0.5 rounded font-bold inline-block min-w-[65px] text-center">
-                            ${exp.payer}
-                        </span>
-                    </td>
-                    <td class="py-1.5 px-3 text-right font-bold text-slate-900 text-xs sm:text-sm">${exp.amount.toFixed(2)} .-</td>
-                    <td class="py-1.5 px-3 text-center space-x-0.5 whitespace-nowrap">
-                        <button type="button" onclick="startEditExpense(${index})" class="text-indigo-600 font-bold text-[11px] bg-indigo-50 px-1.5 py-0.5 rounded border border-indigo-100 hover:bg-indigo-100 transition active:scale-95">✏️</button>
-                        <button type="button" onclick="deleteExpense(${index})" class="text-red-600 font-bold text-[11px] bg-red-50 px-1.5 py-0.5 rounded border border-red-100 hover:bg-red-100 transition active:scale-95">🗑️</button>
-                    </td>
-                </tr>`;
-            });
+            }).loginUser(user, pass);
         }
 
-        function loadExpensesFromSheet() {
-            if (!SCRIPT_URL || SCRIPT_URL.trim() === "") {
-                setSyncStatus("❌ ยังไม่ได้ใส่ลิงก์ SCRIPT_URL ในโค้ด", "bg-red-50 text-red-600 border-red-200");
-                return;
+        function handleRegister() {
+            const disp = document.getElementById('regDisplay').value;
+            const user = document.getElementById('regUser').value;
+            const pass = document.getElementById('regPass').value;
+            if(!disp || !user || !pass) return alert("กรุณากรอกข้อมูลให้ครบถ้วน");
+
+            google.script.run.withSuccessHandler(function(response) {
+                alert(response.message);
+                if(response.success) {
+                    toggleAuthMode(false);
+                }
+            }).registerUser(user, pass, disp);
+        }
+
+        function handleLogout() {
+            localStorage.removeItem('trip_user');
+            currentUser = null;
+            showAuthSection();
+        }
+
+        // --- UI NAVIGATION NAVIGATION ---
+        function switchTab(tabName) {
+            activeTab = tabName;
+            document.querySelectorAll('.tab-view').forEach(el => el.classList.add('hidden'));
+            document.querySelectorAll('.sidebar .nav-link').forEach(el => el.classList.remove('active'));
+
+            if (tabName === 'dashboard') {
+                document.getElementById('tabDashboard').classList.remove('hidden');
+                document.getElementById('menuDashboard').classList.add('active');
+                document.getElementById('pageTitle').innerText = 'สรุปแดชบอร์ดแบบเรียลไทม์';
+                loadGroupSelects();
+            } else if (tabName === 'groups') {
+                document.getElementById('tabGroups').classList.remove('hidden');
+                document.getElementById('menuGroups').classList.add('active');
+                document.getElementById('pageTitle').innerText = 'จัดการกลุ่มทริป/ห้อง';
+                loadGroupsTab();
+            } else if (tabName === 'friends') {
+                document.getElementById('tabFriends').classList.remove('hidden');
+                document.getElementById('menuFriends').classList.add('active');
+                document.getElementById('pageTitle').innerText = 'รายชื่อเพื่อนทั้งหมด';
+                loadFriendsTab();
             }
+        }
 
-            const dropdown = document.getElementById('groupDropdown');
-            const groupInput = document.getElementById('groupNameInput');
-
-            if (dropdown && dropdown.value) {
-                globalGroupName = dropdown.value;
-            } else if (groupInput && groupInput.value) {
-                globalGroupName = groupInput.value.trim();
-            }
-
-//            setSyncStatus(`🔄 กำลังโหลดข้อมูลกลุ่ม [ ${globalGroupName || "ทริปเริ่มต้น"} ]...`, "bg-amber-50 text-amber-600 border-amber-200");
-            
-            fetch(`${SCRIPT_URL}?group=${encodeURIComponent(globalGroupName)}`)
-                .then(res => res.json())
-                .then(data => {
-                    expenses = data.expenses || [];
-                    if (data.allGroups && data.allGroups.length > 0) {
-                        allGroups = data.allGroups;
-                        // บังคับให้เซ็ตค่าทริปปัจจุบันในโกลบอล ถ้ายังไม่มีการกำหนด
-                        if(!globalGroupName && allGroups.length > 0) globalGroupName = allGroups[0];
-                        updateGroupDropdown(globalGroupName);
-                    }
-
-                    if (groupInput) {
-                        groupInput.value = ""; 
-                    }
-                    
-                    let autoFriends = new Set();
-                    expenses.forEach(exp => {
-                        if (exp.payer) autoFriends.add(exp.payer);
-                        if (exp.splitDetails) {
-                            Object.keys(exp.splitDetails).forEach(name => autoFriends.add(name));
-                        }
-                    });
-
-                    if (autoFriends.size > 0) {
-                        document.getElementById('friendsInput').value = Array.from(autoFriends).join(', ');
-                    }
-                    
-                    updatePayerDropdown();
-                    renderSplitUI();
-                    renderExpenses();
-                    calculateFinalSplit();
-                    setSyncStatus(`✅ กลุ่ม [ ${globalGroupName} ] ซิงค์สำเร็จ`, "bg-emerald-50 text-emerald-600 border-emerald-200");
-                })
-                .catch(err => {
-                    console.error(err);
-                    setSyncStatus("❌ เกิดข้อผิดพลาดในการดึงข้อมูล", "bg-red-50 text-red-600 border-red-200");
+        // --- CORE FETCHERS & UPDATERS ---
+        function loadGroupSelects() {
+            const selectElement = document.getElementById('dashGroupSelect');
+            google.script.run.withSuccessHandler(function(groups) {
+                let html = '<option value="">-- โปรดเลือกกลุ่มทริป --</option>';
+                groups.forEach(g => {
+                    html += `<option value="${g.id}">${g.name}</option>`;
                 });
+                selectElement.innerHTML = html;
+            }).getAllGroups(); // backend script function
         }
 
-        function startEditExpense(index) {
-            const exp = expenses[index];
-            document.getElementById('editIndex').value = index;
-            document.getElementById('expenseDate').value = exp.date ? exp.date.substring(0,10) : "";
-            document.getElementById('expenseDesc').value = exp.desc;
-            document.getElementById('expenseAmount').value = exp.amount;
-            document.getElementById('expensePayer').value = exp.payer;
-            document.getElementById('splitType').value = exp.splitType;
-            
-            document.getElementById('formTitle').innerText = "✏️ แก้ไขรายการ";
-            document.getElementById('submitBtn').innerText = "💾 บันทึกการแก้ไข";
-            document.getElementById('cancelEditBtn').classList.remove('hidden');
-
-            renderSplitUI(() => {
-                if (exp.splitType === 'specific') {
-                    document.querySelectorAll('input[name="splitMember"]').forEach(cb => { cb.checked = exp.splitDetails[cb.value] > 0; });
-                } else if (exp.splitType === 'shares' || exp.splitType === 'exact') {
-                    const prefix = exp.splitType === 'shares' ? 'shareValue_' : 'exactValue_';
-                    for(let name in exp.splitDetails) {
-                        let inputEl = document.querySelector(`input[name="${prefix}${name}"]`);
-                        if(inputEl) inputEl.value = exp.splitDetails[name];
-                    }
-                }
-            });
-            switchTab(1);
-        }
-
-        function cancelEdit() {
-            document.getElementById('editIndex').value = "-1";
-            document.getElementById('expenseDesc').value = "";
-            document.getElementById('expenseAmount').value = "";
-            setDefaultDate();
-            document.getElementById('formTitle').innerText = "🍔 เพิ่มรายการค่าใช้จ่ายใหม่";
-            document.getElementById('submitBtn').innerText = "➕ บันทึกรายการลงกลุ่ม";
-            document.getElementById('cancelEditBtn').classList.add('hidden');
-            renderSplitUI();
-        }
-
-        function saveExpense() {
-            const editIndex = parseInt(document.getElementById('editIndex').value);
-            const date = document.getElementById('expenseDate').value;
-            const desc = document.getElementById('expenseDesc').value.trim();
-            const amount = parseFloat(document.getElementById('expenseAmount').value);
-            const payer = document.getElementById('expensePayer').value;
-            const splitType = document.getElementById('splitType').value;
-            const friends = getFriends();
-            
-            const currentGroup = getGroupName();
-            if (!currentGroup) {
-                alert("❌ เกิดข้อผิดพลาด: ไม่พบชื่อกลุ่มในการบันทึกข้อมูล \n(กรุณาเลือกทริปเดิมหรือพิมพ์ชื่อทริปใหม่ก่อนครับ)");
+        function loadDashboardData() {
+            const groupId = document.getElementById('dashGroupSelect').value;
+            if (!groupId) {
+                document.getElementById('dashStatsArea').classList.add('hidden');
                 return;
             }
+            document.getElementById('dashStatsArea').classList.remove('hidden');
+
+            // 1. Fetch live balances (Who owes Who matrix calculation)
+            google.script.run.withSuccessHandler(function(transactions) {
+                const listArea = document.getElementById('settleList');
+                if(transactions.length === 0) {
+                    listArea.innerHTML = '<div class="text-muted py-3 text-center">ไม่มีหนี้ค้างจ่ายในกลุ่มนี้! ทุกคนเคลียร์ยอดลงตัวหมดแล้ว</div>';
+                    document.getElementById('groupStatusSummary').innerText = "ลงตัวเรียบร้อย ดีเยี่ยม! 🎉";
+                    document.getElementById('groupStatusSummary').parentElement.className = "card stat-card owed p-4";
+                } else {
+                    document.getElementById('groupStatusSummary').innerText = "มียอดค้างชำระระหว่างกัน";
+                    document.getElementById('groupStatusSummary').parentElement.className = "card stat-card owe p-4";
+                    
+                    let html = '';
+                    transactions.forEach(tx => {
+                        html += `
+                        <div class="list-group-item d-flex justify-content-between align-items-center py-3">
+                            <div>
+                                <span class="fw-bold text-danger">${tx.from}</span> 
+                                <i class="fa-solid fa-arrow-right-long mx-2 text-muted"></i> 
+                                ต้องติดเงิน <span class="fw-bold text-success">${tx.to}</span>
+                                <div class="text-primary fw-bold mt-1 fs-5">฿${tx.amount}</div>
+                            </div>
+                            <button onclick="executeSettleUp('${groupId}', '${tx.from}', '${tx.to}', ${tx.amount})" class="btn btn-outline-success badge-custom fw-bold">
+                                <i class="fa-solid fa-handshake me-1"></i> Settle Up (เคลียร์หนี้)
+                            </button>
+                        </div>`;
+                    });
+                    listArea.innerHTML = html;
+                }
+            }).getGroupBalances(groupId);
+
+            // 2. Fetch structural historical logs inside this group
+            google.script.run.withSuccessHandler(function(expenses) {
+                const historyArea = document.getElementById('expenseHistoryList');
+                if(expenses.length === 0) {
+                    historyArea.innerHTML = '<div class="text-muted text-center py-2">ไม่มีรายการใช้จ่าย</div>';
+                } else {
+                    let html = '';
+                    expenses.forEach(exp => {
+                        html += `
+                        <div class="list-group-item px-0 py-2">
+                            <div class="d-flex justify-content-between">
+                                <span class="fw-bold">${exp.description}</span>
+                                <span class="text-dark fw-bold">฿${exp.amount}</span>
+                            </div>
+                            <small class="text-muted">จ่ายโดย ${exp.paidBy} (${exp.date})</small>
+                        </div>`;
+                    });
+                    historyArea.innerHTML = html;
+                }
+            }).getGroupExpensesList(groupId);
+
+            // 3. Prepare modal dropdown inside adding expense dynamic forms
+            google.script.run.withSuccessHandler(function(members) {
+                currentGroupMembers = members;
+                let paidByHtml = '';
+                members.forEach(m => {
+                    paidByHtml += `<option value="${m.id}">${m.name}</option>`;
+                });
+                document.getElementById('expPaidBy').innerHTML = paidByHtml;
+                handleSplitTypeChange(); // render member checkboxes splits
+            }).getGroupMembersList(groupId);
+        }
+
+        function executeSettleUp(groupId, fromFriend, toFriend, amount) {
+            if(!confirm(`ยืนยันการบันทึกเคลียร์หนี้โอนเงินคืน ฿${amount} จาก ${fromFriend} ไปยัง ${toFriend} ใช่หรือไม่?`)) return;
+            
+            google.script.run.withSuccessHandler(function(response) {
+                if(response.success) {
+                    alert("บันทึกการล้างหนี้เรียบร้อยแล้ว ยอดอัปเดตแบบเรียลไทม์!");
+                    loadDashboardData();
+                }
+            }).settleUp(groupId, fromFriend, toFriend, amount);
+        }
+
+        // --- EXPENSE CALCULATION SPLITS INTERACTION ---
+        function handleSplitTypeChange() {
+            const splitType = document.getElementById('expSplitType').value;
+            const area = document.getElementById('splitMembersArea');
+            let html = '';
+
+            currentGroupMembers.forEach(m => {
+                if(splitType === 'EQUAL') {
+                    html += `
+                    <div class="form-check mb-2">
+                        <input class="form-check-input member-split-check" type="checkbox" value="${m.id}" id="chk_${m.id}" checked onchange="recalculateSplits()">
+                        <label class="form-check-label d-flex justify-content-between w-100" for="chk_${m.id}">
+                            <span>${m.name}</span>
+                            <span class="text-muted calc-share-display" id="share_${m.id}">฿0.00</span>
+                        </label>
+                    </div>`;
+                } else {
+                    html += `
+                    <div class="row align-items-center mb-2">
+                        <div class="col-6"><label class="form-label mb-0">${m.name}</label></div>
+                        <div class="col-6">
+                            <input type="number" class="form-control form-control-sm member-exact-input" data-uid="${m.id}" placeholder="ระบุยอดเงิน" oninput="recalculateExactTotal()">
+                        </div>
+                    </div>`;
+                }
+            });
+            area.innerHTML = html;
+            recalculateSplits();
+        }
+
+        function recalculateSplits() {
+            const splitType = document.getElementById('expSplitType').value;
+            const totalAmount = Number(document.getElementById('expAmount').value) || 0;
+            if(splitType !== 'EQUAL') return;
+
+            const checkedBoxes = document.querySelectorAll('.member-split-check:checked');
+            if(checkedBoxes.length === 0) return;
+
+            const splitShare = (totalAmount / checkedBoxes.length).toFixed(2);
+            document.querySelectorAll('.member-split-check').forEach(chk => {
+                const userId = chk.value;
+                const display = document.getElementById(`share_${userId}`);
+                if(chk.checked) {
+                    display.innerText = `฿${splitShare}`;
+                } else {
+                    display.innerText = '฿0.00';
+                }
+            });
+        }
+
+        function submitExpenseForm() {
+            const groupId = document.getElementById('dashGroupSelect').value;
+            const desc = document.getElementById('expDesc').value;
+            const totalAmount = Number(document.getElementById('expAmount').value);
+            const paidBy = document.getElementById('expPaidBy').value;
+            const splitType = document.getElementById('expSplitType').value;
+
+            if(!desc || !totalAmount || totalAmount <= 0) return alert("กรุณาระบุรายละเอียดและยอดเงินที่ถูกต้อง");
 
             let splitDetails = {};
 
-            if (splitType === 'equally') { friends.forEach(name => { splitDetails[name] = amount / friends.length; }); } 
-            else if (splitType === 'specific') {
-                const checkboxes = document.querySelectorAll('input[name="splitMember"]:checked');
-                if (checkboxes.length === 0) { alert("ต้องเลือกเพื่อนอย่างน้อย 1 คนครับ"); return; }
-                const subAmount = amount / checkboxes.length;
-                friends.forEach(name => { splitDetails[name] = 0; }); checkboxes.forEach(cb => { splitDetails[cb.value] = subAmount; });
-            } else if (splitType === 'shares') {
-                let totalShares = 0; friends.forEach(name => { totalShares += parseFloat(document.querySelector(`input[name="shareValue_${name}"]`).value) || 0; });
-                if (totalShares === 0) { alert("ยอดสัดส่วนรวมต้องมากกว่า 0"); return; }
-                friends.forEach(name => { let sh = parseFloat(document.querySelector(`input[name="shareValue_${name}"]`).value) || 0; splitDetails[name] = (sh / totalShares) * amount; });
-            } else if (splitType === 'exact') {
-                let currentTotal = 0; friends.forEach(name => { let ex = parseFloat(document.querySelector(`input[name="exactValue_${name}"]`).value) || 0; splitDetails[name] = ex; currentTotal += ex; });
-                if (Math.abs(currentTotal - amount) > 0.1) { alert("ยอดรวมเงินกรอกไม่ตรงกับยอดเงินสุทธิครับ!"); return; }
+            if(splitType === 'EQUAL') {
+                const checkedBoxes = document.querySelectorAll('.member-split-check:checked');
+                if(checkedBoxes.length === 0) return alert("โปรดเลือกคนแชร์เงินอย่างน้อย 1 คน");
+                const share = (totalAmount / checkedBoxes.length).toFixed(2);
+                checkedBoxes.forEach(chk => {
+                    splitDetails[chk.value] = Number(share);
+                });
+            } else {
+                let checkSum = 0;
+                document.querySelectorAll('.member-exact-input').forEach(inp => {
+                    const amt = Number(inp.value) || 0;
+                    if(amt > 0) {
+                        splitDetails[inp.dataset.uid] = amt;
+                        checkSum += amt;
+                    }
+                });
+                if(Math.abs(checkSum - totalAmount) > 0.1) {
+                    return alert(`ผลรวมยอดแต่ละคน (฿${checkSum}) ต้องตรงกับยอดเงินทั้งหมด (฿${totalAmount})`);
+                }
             }
 
-            const payload = { action: editIndex > -1 ? "edit" : "insert", index: editIndex, groupName: currentGroup, date, desc, amount, payer, splitType, splitDetails };
-            
-            setSyncStatus("⏳ กำลังบันทึกข้อมูล...", "bg-amber-50 text-amber-600 border-amber-200");
-            fetch(SCRIPT_URL, { method: "POST", body: JSON.stringify(payload) })
-                .then(() => {
-                    cancelEdit();
-                    loadExpensesFromSheet();
-                    switchTab(2);
-                });
+            // Send payload data to Apps script backend handler
+            google.script.run.withSuccessHandler(function(response) {
+                if(response.success) {
+                    // close modal cleanly via bootstrap api
+                    const modalEl = document.getElementById('addExpenseModal');
+                    const modalInstance = bootstrap.Modal.getInstance(modalEl);
+                    modalInstance.hide();
+                    
+                    // reset form contents
+                    document.getElementById('expDesc').value = '';
+                    document.getElementById('expAmount').value = '';
+                    
+                    alert("บันทึกค่าใช้จ่ายสำเร็จยอดอัปเดตเรียบร้อย!");
+                    loadDashboardData();
+                }
+            }).addExpense(groupId, desc, totalAmount, paidBy, splitType, JSON.stringify(splitDetails));
         }
 
-        function deleteExpense(index) {
-            const currentGroup = getGroupName();
-            const itemToDelete = expenses[index]; 
-            
-            if (!currentGroup) {
-                alert("❌ ไม่พบชื่อกลุ่มสำหรับการลบรายการ");
-                return;
-            }
-            
-            if (confirm(`คุณต้องการลบรายการ "${itemToDelete.desc}" ใช่หรือไม่?`)) {
-                setSyncStatus("⏳ กำลังลบรายการ...", "bg-red-50 text-red-600 border-red-200");
-                
-                const payload = {
-                    action: "delete",
-                    groupName: currentGroup,
-                    index: index
-                };
-
-                fetch(SCRIPT_URL, { 
-                    method: "POST", 
-                    body: JSON.stringify(payload) 
-                })
-                .then(res => res.json())
-                .then(() => { 
-                    setSyncStatus("✅ ลบรายการสำเร็จ", "bg-green-50 text-green-600 border-green-200");
-                    loadExpensesFromSheet(); 
-                })
-                .catch(err => {
-                    console.error("Delete error:", err);
-                    setSyncStatus("❌ ลบไม่สำเร็จ กรุณาลองใหม่", "bg-red-50 text-red-600 border-red-200");
+        // --- TAB SECTION LOADER: GROUPS & MEMBERS ---
+        function loadGroupsTab() {
+            google.script.run.withSuccessHandler(function(groups) {
+                let html = '';
+                groups.forEach(g => {
+                    html += `
+                    <tr>
+                        <td class="fw-bold text-primary"><i class="fa-solid fa-folder me-2"></i>${g.name}</td>
+                        <td>${g.description || '-'}</td>
+                        <td>
+                            <button class="btn btn-outline-dark btn-sm" onclick="openManageMembersModal('${g.id}', '${g.name}')">
+                                <i class="fa-solid fa-user-gear me-1"></i> เพิ่ม/ดูสมาชิกในกลุ่ม
+                            </button>
+                        </td>
+                    </tr>`;
                 });
-            }
+                document.getElementById('groupTableBody').innerHTML = html || '<tr><td colspan="3" class="text-center text-muted py-3">ไม่มีกลุ่มในระบบ กรุณาสร้างกลุ่มด้านบน</td></tr>';
+            }).getAllGroups();
         }
 
-        function clearAllExpenses() {
-            const currentGroup = getGroupName();
-            if (!currentGroup) {
-                alert("❌ ไม่พบชื่อกลุ่มสำหรับการล้างรายการ");
-                return;
-            }
-            if (confirm(`⚠️ คุณต้องการล้างรายการทั้งหมดของกลุ่ม "${currentGroup}" ใช่หรือไม่?\n(ข้อมูลในกลุ่มนี้จะถูกลบถาวร)`)) {
-                setSyncStatus("⏳ กำลังล้างข้อมูลกลุ่ม...", "bg-red-50 text-red-600 border-red-200");
-                
-                const payload = {
-                    action: "clear",
-                    groupName: currentGroup
-                };
+        function createNewGroup() {
+            const name = document.getElementById('groupNameInput').value;
+            const desc = document.getElementById('groupDescInput').value;
+            if(!name) return alert("กรุณาใส่ชื่อกลุ่มทริป");
 
-                fetch(SCRIPT_URL, { 
-                    method: "POST", 
-                    body: JSON.stringify(payload) 
-                })
-                .then(res => res.json())
-                .then(() => { 
-                    setSyncStatus("✅ ล้างข้อมูลกลุ่มสำเร็จ", "bg-green-50 text-green-600 border-green-200");
-                    loadExpensesFromSheet(); 
-                })
-                .catch(err => {
-                    console.error("Clear error:", err);
-                    setSyncStatus("❌ ล้างข้อมูลไม่สำเร็จ กรุณาลองใหม่", "bg-red-50 text-red-600 border-red-200");
-                });
-            }
+            google.script.run.withSuccessHandler(function(response) {
+                if(response.success) {
+                    document.getElementById('groupNameInput').value = '';
+                    document.getElementById('groupDescInput').value = '';
+                    alert("สร้างกลุ่มสำเร็จ!");
+                    loadGroupsTab();
+                }
+            }).createNewGroupBackend(name, desc);
         }
 
-        function calculateFinalSplit() {
-            const friends = getFriends(); if (friends.length === 0 || expenses.length === 0) return;
-            let totalTripAmount = 0; let balances = {}; friends.forEach(name => { balances[name] = 0; });
+        function openManageMembersModal(groupId, groupName) {
+            document.getElementById('memberModalGroupId').value = groupId;
+            document.getElementById('memberModalTitle').innerText = `จัดการสมาชิก: ${groupName}`;
             
-            expenses.forEach(exp => {
-                totalTripAmount += exp.amount; if (balances[exp.payer] !== undefined) balances[exp.payer] += exp.amount;
-                friends.forEach(name => { if (exp.splitDetails[name] !== undefined) balances[name] -= exp.splitDetails[name]; });
-            });
-            
-            document.getElementById('totalTripAmount').innerText = totalTripAmount.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2});
-            let debtors = [], creditors = [];
-            for (let name in balances) {
-                if (balances[name] < -0.01) debtors.push({ name, amount: Math.abs(balances[name]) });
-                else if (balances[name] > 0.01) creditors.push({ name, amount: balances[name] });
-            }
-            
-            let transferOutput = ""; let d = 0, c = 0; let itemIndex = 0;
-            while (d < debtors.length && c < creditors.length) {
-                let debtor = debtors[d], creditor = creditors[c]; let amountToTransfer = Math.min(debtor.amount, creditor.amount);
-                transferOutput += `
-                <div id="transferItem_${itemIndex}" class="bg-emerald-50 p-3.5 rounded-xl border border-emerald-200 flex justify-between items-center shadow-sm transition-all duration-300">
-                    <div class="flex items-center gap-3">
-                        <input type="checkbox" onchange="togglePaidStatus(${itemIndex})" class="w-5 h-5 text-emerald-600 rounded border-emerald-300 cursor-pointer">
-                        <div id="transferText_${itemIndex}" class="text-slate-800">
-                            💸 <span class="font-bold">${debtor.name}</span> ต้องโอนให้ <span class="font-bold">${creditor.name}</span>
+            // load members inside this group
+            google.script.run.withSuccessHandler(function(members) {
+                let html = '';
+                members.forEach(m => {
+                    html += `<li class="list-group-item d-flex justify-content-between align-items-center py-2">
+                                <span><i class="fa-solid fa-user text-muted me-2"></i>${m.name}</span>
+                             </li>`;
+                });
+                document.getElementById('currentGroupMembersList').innerHTML = html || '<li class="list-group-item text-muted">ยังไม่มีสมาชิกในห้องนี้</li>';
+            }).getGroupMembersList(groupId);
+
+            // load total general app friend dropdown to select add
+            google.script.run.withSuccessHandler(function(friends) {
+                let html = '<option value="">-- เลือกรายชื่อเพื่อนเพิ่มเข้ากลุ่ม --</option>';
+                friends.forEach(f => {
+                    html += `<option value="${f.id}">${f.name}</option>`;
+                });
+                document.getElementById('addMemberSelect').innerHTML = html;
+            }).getAllFriendsList();
+
+            const myModal = new bootstrap.Modal(document.getElementById('groupMembersModal'));
+            myModal.show();
+        }
+
+        function addFriendToGroup() {
+            const groupId = document.getElementById('memberModalGroupId').value;
+            const friendId = document.getElementById('addMemberSelect').value;
+            if(!friendId) return alert("โปรดเลือกเพื่อนที่จะแอดเข้ากลุ่ม");
+
+            google.script.run.withSuccessHandler(function(response) {
+                if(response.success) {
+                    alert("เพิ่มเพื่อนเข้ากลุ่มเรียบร้อย");
+                    // re-fetch members list UI within the layout modal view
+                    openManageMembersModal(groupId, document.getElementById('memberModalTitle').innerText.replace("จัดการสมาชิก: ", ""));
+                } else {
+                    alert(response.message);
+                }
+            }).addFriendToGroupBackend(groupId, friendId);
+        }
+
+        // --- TAB SECTION LOADER: MASTER FRIENDS ---
+        function loadFriendsTab() {
+            google.script.run.withSuccessHandler(function(friends) {
+                let html = '';
+                friends.forEach(f => {
+                    html += `
+                    <div class="col">
+                        <div class="card bg-light border-0 p-3 text-center">
+                            <div class="fs-2 text-secondary mb-2"><i class="fa-solid fa-circle-user"></i></div>
+                            <h6 class="fw-bold text-dark m-0">${f.name}</h6>
+                            <small class="text-muted mt-1">ID: ${f.id}</small>
                         </div>
-                    </div>
-                    <div id="transferAmount_${itemIndex}" class="text-sm sm:text-base font-black text-emerald-700">${amountToTransfer.toFixed(2)} บาท</div>
-                </div>`;
-                debtor.amount -= amountToTransfer; creditor.amount -= amountToTransfer;
-                if (debtor.amount <= 0.1) d++; if (creditor.amount <= 0.1) c++; itemIndex++;
-            }
-            document.getElementById('transferResult').innerHTML = transferOutput || '<div class="text-center py-4 text-slate-500 bg-slate-50 rounded-xl border border-dashed border-slate-200 font-bold">🎉 เคลียร์ยอดลงตัวพอดี ไม่ต้องโอนเงินครับ!</div>';
-            document.getElementById('resultSection').classList.remove('hidden');
+                    </div>`;
+                });
+                document.getElementById('friendsList').innerHTML = html || '<div class="w-100 text-center text-muted py-3">ยังไม่มีเพื่อนในระบบ</div>';
+            }).getAllFriendsList();
         }
-
-        // โหลดข้อมูลอัตโนมัติเมื่อเปิดหน้าเว็บครั้งแรก
-        window.onload = function() {
-            setDefaultDate();
-            loadExpensesFromSheet();
-        };
     </script>
 </body>
 </html>
+"""
+
+# Save to file
+output_path = "Index.html"
+with open(output_path, "w", encoding="utf-8") as f:
+    f.write(html_content)
+
+print(f"File generated successfully at: {output_path}")
