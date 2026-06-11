@@ -352,7 +352,7 @@
                 globalGroupName = groupInput.value.trim();
             }
 
-            setSyncStatus(`🔄 กำลังโหลดข้อมูลกลุ่ม [ ${globalGroupName || "ทริปเริ่มต้น"} ]...`, "bg-amber-50 text-amber-600 border-amber-200");
+//            setSyncStatus(`🔄 กำลังโหลดข้อมูลกลุ่ม [ ${globalGroupName || "ทริปเริ่มต้น"} ]...`, "bg-amber-50 text-amber-600 border-amber-200");
             
             fetch(`${SCRIPT_URL}?group=${encodeURIComponent(globalGroupName)}`)
                 .then(res => res.json())
