@@ -179,17 +179,18 @@
                         <table class="table table-striped table-hover align-middle">
                             <thead class="table-dark">
                                 <tr>
-                                    <th style="width: 15%;">วันที่-เวลา</th>
-                                    <th style="width: 25%;">ชื่อรายการ</th>
-                                    <th style="width: 15%;">จำนวนเงินรวม</th>
-                                    <th style="width: 15%;">คนจ่ายเงินสำรอง</th>
-                                    <th style="width: 15%;">รูปแบบการหาร</th>
-                                    <th style="width: 15%;">รายละเอียดผู้ร่วมหาร</th>
+                                    <th style="width: 12%;">วันที่-เวลา</th>
+                                    <th style="width: 20%;">ชื่อรายการ</th>
+                                    <th style="width: 13%;">จำนวนเงินรวม</th>
+                                    <th style="width: 13%;">คนจ่ายเงินสำรอง</th>
+                                    <th style="width: 13%;">รูปแบบการหาร</th>
+                                    <th style="width: 19%;">รายละเอียดผู้ร่วมหาร</th>
+                                    <th style="width: 10%; text-align: center;">จัดการ</th>
                                 </tr>
                             </thead>
                             <tbody id="historyExpenseTableBody">
                                 <tr>
-                                    <td colspan="6" class="text-center text-muted p-3">โปรดเลือกกลุ่มทริปด้านบนเพื่อดึงประวัติรายการบิล</td>
+                                    <td colspan="7" class="text-center text-muted p-3">โปรดเลือกกลุ่มทริปด้านบนเพื่อดึงประวัติรายการบิล</td>
                                 </tr>
                             </tbody>
                         </table>
@@ -263,7 +264,7 @@
             document.querySelectorAll('.tab-content').forEach(tab => tab.classList.add('hidden'));
             document.querySelectorAll('.sidebar .nav-link').forEach(link => link.classList.remove('active'));
             document.getElementById(`tab-${tabName}`).classList.remove('hidden');
-            event.currentTarget.classList.add('active');
+            if(event) event.currentTarget.classList.add('active');
         }
 
         function loadGroupsFromSheet() {
@@ -461,18 +462,17 @@
             });
         }
 
-        // 📊 ฟังก์ชันหลัก: คำนวณสรุปยอดทริปจริง และวาดรายการประวัติบิลรายใบ
         function calculateTripSummary() {
             const groupId = document.getElementById('summaryGroupSelect').value;
             if(!groupId) return;
 
             const settleContainer = document.getElementById('settlementContainer');
             const tableBody = document.getElementById('memberSummaryTableBody');
-            const historyBody = document.getElementById('historyExpenseTableBody'); // ชี้เป้าไปที่ตารางประวัติบิล
+            const historyBody = document.getElementById('historyExpenseTableBody'); 
             
             settleContainer.innerHTML = '<div class="text-center p-3"><i class="fa-spin fa-solid fa-spinner"></i> กำลังคำนวณ...</div>';
             tableBody.innerHTML = '<tr><td colspan="4" class="text-center text-muted">กำลังดึงข้อมูล...</td></tr>';
-            historyBody.innerHTML = '<tr><td colspan="6" class="text-center text-muted"><i class="fa-spin fa-solid fa-spinner"></i> กำลังโหลดประวัติรายการบิล...</td></tr>';
+            historyBody.innerHTML = '<tr><td colspan="7" class="text-center text-muted"><i class="fa-spin fa-solid fa-spinner"></i> กำลังโหลดประวัติรายการบิล...</td></tr>';
 
             fetch(`${SCRIPT_URL}?action=getTripReport&groupId=${groupId}`)
             .then(res => res.json())
@@ -482,7 +482,6 @@
                 document.getElementById('sumTotalAmount').innerText = `฿${data.totalAmount.toLocaleString('th-TH',{minimumFractionDigits:2})}`;
                 document.getElementById('sumTotalBills').innerText = `${data.totalBills} บิล`;
 
-                // 1. วาดตารางแจกแจงสถานะ Net Balance รายบุคคล
                 tableBody.innerHTML = "";
                 data.memberStatus.forEach(m => {
                     let netBadge = "";
@@ -499,7 +498,6 @@
                         </tr>`;
                 });
 
-                // 2. วาดรายการเคลียร์หนี้โอนเงิน
                 settleContainer.innerHTML = "";
                 if(data.debts.length === 0) {
                     settleContainer.innerHTML = '<div class="alert alert-success text-center my-2"><i class="fa-solid fa-circle-check me-2"></i>ทริปนี้เคลียร์เงินกันลงตัวเรียบร้อยแล้วครับ!</div>';
@@ -517,25 +515,24 @@
                     });
                 }
 
-                // 🔥 3. [เพิ่มใหม่] วาดตารางประวัติบิลแต่ละใบลงบนกระดานด้านล่างสุด
+                // วาดประวัติบิลพร้อมแนบปุ่ม "ลบรายการ"
                 historyBody.innerHTML = "";
                 if(data.historyBills.length === 0) {
-                    historyBody.innerHTML = '<tr><td colspan="6" class="text-center text-muted p-3">ยังไม่มีการบันทึกรายการบิลค่าใช้จ่ายในกลุ่มนี้</td></tr>';
+                    historyBody.innerHTML = '<tr><td colspan="7" class="text-center text-muted p-3">ยังไม่มีการบันทึกรายการบิลค่าใช้จ่ายในกลุ่มนี้</td></tr>';
                 } else {
                     data.historyBills.forEach(bill => {
-                        // แปลงประเภทข้อความตัวย่อให้อ่านง่ายขึ้น
                         let typeText = "";
                         if(bill.type === "EQUAL") typeText = "หารเท่ากัน";
                         else if(bill.type === "EXACT") typeText = "ระบุเงินรายคน";
-                        else if(bill.type === "SHARE") typeText = "หารตามสัดส่วนส่วน";
+                        else if(bill.type === "SHARE") typeText = "หารตามสัดส่วน";
                         else if(bill.type === "PERCENT") typeText = "หารตาม %";
 
-                        // แตกรายชื่อคนโดนหารและยอดเงินของแต่ละคนในบิลนั้นออกมาโชว์ในกล่องเล็กๆ
                         let detailsHtml = "";
                         for (let name in bill.rawDetails) {
                             detailsHtml += `<span class="badge bg-light text-dark border me-1 d-inline-block my-1">${name}: ฿${bill.rawDetails[name]}</span>`;
                         }
 
+                        // เพิ่มปุ่มถังขยะสีแดง และเมื่อกดจะกระตุ้นฟังก์ชันลบ deleteExpense โดยส่งไอดีบิลไปด้วย
                         historyBody.innerHTML += `
                             <tr>
                                 <td class="small text-muted">${bill.date}</td>
@@ -544,10 +541,31 @@
                                 <td><span class="badge bg-secondary">${bill.payerName}</span></td>
                                 <td><small class="text-muted">${typeText}</small></td>
                                 <td>${detailsHtml}</td>
+                                <td style="text-align: center;">
+                                    <button class="btn btn-sm btn-outline-danger" onclick="deleteExpense('${bill.id}')">
+                                        <i class="fa-solid fa-trash-can"></i> ลบ
+                                    </button>
+                                </td>
                             </tr>`;
                     });
                 }
             });
+        }
+
+        // 🔥 [ฟังก์ชันใหม่] ยิงคำสั่งไปบอก Google Sheets ให้ทำการลบแถวของบิลนี้ออก
+        function deleteExpense(expenseId) {
+            if(!confirm("คุณน้าแน่ใจใช่ไหมครับ ว่าต้องการลบรายการค่าใช้จ่ายนี้อย่างถาวร?")) return;
+
+            fetch(`${SCRIPT_URL}?action=deleteExpense&expenseId=${expenseId}`)
+            .then(res => res.json())
+            .then(data => {
+                if(data.success) {
+                    alert("ลบบิลรายการค่าใช้จ่ายออกจากกูเกิลชีทสำเร็จแล้วครับ!");
+                    calculateTripSummary(); // โหลดความเปลี่ยนแปลงคำนวณหน้ากระดานใหม่ทันที
+                } else {
+                    alert("เกิดข้อผิดพลาด: " + data.message);
+                }
+            }).catch(err => alert("เกิดปัญหาในการเชื่อมต่อเครือข่ายออนไลน์"));
         }
 
         function submitCreateGroup() {
