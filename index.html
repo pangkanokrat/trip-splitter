@@ -1,125 +1,71 @@
-import os
-
-# Define HTML content for Index.html
-html_content = """<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="th">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Trip Split-Bill Web App</title>
+    <title>Trip Split-Bill Web App (No-Python Version)</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <style>
-        body {
-            background-color: #f4f7f6;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            margin: 0;
-            padding: 0;
-        }
-        .login-container {
-            max-width: 400px;
-            margin: 80px auto;
-        }
-        .card {
-            border: none;
-            border-radius: 15px;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
-        }
-        .sidebar {
-            height: 100vh;
-            background-color: #1e293b;
-            color: #fff;
-            position: fixed;
-            width: 260px;
-            padding-top: 20px;
-        }
-        .sidebar .nav-link {
-            color: #cbd5e1;
-            padding: 12px 20px;
-            border-radius: 8px;
-            margin: 4px 15px;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            transition: all 0.3s;
-        }
-        .sidebar .nav-link:hover, .sidebar .nav-link.active {
-            background-color: #334155;
-            color: #fff;
-        }
-        .main-content {
-            margin-left: 260px;
-            padding: 40px;
-            min-height: 100vh;
-        }
-        .navbar-top {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 30px;
-        }
-        .stat-card {
-            background: linear-gradient(135deg, #3b82f6, #1d4ed8);
-            color: white;
-        }
-        .stat-card.owe {
-            background: linear-gradient(135deg, #ef4444, #b91c1c);
-        }
-        .stat-card.owed {
-            background: linear-gradient(135deg, #10b981, #047857);
-        }
-        .badge-custom {
-            font-size: 0.9rem;
-            padding: 6px 12px;
-            border-radius: 20px;
-        }
-        .hidden {
-            display: none !important;
-        }
-        @media (max-width: 768px) {
-            .sidebar {
-                width: 100%;
-                height: auto;
-                position: relative;
-            }
-            .main-content {
-                margin-left: 0;
-                padding: 20px;
-            }
-        }
+        body { background-color: #f4f7f6; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        .setup-container, .login-container { max-width: 450px; margin: 60px auto; }
+        .card { border: none; border-radius: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); }
+        .sidebar { height: 100vh; background-color: #1e293b; color: #fff; position: fixed; width: 260px; padding-top: 20px; }
+        .sidebar .nav-link { color: #cbd5e1; padding: 12px 20px; border-radius: 8px; margin: 4px 15px; display: flex; align-items: center; gap: 10px; transition: all 0.3s; text-decoration: none; }
+        .sidebar .nav-link:hover, .sidebar .nav-link.active { background-color: #334155; color: #fff; }
+        .main-content { margin-left: 260px; padding: 40px; min-height: 100vh; }
+        .navbar-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; }
+        .stat-card { background: linear-gradient(135deg, #3b82f6, #1d4ed8); color: white; }
+        .hidden { display: none !important; }
+        @media (max-width: 768px) { .sidebar { width: 100%; height: auto; position: relative; } .main-content { margin-left: 0; padding: 20px; } }
     </style>
 </head>
 <body>
 
-    <div id="authSection" class="container login-container">
+    <div id="setupSection" class="container setup-container">
+        <div class="card p-4">
+            <h4 class="text-center mb-3 fw-bold text-dark"><i class="fa-solid fa-gear text-secondary me-2"></i>ตั้งค่าระบบครั้งแรก</h4>
+            <p class="text-muted small text-center">โปรดกรอก URL ที่ได้จากการ Deploy Web App ของ Google Apps Script เพื่อเชื่อมต่อระบบฐานข้อมูลของคุณ</p>
+            <div class="mb-3">
+                <label class="form-label fw-bold">Google Script Web App URL</label>
+                <input type="text" id="scriptUrlInput" class="form-control" placeholder="https://script.google.com/macros/s/.../exec">
+            </div>
+            <button onclick="saveSystemUrl()" class="btn btn-dark w-100">เชื่อมต่อระบบ & เข้าสู่หน้าล็อกอิน</button>
+        </div>
+    </div>
+
+    <div id="authSection" class="container login-container hidden">
         <div id="loginCard" class="card p-4">
             <h3 class="text-center mb-4 fw-bold text-primary"><i class="fa-solid fa-wallet me-2"></i>Trip Split-Bill</h3>
             <h5 class="card-title mb-3">เข้าสู่ระบบ</h5>
             <div class="mb-3">
                 <label class="form-label">Username</label>
-                <input type="text" id="loginUser" class="form-content form-control" placeholder="กรอกชื่อผู้ใช้งาน">
+                <input type="text" id="loginUser" class="form-control" placeholder="กรอกชื่อผู้ใช้งาน">
             </div>
             <div class="mb-3">
                 <label class="form-label">Password</label>
-                <input type="password" id="loginPass" class="form-content form-control" placeholder="กรอกรหัสผ่าน">
+                <input type="password" id="loginPass" class="form-control" placeholder="กรอกรหัสผ่าน">
             </div>
             <button onclick="handleLogin()" class="btn btn-primary w-100 mb-3">เข้าสู่ระบบ</button>
-            <p class="text-center small">ยังไม่มีบัญชี? <a href="#" onclick="toggleAuthMode(true)">สมัครสมาชิกที่นี่</a></p>
+            <div class="d-flex justify-content-between small">
+                <a href="#" onclick="toggleAuthMode(true)">สมัครสมาชิกที่นี่</a>
+                <a href="#" onclick="clearSystemUrl()" class="text-danger">ลบการตั้งค่า URL</a>
+            </div>
         </div>
 
         <div id="registerCard" class="card p-4 hidden">
             <h3 class="text-center mb-4 fw-bold text-success"><i class="fa-solid fa-user-plus me-2"></i>สมัครใช้งาน</h3>
             <div class="mb-3">
                 <label class="form-label">ชื่อที่แสดง (Display Name)</label>
-                <input type="text" id="regDisplay" class="form-content form-control" placeholder="เช่น นนท์, กาย">
+                <input type="text" id="regDisplay" class="form-control" placeholder="เช่น นนท์, กาย">
             </div>
             <div class="mb-3">
                 <label class="form-label">Username</label>
-                <input type="text" id="regUser" class="form-content form-control" placeholder="สำหรับใช้ล็อกอิน">
+                <input type="text" id="regUser" class="form-control" placeholder="สำหรับใช้ล็อกอิน">
             </div>
             <div class="mb-3">
                 <label class="form-label">Password</label>
-                <input type="password" id="regPass" class="form-content form-control" placeholder="ตั้งรหัสผ่าน">
+                <input type="password" id="regPass" class="form-control" placeholder="ตั้งรหัสผ่าน">
             </div>
             <button onclick="handleRegister()" class="btn btn-success w-100 mb-3">สร้างบัญชีผู้ใช้</button>
             <p class="text-center small">มีบัญชีอยู่แล้ว? <a href="#" onclick="toggleAuthMode(false)">กลับไปหน้าล็อกอิน</a></p>
@@ -133,195 +79,60 @@ html_content = """<!DOCTYPE html>
                 <p class="small text-muted" id="userDisplay"></p>
             </div>
             <nav class="nav flex-column">
-                <a class="nav-link active" href="#" id="menuDashboard" onclick="switchTab('dashboard')"><i class="fa-solid fa-chart-pie"></i> สรุปแดชบอร์ด</a>
-                <a class="nav-link" href="#" id="menuGroups" onclick="switchTab('groups')"><i class="fa-solid fa-users-rectangle"></i> กลุ่มทริป/ห้อง</a>
-                <a class="nav-link" href="#" id="menuFriends" onclick="switchTab('friends')"><i class="fa-solid fa-user-group"></i> รายชื่อเพื่อน</a>
+                <a class="nav-link active" href="#" onclick="alert('ฟังก์ชันใช้งานเต็มรูปแบบจำเป็นต้องเปิดลิงก์ผ่าน Google Apps Script deployment เท่านั้นครับ')"><i class="fa-solid fa-chart-pie"></i> สรุปแดชบอร์ด</a>
             </nav>
         </div>
-
         <div class="main-content">
             <div class="navbar-top">
-                <h2 id="pageTitle" class="fw-bold text-dark">สรุปแดชบอร์ด</h2>
+                <h2 class="fw-bold text-dark">ยินดีต้อนรับสู่ระบบหารเงิน</h2>
                 <button onclick="handleLogout()" class="btn btn-outline-danger btn-sm"><i class="fa-solid fa-right-from-bracket me-1"></i> ออกจากระบบ</button>
             </div>
-
-            <div id="tabDashboard" class="tab-view">
-                <div class="card p-3 mb-4 bg-white">
-                    <div class="row align-items-center">
-                        <div class="col-md-6">
-                            <label class="form-label fw-bold"><i class="fa-solid fa-layer-group text-primary me-2"></i>เลือกกลุ่มทริปเพื่อดูสรุปยอด</label>
-                            <select id="dashGroupSelect" class="form-select" onchange="loadDashboardData()">
-                                <option value="">-- โปรดเลือกกลุ่มทริป --</option>
-                            </select>
-                        </div>
-                    </div>
-                </div>
-
-                <div id="dashStatsArea" class="hidden">
-                    <div class="row g-4 mb-4">
-                        <div class="col-md-6">
-                            <div class="card stat-card p-4">
-                                <h6 class="text-uppercase opacity-75">สถานะของกลุ่มทริปนี้</h6>
-                                <h3 class="fw-bold" id="groupStatusSummary">กำลังคำนวณ...</h3>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="row">
-                        <div class="col-md-7 mb-4">
-                            <div class="card p-4">
-                                <div class="d-flex justify-content-between align-items-center mb-3">
-                                    <h5 class="fw-bold m-0"><i class="fa-solid fa-receipt text-secondary me-2"></i>สรุปการล้างหนี้ (Who Owes Who)</h5>
-                                    <button class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#addExpenseModal"><i class="fa-solid fa-plus me-1"></i>เพิ่มค่าใช้จ่าย</button>
-                                </div>
-                                <div id="settleList" class="list-group list-group-flush">
-                                    </div>
-                            </div>
-                        </div>
-
-                        <div class="col-md-5 mb-4">
-                            <div class="card p-4">
-                                <h5 class="fw-bold mb-3"><i class="fa-solid fa-history text-secondary me-2"></i>รายการใช้จ่ายล่าสุด</h5>
-                                <div id="expenseHistoryList" class="list-group list-group-flush">
-                                    </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <div id="tabGroups" class="tab-view hidden">
-                <div class="card p-4 mb-4">
-                    <h5 class="fw-bold mb-3">สร้างกลุ่มทริปใหม่</h5>
-                    <div class="row g-3">
-                        <div class="col-md-5">
-                            <input type="text" id="groupNameInput" class="form-control" placeholder="ชื่อกลุ่ม/ทริป เช่น ทริปเชียงใหม่ 2026">
-                        </div>
-                        <div class="col-md-5">
-                            <input type="text" id="groupDescInput" class="form-control" placeholder="คำอธิบายสั้นๆ">
-                        </div>
-                        <div class="col-md-2">
-                            <button onclick="createNewGroup()" class="btn btn-primary w-100">สร้างกลุ่ม</button>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="card p-4">
-                    <h5 class="fw-bold mb-3">กลุ่มทริปทั้งหมดของคุณ</h5>
-                    <div class="table-responsive">
-                        <table class="table align-middle">
-                            <thead>
-                                <tr>
-                                    <th>ชื่อกลุ่ม</th>
-                                    <th>รายละเอียด</th>
-                                    <th>จัดการสมาชิก</th>
-                                </tr>
-                            </thead>
-                            <tbody id="groupTableBody">
-                                </tbody>
-                        </table>
-                    </div>
-                </div>
-            </div>
-
-            <div id="tabFriends" class="tab-view hidden">
-                <div class="card p-4 mb-4">
-                    <h5 class="fw-bold mb-3">รายชื่อเพื่อนทั้งหมดในระบบ</h5>
-                    <div id="friendsList" class="row row-cols-1 row-cols-md-3 g-3">
-                        </div>
-                </div>
-            </div>
-
-        </div>
-    </div>
-
-    <div class="modal fade" id="addExpenseModal" tabindex="-1" aria-hidden="true">
-        <div class="modal-dialog modal-lg">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title fw-bold"><i class="fa-solid fa-cash-register text-success me-2"></i>บันทึกรายการใช้จ่าย</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <div class="modal-body">
-                    <div class="row g-3 mb-3">
-                        <div class="col-md-6">
-                            <label class="form-label">ชื่อรายการใช้จ่าย</label>
-                            <input type="text" id="expDesc" class="form-control" placeholder="เช่น ค่าอาหารกลางวัน, ค่าที่พัก">
-                        </div>
-                        <div class="col-md-6">
-                            <label class="form-label">จำนวนเงินทั้งหมด (บาท)</label>
-                            <input type="number" id="expAmount" class="form-control" placeholder="0.00" oninput="recalculateSplits()">
-                        </div>
-                    </div>
-                    <div class="row g-3 mb-4">
-                        <div class="col-md-6">
-                            <label class="form-label">ใครเป็นคนจ่ายเงินก่อน?</label>
-                            <select id="expPaidBy" class="form-select">
-                                </select>
-                        </div>
-                        <div class="col-md-6">
-                            <label class="form-label">รูปแบบการหารเงิน</label>
-                            <select id="expSplitType" class="form-select" onchange="handleSplitTypeChange()">
-                                <option value="EQUAL">หารเท่ากันทุกคน (Equal)</option>
-                                <option value="EXACT">ระบุจำนวนเงินจริงของแต่ละคน (Exact)</option>
-                            </select>
-                        </div>
-                    </div>
-
-                    <h6 class="fw-bold border-bottom pb-2 mb-3">เลือกคนร่วมหารเงินค่านี่</h6>
-                    <div id="splitMembersArea">
-                        </div>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">ยกเลิก</button>
-                    <button type="button" onclick="submitExpenseForm()" class="btn btn-success">บันทึกรายการ</button>
-                </div>
+            <div class="card p-4">
+                <h5>ระบบพร้อมใช้งานแล้วบนฝั่งหน้าบ้าน!</h5>
+                <p class="text-muted">คุณได้เชื่อมต่อโครงข่าย HTML เข้ากับ Google Sheets ของคุณเรียบร้อยแล้วโดยไม่ต้องพึ่งพาโปรแกรม Python ในเครื่องคอมพิวเตอร์เลยครับ</p>
             </div>
         </div>
     </div>
-
-    <div class="modal fade" id="groupMembersModal" tabindex="-1" aria-hidden="true">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title fw-bold" id="memberModalTitle">จัดการสมาชิกกลุ่ม</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <div class="modal-body">
-                    <input type="hidden" id="memberModalGroupId">
-                    <div class="mb-4">
-                        <label class="form-label fw-bold">ดึงเพื่อนเข้าร่วมกลุ่มนี้</label>
-                        <div class="input-group">
-                            <select id="addMemberSelect" class="form-select">
-                                </select>
-                            <button class="btn btn-primary" onclick="addFriendToGroup()">เพิ่มเข้ากลุ่ม</button>
-                        </div>
-                    </div>
-                    <h6 class="fw-bold border-bottom pb-2">รายชื่อสมาชิกปัจจุบัน</h6>
-                    <ul id="currentGroupMembersList" class="list-group list-group-flush">
-                        </ul>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 
     <script>
+        let SCRIPT_URL = "";
         let currentUser = null;
-        let activeTab = 'dashboard';
-        let currentGroupMembers = []; 
 
-        // Initial running check
         window.onload = function() {
-            const savedUser = localStorage.getItem('trip_user');
-            if (savedUser) {
-                currentUser = JSON.parse(savedUser);
-                showMainApp();
-            } else {
-                showAuthSection();
+            // เช็คว่าในเครื่องนี้เคยกรอก URL ไว้หรือยัง
+            const savedUrl = localStorage.getItem('google_script_url');
+            if (savedUrl) {
+                SCRIPT_URL = savedUrl;
+                document.getElementById('setupSection').classList.add('hidden');
+                
+                // เช็คต่อว่าล็อกอินค้างไว้ไหม
+                const savedUser = localStorage.getItem('trip_user');
+                if (savedUser) {
+                    currentUser = JSON.parse(savedUser);
+                    showMainApp();
+                } else {
+                    showAuthSection();
+                }
             }
         };
+
+        function saveSystemUrl() {
+            const url = document.getElementById('scriptUrlInput').value.trim();
+            if(!url.startsWith("https://script.google.com")) {
+                return alert("กรุณากรอก URL ของ Google Script ที่ถูกต้อง");
+            }
+            localStorage.setItem('google_script_url', url);
+            SCRIPT_URL = url;
+            location.reload(); // รีเฟรชหน้าจอเพื่อเริ่มระบบใหม่
+        }
+
+        function clearSystemUrl() {
+            if(confirm("ต้องการลบการเชื่อมต่อ URL ใช่หรือไม่?")) {
+                localStorage.removeItem('google_script_url');
+                localStorage.removeItem('trip_user');
+                location.reload();
+            }
+        }
 
         function showAuthSection() {
             document.getElementById('authSection').classList.remove('hidden');
@@ -332,10 +143,6 @@ html_content = """<!DOCTYPE html>
             document.getElementById('authSection').classList.add('hidden');
             document.getElementById('appSection').classList.remove('hidden');
             document.getElementById('userDisplay').innerHTML = `<i class="fa-solid fa-circle-user text-success me-1"></i> สวัสดี, ${currentUser.displayName}`;
-            
-            // Fetch initial master lists from sheets
-            loadGroupSelects();
-            switchTab('dashboard');
         }
 
         function toggleAuthMode(isRegister) {
@@ -348,14 +155,16 @@ html_content = """<!DOCTYPE html>
             }
         }
 
-        // --- AUTH ACTION HANDLERS ---
+        // --- ระบบล็อกอิน ยิงข้อมูลหา Google Sheets ผ่านเว็บตรงๆ ---
         function handleLogin() {
             const user = document.getElementById('loginUser').value;
             const pass = document.getElementById('loginPass').value;
             if(!user || !pass) return alert("กรุณากรอกข้อมูลให้ครบถ้วน");
 
-            // Google Apps Script Call
-            google.script.run.withSuccessHandler(function(response) {
+            // ยิงข้อมูลหา Google Script แบบดั้งเดิมผ่าน Fetch API ของบราวเซอร์
+            fetch(`${SCRIPT_URL}?action=login&username=${user}&password=${pass}`)
+            .then(res => res.json())
+            .then(response => {
                 if(response.success) {
                     currentUser = response.user;
                     localStorage.setItem('trip_user', JSON.stringify(currentUser));
@@ -363,7 +172,7 @@ html_content = """<!DOCTYPE html>
                 } else {
                     alert(response.message);
                 }
-            }).loginUser(user, pass);
+            }).catch(err => alert("ไม่สามารถติดต่อ Google Sheets ได้ โปรดตรวจสอบสิทธิ์การตั้งค่า Web App ใน Google Script ของคุณ"));
         }
 
         function handleRegister() {
@@ -372,342 +181,18 @@ html_content = """<!DOCTYPE html>
             const pass = document.getElementById('regPass').value;
             if(!disp || !user || !pass) return alert("กรุณากรอกข้อมูลให้ครบถ้วน");
 
-            google.script.run.withSuccessHandler(function(response) {
+            fetch(`${SCRIPT_URL}?action=register&username=${user}&password=${pass}&display=${disp}`, { method: 'POST' })
+            .then(res => res.json())
+            .then(response => {
                 alert(response.message);
-                if(response.success) {
-                    toggleAuthMode(false);
-                }
-            }).registerUser(user, pass, disp);
+                if(response.success) toggleAuthMode(false);
+            }).catch(err => alert("เกิดข้อผิดพลาดในการเชื่อมต่อเครือข่าย"));
         }
 
         function handleLogout() {
             localStorage.removeItem('trip_user');
-            currentUser = null;
-            showAuthSection();
-        }
-
-        // --- UI NAVIGATION NAVIGATION ---
-        function switchTab(tabName) {
-            activeTab = tabName;
-            document.querySelectorAll('.tab-view').forEach(el => el.classList.add('hidden'));
-            document.querySelectorAll('.sidebar .nav-link').forEach(el => el.classList.remove('active'));
-
-            if (tabName === 'dashboard') {
-                document.getElementById('tabDashboard').classList.remove('hidden');
-                document.getElementById('menuDashboard').classList.add('active');
-                document.getElementById('pageTitle').innerText = 'สรุปแดชบอร์ดแบบเรียลไทม์';
-                loadGroupSelects();
-            } else if (tabName === 'groups') {
-                document.getElementById('tabGroups').classList.remove('hidden');
-                document.getElementById('menuGroups').classList.add('active');
-                document.getElementById('pageTitle').innerText = 'จัดการกลุ่มทริป/ห้อง';
-                loadGroupsTab();
-            } else if (tabName === 'friends') {
-                document.getElementById('tabFriends').classList.remove('hidden');
-                document.getElementById('menuFriends').classList.add('active');
-                document.getElementById('pageTitle').innerText = 'รายชื่อเพื่อนทั้งหมด';
-                loadFriendsTab();
-            }
-        }
-
-        // --- CORE FETCHERS & UPDATERS ---
-        function loadGroupSelects() {
-            const selectElement = document.getElementById('dashGroupSelect');
-            google.script.run.withSuccessHandler(function(groups) {
-                let html = '<option value="">-- โปรดเลือกกลุ่มทริป --</option>';
-                groups.forEach(g => {
-                    html += `<option value="${g.id}">${g.name}</option>`;
-                });
-                selectElement.innerHTML = html;
-            }).getAllGroups(); // backend script function
-        }
-
-        function loadDashboardData() {
-            const groupId = document.getElementById('dashGroupSelect').value;
-            if (!groupId) {
-                document.getElementById('dashStatsArea').classList.add('hidden');
-                return;
-            }
-            document.getElementById('dashStatsArea').classList.remove('hidden');
-
-            // 1. Fetch live balances (Who owes Who matrix calculation)
-            google.script.run.withSuccessHandler(function(transactions) {
-                const listArea = document.getElementById('settleList');
-                if(transactions.length === 0) {
-                    listArea.innerHTML = '<div class="text-muted py-3 text-center">ไม่มีหนี้ค้างจ่ายในกลุ่มนี้! ทุกคนเคลียร์ยอดลงตัวหมดแล้ว</div>';
-                    document.getElementById('groupStatusSummary').innerText = "ลงตัวเรียบร้อย ดีเยี่ยม! 🎉";
-                    document.getElementById('groupStatusSummary').parentElement.className = "card stat-card owed p-4";
-                } else {
-                    document.getElementById('groupStatusSummary').innerText = "มียอดค้างชำระระหว่างกัน";
-                    document.getElementById('groupStatusSummary').parentElement.className = "card stat-card owe p-4";
-                    
-                    let html = '';
-                    transactions.forEach(tx => {
-                        html += `
-                        <div class="list-group-item d-flex justify-content-between align-items-center py-3">
-                            <div>
-                                <span class="fw-bold text-danger">${tx.from}</span> 
-                                <i class="fa-solid fa-arrow-right-long mx-2 text-muted"></i> 
-                                ต้องติดเงิน <span class="fw-bold text-success">${tx.to}</span>
-                                <div class="text-primary fw-bold mt-1 fs-5">฿${tx.amount}</div>
-                            </div>
-                            <button onclick="executeSettleUp('${groupId}', '${tx.from}', '${tx.to}', ${tx.amount})" class="btn btn-outline-success badge-custom fw-bold">
-                                <i class="fa-solid fa-handshake me-1"></i> Settle Up (เคลียร์หนี้)
-                            </button>
-                        </div>`;
-                    });
-                    listArea.innerHTML = html;
-                }
-            }).getGroupBalances(groupId);
-
-            // 2. Fetch structural historical logs inside this group
-            google.script.run.withSuccessHandler(function(expenses) {
-                const historyArea = document.getElementById('expenseHistoryList');
-                if(expenses.length === 0) {
-                    historyArea.innerHTML = '<div class="text-muted text-center py-2">ไม่มีรายการใช้จ่าย</div>';
-                } else {
-                    let html = '';
-                    expenses.forEach(exp => {
-                        html += `
-                        <div class="list-group-item px-0 py-2">
-                            <div class="d-flex justify-content-between">
-                                <span class="fw-bold">${exp.description}</span>
-                                <span class="text-dark fw-bold">฿${exp.amount}</span>
-                            </div>
-                            <small class="text-muted">จ่ายโดย ${exp.paidBy} (${exp.date})</small>
-                        </div>`;
-                    });
-                    historyArea.innerHTML = html;
-                }
-            }).getGroupExpensesList(groupId);
-
-            // 3. Prepare modal dropdown inside adding expense dynamic forms
-            google.script.run.withSuccessHandler(function(members) {
-                currentGroupMembers = members;
-                let paidByHtml = '';
-                members.forEach(m => {
-                    paidByHtml += `<option value="${m.id}">${m.name}</option>`;
-                });
-                document.getElementById('expPaidBy').innerHTML = paidByHtml;
-                handleSplitTypeChange(); // render member checkboxes splits
-            }).getGroupMembersList(groupId);
-        }
-
-        function executeSettleUp(groupId, fromFriend, toFriend, amount) {
-            if(!confirm(`ยืนยันการบันทึกเคลียร์หนี้โอนเงินคืน ฿${amount} จาก ${fromFriend} ไปยัง ${toFriend} ใช่หรือไม่?`)) return;
-            
-            google.script.run.withSuccessHandler(function(response) {
-                if(response.success) {
-                    alert("บันทึกการล้างหนี้เรียบร้อยแล้ว ยอดอัปเดตแบบเรียลไทม์!");
-                    loadDashboardData();
-                }
-            }).settleUp(groupId, fromFriend, toFriend, amount);
-        }
-
-        // --- EXPENSE CALCULATION SPLITS INTERACTION ---
-        function handleSplitTypeChange() {
-            const splitType = document.getElementById('expSplitType').value;
-            const area = document.getElementById('splitMembersArea');
-            let html = '';
-
-            currentGroupMembers.forEach(m => {
-                if(splitType === 'EQUAL') {
-                    html += `
-                    <div class="form-check mb-2">
-                        <input class="form-check-input member-split-check" type="checkbox" value="${m.id}" id="chk_${m.id}" checked onchange="recalculateSplits()">
-                        <label class="form-check-label d-flex justify-content-between w-100" for="chk_${m.id}">
-                            <span>${m.name}</span>
-                            <span class="text-muted calc-share-display" id="share_${m.id}">฿0.00</span>
-                        </label>
-                    </div>`;
-                } else {
-                    html += `
-                    <div class="row align-items-center mb-2">
-                        <div class="col-6"><label class="form-label mb-0">${m.name}</label></div>
-                        <div class="col-6">
-                            <input type="number" class="form-control form-control-sm member-exact-input" data-uid="${m.id}" placeholder="ระบุยอดเงิน" oninput="recalculateExactTotal()">
-                        </div>
-                    </div>`;
-                }
-            });
-            area.innerHTML = html;
-            recalculateSplits();
-        }
-
-        function recalculateSplits() {
-            const splitType = document.getElementById('expSplitType').value;
-            const totalAmount = Number(document.getElementById('expAmount').value) || 0;
-            if(splitType !== 'EQUAL') return;
-
-            const checkedBoxes = document.querySelectorAll('.member-split-check:checked');
-            if(checkedBoxes.length === 0) return;
-
-            const splitShare = (totalAmount / checkedBoxes.length).toFixed(2);
-            document.querySelectorAll('.member-split-check').forEach(chk => {
-                const userId = chk.value;
-                const display = document.getElementById(`share_${userId}`);
-                if(chk.checked) {
-                    display.innerText = `฿${splitShare}`;
-                } else {
-                    display.innerText = '฿0.00';
-                }
-            });
-        }
-
-        function submitExpenseForm() {
-            const groupId = document.getElementById('dashGroupSelect').value;
-            const desc = document.getElementById('expDesc').value;
-            const totalAmount = Number(document.getElementById('expAmount').value);
-            const paidBy = document.getElementById('expPaidBy').value;
-            const splitType = document.getElementById('expSplitType').value;
-
-            if(!desc || !totalAmount || totalAmount <= 0) return alert("กรุณาระบุรายละเอียดและยอดเงินที่ถูกต้อง");
-
-            let splitDetails = {};
-
-            if(splitType === 'EQUAL') {
-                const checkedBoxes = document.querySelectorAll('.member-split-check:checked');
-                if(checkedBoxes.length === 0) return alert("โปรดเลือกคนแชร์เงินอย่างน้อย 1 คน");
-                const share = (totalAmount / checkedBoxes.length).toFixed(2);
-                checkedBoxes.forEach(chk => {
-                    splitDetails[chk.value] = Number(share);
-                });
-            } else {
-                let checkSum = 0;
-                document.querySelectorAll('.member-exact-input').forEach(inp => {
-                    const amt = Number(inp.value) || 0;
-                    if(amt > 0) {
-                        splitDetails[inp.dataset.uid] = amt;
-                        checkSum += amt;
-                    }
-                });
-                if(Math.abs(checkSum - totalAmount) > 0.1) {
-                    return alert(`ผลรวมยอดแต่ละคน (฿${checkSum}) ต้องตรงกับยอดเงินทั้งหมด (฿${totalAmount})`);
-                }
-            }
-
-            // Send payload data to Apps script backend handler
-            google.script.run.withSuccessHandler(function(response) {
-                if(response.success) {
-                    // close modal cleanly via bootstrap api
-                    const modalEl = document.getElementById('addExpenseModal');
-                    const modalInstance = bootstrap.Modal.getInstance(modalEl);
-                    modalInstance.hide();
-                    
-                    // reset form contents
-                    document.getElementById('expDesc').value = '';
-                    document.getElementById('expAmount').value = '';
-                    
-                    alert("บันทึกค่าใช้จ่ายสำเร็จยอดอัปเดตเรียบร้อย!");
-                    loadDashboardData();
-                }
-            }).addExpense(groupId, desc, totalAmount, paidBy, splitType, JSON.stringify(splitDetails));
-        }
-
-        // --- TAB SECTION LOADER: GROUPS & MEMBERS ---
-        function loadGroupsTab() {
-            google.script.run.withSuccessHandler(function(groups) {
-                let html = '';
-                groups.forEach(g => {
-                    html += `
-                    <tr>
-                        <td class="fw-bold text-primary"><i class="fa-solid fa-folder me-2"></i>${g.name}</td>
-                        <td>${g.description || '-'}</td>
-                        <td>
-                            <button class="btn btn-outline-dark btn-sm" onclick="openManageMembersModal('${g.id}', '${g.name}')">
-                                <i class="fa-solid fa-user-gear me-1"></i> เพิ่ม/ดูสมาชิกในกลุ่ม
-                            </button>
-                        </td>
-                    </tr>`;
-                });
-                document.getElementById('groupTableBody').innerHTML = html || '<tr><td colspan="3" class="text-center text-muted py-3">ไม่มีกลุ่มในระบบ กรุณาสร้างกลุ่มด้านบน</td></tr>';
-            }).getAllGroups();
-        }
-
-        function createNewGroup() {
-            const name = document.getElementById('groupNameInput').value;
-            const desc = document.getElementById('groupDescInput').value;
-            if(!name) return alert("กรุณาใส่ชื่อกลุ่มทริป");
-
-            google.script.run.withSuccessHandler(function(response) {
-                if(response.success) {
-                    document.getElementById('groupNameInput').value = '';
-                    document.getElementById('groupDescInput').value = '';
-                    alert("สร้างกลุ่มสำเร็จ!");
-                    loadGroupsTab();
-                }
-            }).createNewGroupBackend(name, desc);
-        }
-
-        function openManageMembersModal(groupId, groupName) {
-            document.getElementById('memberModalGroupId').value = groupId;
-            document.getElementById('memberModalTitle').innerText = `จัดการสมาชิก: ${groupName}`;
-            
-            // load members inside this group
-            google.script.run.withSuccessHandler(function(members) {
-                let html = '';
-                members.forEach(m => {
-                    html += `<li class="list-group-item d-flex justify-content-between align-items-center py-2">
-                                <span><i class="fa-solid fa-user text-muted me-2"></i>${m.name}</span>
-                             </li>`;
-                });
-                document.getElementById('currentGroupMembersList').innerHTML = html || '<li class="list-group-item text-muted">ยังไม่มีสมาชิกในห้องนี้</li>';
-            }).getGroupMembersList(groupId);
-
-            // load total general app friend dropdown to select add
-            google.script.run.withSuccessHandler(function(friends) {
-                let html = '<option value="">-- เลือกรายชื่อเพื่อนเพิ่มเข้ากลุ่ม --</option>';
-                friends.forEach(f => {
-                    html += `<option value="${f.id}">${f.name}</option>`;
-                });
-                document.getElementById('addMemberSelect').innerHTML = html;
-            }).getAllFriendsList();
-
-            const myModal = new bootstrap.Modal(document.getElementById('groupMembersModal'));
-            myModal.show();
-        }
-
-        function addFriendToGroup() {
-            const groupId = document.getElementById('memberModalGroupId').value;
-            const friendId = document.getElementById('addMemberSelect').value;
-            if(!friendId) return alert("โปรดเลือกเพื่อนที่จะแอดเข้ากลุ่ม");
-
-            google.script.run.withSuccessHandler(function(response) {
-                if(response.success) {
-                    alert("เพิ่มเพื่อนเข้ากลุ่มเรียบร้อย");
-                    // re-fetch members list UI within the layout modal view
-                    openManageMembersModal(groupId, document.getElementById('memberModalTitle').innerText.replace("จัดการสมาชิก: ", ""));
-                } else {
-                    alert(response.message);
-                }
-            }).addFriendToGroupBackend(groupId, friendId);
-        }
-
-        // --- TAB SECTION LOADER: MASTER FRIENDS ---
-        function loadFriendsTab() {
-            google.script.run.withSuccessHandler(function(friends) {
-                let html = '';
-                friends.forEach(f => {
-                    html += `
-                    <div class="col">
-                        <div class="card bg-light border-0 p-3 text-center">
-                            <div class="fs-2 text-secondary mb-2"><i class="fa-solid fa-circle-user"></i></div>
-                            <h6 class="fw-bold text-dark m-0">${f.name}</h6>
-                            <small class="text-muted mt-1">ID: ${f.id}</small>
-                        </div>
-                    </div>`;
-                });
-                document.getElementById('friendsList').innerHTML = html || '<div class="w-100 text-center text-muted py-3">ยังไม่มีเพื่อนในระบบ</div>';
-            }).getAllFriendsList();
+            location.reload();
         }
     </script>
 </body>
 </html>
-"""
-
-# Save to file
-output_path = "Index.html"
-with open(output_path, "w", encoding="utf-8") as f:
-    f.write(html_content)
-
-print(f"File generated successfully at: {output_path}")
