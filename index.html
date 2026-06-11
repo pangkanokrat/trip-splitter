@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Multi-Group Trip Splitter - Separate Create Button</title>
+    <title>Multi-Group Trip Splitter - Fixed Index & Group Logic</title>
     <script src="https://cdn.tailwindcss.com"></script>
 </head>
 <body class="bg-slate-100 p-4 md:p-8 text-slate-800">
@@ -27,7 +27,7 @@
         
         <hr class="border-slate-100">
 
-<div class="bg-violet-50 p-4 rounded-xl border border-violet-100 space-y-4">
+        <div class="bg-violet-50 p-4 rounded-xl border border-violet-100 space-y-4">
             <h2 class="text-sm font-bold text-violet-950">📂 จัดการกลุ่มทริป</h2>
             
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -119,12 +119,12 @@
                     <table class="w-full text-left border-collapse bg-slate-50 text-sm min-w-[600px]">
                         <thead>
                             <tr class="bg-slate-200 text-slate-700 font-bold border-b border-slate-300 text-[12px]">
-                            <th class="py-2 px-3 w-24">📅 วันที่</th>
-                            <th class="py-2 px-3">🍔 รายการ</th>
-                            <th class="py-2 px-3 w-20">👤 คนจ่าย</th>
-                            <th class="py-2 px-3 text-right w-24">💰 ยอดเงิน</th>
-                            <th class="py-2 px-3 text-center w-24">🛠️ จัดการ</th>
-                        </tr>
+                                <th class="py-2 px-3 w-24">📅 วันที่</th>
+                                <th class="py-2 px-3">🍔 รายการ</th>
+                                <th class="py-2 px-3 w-20">👤 คนจ่าย</th>
+                                <th class="py-2 px-3 text-right w-24">💰 ยอดเงิน</th>
+                                <th class="py-2 px-3 text-center w-24">🛠️ จัดการ</th>
+                            </tr>
                         </thead>
                         <tbody id="expenseList" class="divide-y divide-slate-100">
                             <tr>
@@ -147,67 +147,51 @@
     </div>
 
     <script>
-        // ⚠️ บรรทัดนี้: วางลิงก์ Web App URL จาก Google Sheets ของคุณที่นี่ครับ
+        // ⚠️ ลิงก์เชื่อมโยงไปยัง Google Sheets Apps Script ของคุณ
         const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzo1fpn7l0Jgl2jp1hJ6ECDwDgBjiyT6KT-7FtEcDvhnVyQaKCl_VQqdu8DpVQmYmIC/exec"; 
 
         let expenses = [];
         let allGroups = []; 
+        let globalGroupName = ""; // ตัวแปรหลักกลางของระบบสำหรับจำชื่อกลุ่มที่เลือก
 
-        // เมื่อเปลี่ยนค่าใน Dropdown ให้เอาค่าไปใส่ในกล่องหลักรอซิงค์
-// 1. ปรับปรุงฟังก์ชันเมื่อเลือกเปลี่ยนทริปใน Dropdown
-// เปลี่ยนฟังก์ชัน handleDropdownChange() ให้เคลียร์ค่าทิ้ง ไม่ต้องส่งคำไปช่องพิมพ์แล้วครับ
-function handleDropdownChange() {
-    // ปล่อยข้างในให้ว่างเปล่า หรือลบคำสั่งที่เกี่ยวกับ groupNameInput ออกให้หมดครับ
-}
-
-// 2. ปรับปรุงฟังก์ชันเมื่อกดปุ่ม "🔄 เรียกดูข้อมูลกลุ่มนี้"
-function switchGroup() {
-    const dropdown = document.getElementById('groupDropdown');
-    const groupInput = document.getElementById('groupNameInput');
-    
-    if (dropdown && dropdown.value) {
-        // ล็อกตัวแปรหลักหลังบ้านให้จำชื่อกลุ่มจากดรอปดาวน์
-        groupName = dropdown.value; 
-        
-        // สั่งเคลียร์ช่องพิมพ์เปิดทริปใหม่ให้ว่างสะอาดชัวร์ ๆ
-        if (groupInput) {
-            groupInput.value = ""; 
+        function handleDropdownChange() {
+            // ปล่อยว่างไว้ตามดีไซน์ของคุณ
         }
-        
-        // เรียกข้อมูลกลุ่มใหม่มาแสดง
-        loadExpensesFromSheet();
-    } else {
-        alert("กรุณาเลือกกลุ่มทริปจากช่อง 'เลือกทริปที่มีอยู่เดิม' ก่อนครับ");
-    }
-}
 
-        // 🌟 ฟังก์ชันใหม่ล่าสุด: เมื่อกดปุ่ม "สร้างกลุ่มใหม่"
-        function createNewGroupClick() {
-               const groupInput = document.getElementById('groupNameInput');
-                if (!groupInput || groupInput.value.trim() === "") {
-                    alert("กรุณาพิมพ์ชื่อกลุ่มทริปใหม่ก่อนกดสร้างครับ");
-                    return;
-                }
-    
-             // 🔥 ล็อกชื่อกลุ่มใหม่เข้าตัวแปรหลักทันที
-            groupName = groupInput.value.trim(); 
-    
-            // สั่งโหลดข้อมูล (ซึ่งตอนนี้จะเป็นกลุ่มใหม่ว่างๆ)
-            loadExpensesFromSheet();
+        function switchGroup() {
+            const dropdown = document.getElementById('groupDropdown');
+            const groupInput = document.getElementById('groupNameInput');
             
-            // เคลียร์ค่าข้อมูลในหน้าจอเพื่อเตรียมรับกลุ่มใหม่แกะกล่อง
+            if (dropdown && dropdown.value) {
+                globalGroupName = dropdown.value; 
+                if (groupInput) groupInput.value = ""; 
+                loadExpensesFromSheet();
+            } else {
+                alert("กรุณาเลือกกลุ่มทริปจากช่อง 'เลือกทริปที่มีอยู่เดิม' ก่อนครับ");
+            }
+        }
+
+        function createNewGroupClick() {
+            const groupInput = document.getElementById('groupNameInput');
+            if (!groupInput || groupInput.value.trim() === "") {
+                alert("กรุณาพิมพ์ชื่อกลุ่มทริปใหม่ก่อนกดสร้างครับ");
+                return;
+            }
+            
+            const newGroup = groupInput.value.trim();
+            globalGroupName = newGroup; 
+            
             expenses = [];
             renderExpenses();
             document.getElementById('resultSection').classList.add('hidden');
             
-            // เพิ่มกลุ่มใหม่นี้เข้าไปใน Array ชั่วคราวเพื่อให้เลือกได้
             if(!allGroups.includes(newGroup)){
                 allGroups.push(newGroup);
             }
             updateGroupDropdown(newGroup);
             
-            alert(`🎉 สร้างกลุ่ม "${newGroup}" สำเร็จบนหน้าเว็บแล้ว! เริ่มกรอกข้อมูลรายการแรกใน หน้า 1 ได้เลยครับ (ชื่อกลุ่มนี้จะบันทึกเข้าคอลัมน์ A ทันทีที่คุณกดบันทึกรายการแรกครับ)`);
-            switchTab(1); // เด้งมาหน้ากรอกข้อมูลให้ทันที
+            alert(`🎉 สร้างกลุ่ม "${newGroup}" สำเร็จบนหน้าเว็บแล้ว! เริ่มกรอกข้อมูลรายการแรกได้เลยครับ`);
+            switchTab(1);
         }
 
         function switchTab(tabNum) {
@@ -228,8 +212,13 @@ function switchGroup() {
             }
         }
 
+        // ✨ แก้ไขจุดตาย: ให้ไปดึงจากตัวแปรโกลบอลกลาง หรืออิงตาม dropdown ปัจจุบัน ป้องกันค่าหลุดหาย
         function getGroupName() { 
-            return document.getElementById('groupNameInput').value.trim() || ""; 
+            if (globalGroupName) return globalGroupName;
+            const dropdown = document.getElementById('groupDropdown');
+            if (dropdown && dropdown.value) return dropdown.value;
+            const groupInput = document.getElementById('groupNameInput');
+            return groupInput ? groupInput.value.trim() : "";
         }
         
         function setDefaultDate() { document.getElementById('expenseDate').value = new Date().toISOString().split('T')[0]; }
@@ -276,194 +265,138 @@ function switchGroup() {
                 dropdown.appendChild(option);
             });
         }
-
-// ฟังก์ชันสำหรับเจนสีพื้นหลังและสีตัวอักษรพาสเทลตามชื่ออัตโนมัติ
-function getFriendColorClasses(name) {
-    if (!name) return { bg: 'bg-slate-50', text: 'text-slate-700', border: 'border-slate-200' };
-    
-    // แปลงชื่อเป็นรหัสตัวเลข (Hash Code)
-    let hash = 0;
-    for (let i = 0; i < name.length; i++) {
-        hash = name.charCodeAt(i) + ((hash << 5) - hash);
-    }
-    
-    // รายการคู่สีพาสเทลที่แมตช์มาแล้วว่าสวยและตัวหนังสืออ่านง่าย
-    const colorPalette = [
-        { bg: 'bg-blue-50', text: 'text-blue-700', border: 'border-blue-200' },
-        { bg: 'bg-emerald-50', text: 'text-emerald-700', border: 'border-emerald-200' },
-        { bg: 'bg-amber-50', text: 'text-amber-700', border: 'border-amber-200' },
-        { bg: 'bg-rose-50', text: 'text-rose-700', border: 'border-rose-200' },
-        { bg: 'bg-purple-50', text: 'text-purple-700', border: 'border-purple-200' },
-        { bg: 'bg-cyan-50', text: 'text-cyan-700', border: 'border-cyan-200' },
-        { bg: 'bg-fuchsia-50', text: 'text-fuchsia-700', border: 'border-fuchsia-200' },
-        { bg: 'bg-orange-50', text: 'text-orange-700', border: 'border-orange-200' }
-    ];
-    
-    // เลือกคู่สีจาก Palette ตามรหัสชื่อ
-    const index = Math.abs(hash) % colorPalette.length;
-    return colorPalette[index];
-}
         
-function renderExpenses() {
-    const tbody = document.getElementById('expenseList'); tbody.innerHTML = "";
-    if (expenses.length === 0) { 
-        tbody.innerHTML = `<tr><td colspan="5" class="p-6 text-center text-slate-400 bg-white">ยังไม่มีข้อมูลใช้จ่ายในกลุ่มนี้ เริ่มกรอกรายการแรกได้เลยครับ</td></tr>`; 
-        document.getElementById('resultSection').classList.add('hidden'); 
-        return; 
-    }
-    
-    // 🎨 อาเรย์ชุดสีพาสเทลแบบฝังในตัวฟังก์ชัน ป้องกันเรียกหาฟังก์ชันอื่นไม่เจอ
-    const colorPalette = [
-        { bg: 'bg-blue-50', text: 'text-blue-700', border: 'border-blue-200' },
-        { bg: 'bg-emerald-50', text: 'text-emerald-700', border: 'border-emerald-200' },
-        { bg: 'bg-amber-50', text: 'text-amber-700', border: 'border-amber-200' },
-        { bg: 'bg-rose-50', text: 'text-rose-700', border: 'border-rose-200' },
-        { bg: 'bg-purple-50', text: 'text-purple-700', border: 'border-purple-200' },
-        { bg: 'bg-cyan-50', text: 'text-cyan-700', border: 'border-cyan-200' },
-        { bg: 'bg-fuchsia-50', text: 'text-fuchsia-700', border: 'border-fuchsia-200' },
-        { bg: 'bg-orange-50', text: 'text-orange-700', border: 'border-orange-200' }
-    ];
-
-    expenses.forEach((exp, index) => {
-        let displayDate = "-";
-        
-// 1. จัดการฟอร์แมตวันที่แบบเด็ดขาด (ถ้าค่าว่างเปล่า ให้ใช้วันที่ของวันนี้แทนทันที)
-const todayStr = new Date().toLocaleDateString('en-GB'); // DD/MM/YYYY
-displayDate = todayStr; 
-
-if (exp.date) {
-    let dateStr = exp.date.toString().trim();
-    
-    // เคสที่ 1: ถ้าเป็นค่าว่าง หรือขีด
-    if (dateStr === "" || dateStr === "-" || dateStr === "undefined" || dateStr === "null") {
-        displayDate = todayStr;
-    }
-    // เคสที่ 2: ฟอร์แมตรายการใหม่ ปี-เดือน-วัน (เช่น 2026-05-28)
-    else if (dateStr.includes('-') && dateStr.split('-')[0].length === 4) {
-        const parts = dateStr.substring(0, 10).split('-');
-        displayDate = `${parts[2]}/${parts[1]}/${parts[0]}`;
-    } 
-    // เคสที่ 3: ดึง "ชื่อเดือน + วันที่" (เช่น May 27) ออกมาจากก้อนข้อความยาวๆ ของ Sheets
-    else if (/[a-zA-Z]/.test(dateStr)) {
-        // ใช้ Regex ค้นหาแพทเทิร์น ตัวอักษร 3 ตัว (ชื่อเดือน) ตามด้วยช่องว่าง และตัวเลข 1-2 หลัก (วันที่)
-        const match = dateStr.match(/([a-zA-Z]{3})\s(\d{1,2})/);
-        
-        if (match) {
-            displayDate = match[0]; // จะได้ "May 27" ออกมาตรงๆ เลยครับ
-        } else {
-            displayDate = dateStr; // ถ้าหาไม่เจอจริงๆ ให้แสดงค่าเดิมกันพัง
-        }
-    }
-    // เคสที่ 4: ฟอร์แมตอื่นๆ
-    else {
-        displayDate = dateStr; 
-    }
-} else {
-    displayDate = todayStr;
-}
-        
-        // 🟢 2. คำนวณสีจากชื่อตรงนี้เลย (สายตรง ไม่พึ่งพาฟังก์ชันนอก)
-        let colors = { bg: 'bg-slate-50', text: 'text-slate-700', border: 'border-slate-200' };
-        if (exp.payer) {
-            let hash = 0;
-            const nameStr = exp.payer.toString();
-            for (let i = 0; i < nameStr.length; i++) {
-                hash = nameStr.charCodeAt(i) + ((hash << 5) - hash);
-            }
-            const colorIndex = Math.abs(hash) % colorPalette.length;
-            colors = colorPalette[colorIndex];
-        }
-        
-        // 3. พิมพ์แถวตาราง
-        tbody.innerHTML += `<tr class="bg-white hover:bg-slate-50 transition border-b border-slate-100">
-            <td class="py-1.5 px-3 text-slate-600 font-mono text-[11px] font-bold">${displayDate}</td>
-            <td class="py-1.5 px-3 font-semibold text-slate-700 text-xs sm:text-sm">${exp.desc}</td>
-            
-            <td class="py-1.5 px-3 text-slate-600">
-                <span class="${colors.bg} ${colors.text} ${colors.border} border text-[11px] px-1.5 py-0.5 rounded font-bold inline-block min-w-[65px] text-center">
-                    ${exp.payer}
-                </span>
-            </td>
-            
-            <td class="py-1.5 px-3 text-right font-bold text-slate-900 text-xs sm:text-sm">${exp.amount.toFixed(2)} .-</td>
-            <td class="py-1.5 px-3 text-center space-x-0.5 whitespace-nowrap">
-                <button type="button" onclick="startEditExpense(${index})" class="text-indigo-600 font-bold text-[11px] bg-indigo-50 px-1.5 py-0.5 rounded border border-indigo-100 hover:bg-indigo-100 transition active:scale-95">✏️</button>
-                <button type="button" onclick="deleteExpense(${index})" class="text-red-600 font-bold text-[11px] bg-red-50 px-1.5 py-0.5 rounded border border-red-100 hover:bg-red-100 transition active:scale-95">🗑️</button>
-            </td>
-        </tr>`;
-    });
-}
-
-function loadExpensesFromSheet() {
-    if (!SCRIPT_URL || SCRIPT_URL.trim() === "" || SCRIPT_URL.includes("ใส่ลิงก์")) {
-        setSyncStatus("❌ ยังไม่ได้ใส่ลิงก์ SCRIPT_URL ในโค้ด", "bg-red-50 text-red-600 border-red-200");
-        return;
-    }
-
-    // ✨ ปรับตรงนี้: เช็กและประกาศตัวแปร groupName ให้ชัดเจนเพื่อไม่ให้ระบบค้าง
-    let currentGroup = "";
-    const dropdown = document.getElementById('groupDropdown');
-    const groupInput = document.getElementById('groupNameInput');
-
-    if (dropdown && dropdown.value) {
-        currentGroup = dropdown.value;
-    } else if (groupInput && groupInput.value) {
-        currentGroup = groupInput.value;
-    } else {
-        currentGroup = ""; // ค่าเริ่มต้นกรณีเข้าเว็บครั้งแรกสุดแล้วไม่มีอะไรเลย
-    }
-
-    // เปลี่ยนชื่อกลุ่มโกลบอลหลักให้ตรงกัน
-    groupName = currentGroup; 
-    if (groupInput) groupInput.value = currentGroup;
-
-    setSyncStatus(`🔄 กำลังโหลดข้อมูลกลุ่ม [ ${currentGroup} ]...`, "bg-amber-50 text-amber-600 border-amber-200");
-    
-    // ยิง Fetch ไปหา Google Apps Script
-    fetch(`${SCRIPT_URL}?group=${encodeURIComponent(currentGroup)}`)
-        .then(res => res.json())
-        .then(data => {
-            expenses = data.expenses || [];
-            if (data.allGroups && data.allGroups.length > 0) {
-                allGroups = data.allGroups;
-                updateGroupDropdown(groupName);
-            }
-
-            // 🔥 จุดแก้ไข: ป้องกันไม่ให้ชื่อกลุ่มวิ่งกลับมาโชว์ในช่องกรอกตอนโหลดเสร็จ
-            const groupInput = document.getElementById('groupNameInput');
-            if (groupInput) {
-                groupInput.value = ""; // บังคับให้เป็นค่าว่างเสมอ
+        function renderExpenses() {
+            const tbody = document.getElementById('expenseList'); tbody.innerHTML = "";
+            if (expenses.length === 0) { 
+                tbody.innerHTML = `<tr><td colspan="5" class="p-6 text-center text-slate-400 bg-white">ยังไม่มีข้อมูลใช้จ่ายในกลุ่มนี้ เริ่มกรอกรายการแรกได้เลยครับ</td></tr>`; 
+                document.getElementById('resultSection').classList.add('hidden'); 
+                return; 
             }
             
-            // จัดการรายชื่อเพื่อน
-            let autoFriends = new Set();
-            expenses.forEach(exp => {
-                if (exp.payer) autoFriends.add(exp.payer);
-                if (exp.splitDetails) {
-                    Object.keys(exp.splitDetails).forEach(name => autoFriends.add(name));
+            const colorPalette = [
+                { bg: 'bg-blue-50', text: 'text-blue-700', border: 'border-blue-200' },
+                { bg: 'bg-emerald-50', text: 'text-emerald-700', border: 'border-emerald-200' },
+                { bg: 'bg-amber-50', text: 'text-amber-700', border: 'border-amber-200' },
+                { bg: 'bg-rose-50', text: 'text-rose-700', border: 'border-rose-200' },
+                { bg: 'bg-purple-50', text: 'text-purple-700', border: 'border-purple-200' },
+                { bg: 'bg-cyan-50', text: 'text-cyan-700', border: 'border-cyan-200' },
+                { bg: 'bg-fuchsia-50', text: 'text-fuchsia-700', border: 'border-fuchsia-200' },
+                { bg: 'bg-orange-50', text: 'text-orange-700', border: 'border-orange-200' }
+            ];
+
+            expenses.forEach((exp, index) => {
+                let displayDate = "-";
+                const todayStr = new Date().toLocaleDateString('en-GB'); 
+                displayDate = todayStr; 
+
+                if (exp.date) {
+                    let dateStr = exp.date.toString().trim();
+                    if (dateStr === "" || dateStr === "-" || dateStr === "undefined" || dateStr === "null") {
+                        displayDate = todayStr;
+                    }
+                    else if (dateStr.includes('-') && dateStr.split('-')[0].length === 4) {
+                        const parts = dateStr.substring(0, 10).split('-');
+                        displayDate = `${parts[2]}/${parts[1]}/${parts[0]}`;
+                    } 
+                    else if (/[a-zA-Z]/.test(dateStr)) {
+                        const match = dateStr.match(/([a-zA-Z]{3})\s(\d{1,2})/);
+                        if (match) displayDate = match[0];
+                        else displayDate = dateStr;
+                    }
+                    else {
+                        displayDate = dateStr; 
+                    }
                 }
-            });
 
-            if (autoFriends.size > 0) {
-                document.getElementById('friendsInput').value = Array.from(autoFriends).join(', ');
+                let colors = { bg: 'bg-slate-50', text: 'text-slate-700', border: 'border-slate-200' };
+                if (exp.payer) {
+                    let hash = 0;
+                    const nameStr = exp.payer.toString();
+                    for (let i = 0; i < nameStr.length; i++) {
+                        hash = nameStr.charCodeAt(i) + ((hash << 5) - hash);
+                    }
+                    const colorIndex = Math.abs(hash) % colorPalette.length;
+                    colors = colorPalette[colorIndex];
+                }
+                
+                tbody.innerHTML += `<tr class="bg-white hover:bg-slate-50 transition border-b border-slate-100">
+                    <td class="py-1.5 px-3 text-slate-600 font-mono text-[11px] font-bold">${displayDate}</td>
+                    <td class="py-1.5 px-3 font-semibold text-slate-700 text-xs sm:text-sm">${exp.desc}</td>
+                    <td class="py-1.5 px-3 text-slate-600">
+                        <span class="${colors.bg} ${colors.text} ${colors.border} border text-[11px] px-1.5 py-0.5 rounded font-bold inline-block min-w-[65px] text-center">
+                            ${exp.payer}
+                        </span>
+                    </td>
+                    <td class="py-1.5 px-3 text-right font-bold text-slate-900 text-xs sm:text-sm">${exp.amount.toFixed(2)} .-</td>
+                    <td class="py-1.5 px-3 text-center space-x-0.5 whitespace-nowrap">
+                        <button type="button" onclick="startEditExpense(${index})" class="text-indigo-600 font-bold text-[11px] bg-indigo-50 px-1.5 py-0.5 rounded border border-indigo-100 hover:bg-indigo-100 transition active:scale-95">✏️</button>
+                        <button type="button" onclick="deleteExpense(${index})" class="text-red-600 font-bold text-[11px] bg-red-50 px-1.5 py-0.5 rounded border border-red-100 hover:bg-red-100 transition active:scale-95">🗑️</button>
+                    </td>
+                </tr>`;
+            });
+        }
+
+        function loadExpensesFromSheet() {
+            if (!SCRIPT_URL || SCRIPT_URL.trim() === "") {
+                setSyncStatus("❌ ยังไม่ได้ใส่ลิงก์ SCRIPT_URL ในโค้ด", "bg-red-50 text-red-600 border-red-200");
+                return;
             }
+
+            const dropdown = document.getElementById('groupDropdown');
+            const groupInput = document.getElementById('groupNameInput');
+
+            if (dropdown && dropdown.value) {
+                globalGroupName = dropdown.value;
+            } else if (groupInput && groupInput.value) {
+                globalGroupName = groupInput.value.trim();
+            }
+
+            setSyncStatus(`🔄 กำลังโหลดข้อมูลกลุ่ม [ ${globalGroupName || "ทริปเริ่มต้น"} ]...`, "bg-amber-50 text-amber-600 border-amber-200");
             
-            updatePayerDropdown();
-            renderSplitUI();
-            renderExpenses();
-            calculateFinalSplit();
-            setSyncStatus(`✅ กลุ่ม [ ${currentGroup} ] ซิงค์สำเร็จ`, "bg-emerald-50 text-emerald-600 border-emerald-200");
-        })
-        .catch(err => {
-            console.error(err);
-            setSyncStatus("❌ เกิดข้อผิดพลาดในการดึงข้อมูล", "bg-red-50 text-red-600 border-red-200");
-        });
-}
+            fetch(`${SCRIPT_URL}?group=${encodeURIComponent(globalGroupName)}`)
+                .then(res => res.json())
+                .then(data => {
+                    expenses = data.expenses || [];
+                    if (data.allGroups && data.allGroups.length > 0) {
+                        allGroups = data.allGroups;
+                        // บังคับให้เซ็ตค่าทริปปัจจุบันในโกลบอล ถ้ายังไม่มีการกำหนด
+                        if(!globalGroupName && allGroups.length > 0) globalGroupName = allGroups[0];
+                        updateGroupDropdown(globalGroupName);
+                    }
+
+                    if (groupInput) {
+                        groupInput.value = ""; 
+                    }
+                    
+                    let autoFriends = new Set();
+                    expenses.forEach(exp => {
+                        if (exp.payer) autoFriends.add(exp.payer);
+                        if (exp.splitDetails) {
+                            Object.keys(exp.splitDetails).forEach(name => autoFriends.add(name));
+                        }
+                    });
+
+                    if (autoFriends.size > 0) {
+                        document.getElementById('friendsInput').value = Array.from(autoFriends).join(', ');
+                    }
+                    
+                    updatePayerDropdown();
+                    renderSplitUI();
+                    renderExpenses();
+                    calculateFinalSplit();
+                    setSyncStatus(`✅ กลุ่ม [ ${globalGroupName} ] ซิงค์สำเร็จ`, "bg-emerald-50 text-emerald-600 border-emerald-200");
+                })
+                .catch(err => {
+                    console.error(err);
+                    setSyncStatus("❌ เกิดข้อผิดพลาดในการดึงข้อมูล", "bg-red-50 text-red-600 border-red-200");
+                });
+        }
 
         function startEditExpense(index) {
             const exp = expenses[index];
             document.getElementById('editIndex').value = index;
-            document.getElementById('expenseDate').value = exp.date;
+            document.getElementById('expenseDate').value = exp.date ? exp.date.substring(0,10) : "";
             document.getElementById('expenseDesc').value = exp.desc;
             document.getElementById('expenseAmount').value = exp.amount;
             document.getElementById('expensePayer').value = exp.payer;
@@ -506,23 +439,12 @@ function loadExpensesFromSheet() {
             const payer = document.getElementById('expensePayer').value;
             const splitType = document.getElementById('splitType').value;
             const friends = getFriends();
-    
-            // 🟢 เปลี่ยนวิธีหาชื่อกลุ่มตรงนี้ครับ (วางแทนของเดิมได้เลย)
-            const groupInput = document.getElementById('groupNameInput');
-            const groupDropdown = document.getElementById('groupDropdown');
-    
-            let groupName = "";
-            if (groupInput && groupInput.value.trim() !== "") {
-                groupName = groupInput.value.trim();
-            } else if (groupDropdown && groupDropdown.value.trim() !== "") {
-                groupName = groupDropdown.value.trim();
+            
+            const currentGroup = getGroupName();
+            if (!currentGroup) {
+                alert("❌ เกิดข้อผิดพลาด: ไม่พบชื่อกลุ่มในการบันทึกข้อมูล \n(กรุณาเลือกทริปเดิมหรือพิมพ์ชื่อทริปใหม่ก่อนครับ)");
+                return;
             }
-    
-    // ถ้าเช็กทั้ง 2 ช่องแล้วไม่มีชื่อกลุ่มโผล่มาจริง ๆ ค่อยเตือน
-    if (!groupName) {
-        alert("❌ เกิดข้อผิดพลาด: ไม่พบชื่อกลุ่มในการบันทึกข้อมูล \n(กรุณาเลือกทริปเดิมหรือพิมพ์ชื่อทริปใหม่ก่อนครับ)");
-        return;
-    }
 
             let splitDetails = {};
 
@@ -541,9 +463,9 @@ function loadExpensesFromSheet() {
                 if (Math.abs(currentTotal - amount) > 0.1) { alert("ยอดรวมเงินกรอกไม่ตรงกับยอดเงินสุทธิครับ!"); return; }
             }
 
-            const payload = { action: editIndex > -1 ? "edit" : "insert", index: editIndex, groupName, date, desc, amount, payer, splitType, splitDetails };
+            const payload = { action: editIndex > -1 ? "edit" : "insert", index: editIndex, groupName: currentGroup, date, desc, amount, payer, splitType, splitDetails };
             
-            setSyncStatus("⏳ กำลังบันทึกข้อมูลลงคอลัมน์ A...", "bg-amber-50 text-amber-600 border-amber-200");
+            setSyncStatus("⏳ กำลังบันทึกข้อมูล...", "bg-amber-50 text-amber-600 border-amber-200");
             fetch(SCRIPT_URL, { method: "POST", body: JSON.stringify(payload) })
                 .then(() => {
                     cancelEdit();
@@ -552,67 +474,68 @@ function loadExpensesFromSheet() {
                 });
         }
 
-function deleteExpense(index) {
-    const groupName = getGroupName();
-    const itemToDelete = expenses[index]; // ดึงข้อมูลเต็มๆ ของรายการที่จะลบ
-    
-    if (confirm(`คุณต้องการลบรายการ "${itemToDelete.desc}" ใช่หรือไม่?`)) {
-        setSyncStatus("⏳ กำลังลบรายการ...", "bg-red-50 text-red-600 border-red-200");
-        
-        // ส่งเป็น JSON Object ส่งค่าไปค้นหาแฝดใน Sheet ป้องกันการลบผิดแถว
-        const payload = {
-            action: "delete",
-            groupName: groupName,
-            index: index,
-            desc: itemToDelete.desc,
-            amount: itemToDelete.amount,
-            date: itemToDelete.date
-        };
+        function deleteExpense(index) {
+            const currentGroup = getGroupName();
+            const itemToDelete = expenses[index]; 
+            
+            if (!currentGroup) {
+                alert("❌ ไม่พบชื่อกลุ่มสำหรับการลบรายการ");
+                return;
+            }
+            
+            if (confirm(`คุณต้องการลบรายการ "${itemToDelete.desc}" ใช่หรือไม่?`)) {
+                setSyncStatus("⏳ กำลังลบรายการ...", "bg-red-50 text-red-600 border-red-200");
+                
+                const payload = {
+                    action: "delete",
+                    groupName: currentGroup,
+                    index: index
+                };
 
-        fetch(SCRIPT_URL, { 
-            method: "POST", 
-            body: JSON.stringify(payload) 
-        })
-        .then(() => { 
-            setSyncStatus("✅ ลบรายการสำเร็จ", "bg-green-50 text-green-600 border-green-200");
-            loadExpensesFromSheet(); 
-        })
-        .catch(err => {
-            console.error("Delete error:", err);
-            setSyncStatus("❌ ลบไม่สำเร็จ กรุณาลองใหม่", "bg-red-50 text-red-600 border-red-200");
-        });
-    }
-}
+                fetch(SCRIPT_URL, { 
+                    method: "POST", 
+                    body: JSON.stringify(payload) 
+                })
+                .then(res => res.json())
+                .then(() => { 
+                    setSyncStatus("✅ ลบรายการสำเร็จ", "bg-green-50 text-green-600 border-green-200");
+                    loadExpensesFromSheet(); 
+                })
+                .catch(err => {
+                    console.error("Delete error:", err);
+                    setSyncStatus("❌ ลบไม่สำเร็จ กรุณาลองใหม่", "bg-red-50 text-red-600 border-red-200");
+                });
+            }
+        }
 
-function clearAllExpenses() {
-    const groupName = getGroupName();
-    if (confirm(`⚠️ คุณต้องการล้างรายการทั้งหมดของกลุ่ม "${groupName}" ใช่หรือไม่?\n(ข้อมูลในกลุ่มนี้จะถูกลบถาวร)`)) {
-        setSyncStatus("⏳ กำลังล้างข้อมูลกลุ่ม...", "bg-red-50 text-red-600 border-red-200");
-        
-        const payload = {
-            action: "clear",
-            groupName: groupName
-        };
+        function clearAllExpenses() {
+            const currentGroup = getGroupName();
+            if (!currentGroup) {
+                alert("❌ ไม่พบชื่อกลุ่มสำหรับการล้างรายการ");
+                return;
+            }
+            if (confirm(`⚠️ คุณต้องการล้างรายการทั้งหมดของกลุ่ม "${currentGroup}" ใช่หรือไม่?\n(ข้อมูลในกลุ่มนี้จะถูกลบถาวร)`)) {
+                setSyncStatus("⏳ กำลังล้างข้อมูลกลุ่ม...", "bg-red-50 text-red-600 border-red-200");
+                
+                const payload = {
+                    action: "clear",
+                    groupName: currentGroup
+                };
 
-        fetch(SCRIPT_URL, { 
-            method: "POST", 
-            body: JSON.stringify(payload) 
-        })
-        .then(() => { 
-            setSyncStatus("✅ ล้างข้อมูลกลุ่มสำเร็จ", "bg-green-50 text-green-600 border-green-200");
-            loadExpensesFromSheet(); 
-        })
-        .catch(err => {
-            console.error("Clear error:", err);
-            setSyncStatus("❌ ล้างข้อมูลไม่สำเร็จ กรุณาลองใหม่", "bg-red-50 text-red-600 border-red-200");
-        });
-    }
-}
-
-        function setSyncStatus(text, classes) {
-            const statusDiv = document.getElementById('syncStatus');
-            statusDiv.innerText = text;
-            statusDiv.className = `inline-block px-3 py-1 rounded-full text-xs font-bold ${classes}`;
+                fetch(SCRIPT_URL, { 
+                    method: "POST", 
+                    body: JSON.stringify(payload) 
+                })
+                .then(res => res.json())
+                .then(() => { 
+                    setSyncStatus("✅ ล้างข้อมูลกลุ่มสำเร็จ", "bg-green-50 text-green-600 border-green-200");
+                    loadExpensesFromSheet(); 
+                })
+                .catch(err => {
+                    console.error("Clear error:", err);
+                    setSyncStatus("❌ ล้างข้อมูลไม่สำเร็จ กรุณาลองใหม่", "bg-red-50 text-red-600 border-red-200");
+                });
+            }
         }
 
         function calculateFinalSplit() {
@@ -651,25 +574,11 @@ function clearAllExpenses() {
             document.getElementById('resultSection').classList.remove('hidden');
         }
 
-        function togglePaidStatus(id) {
-            const container = document.getElementById(`transferItem_${id}`);
-            const text = document.getElementById(`transferText_${id}`);
-            const amount = document.getElementById(`transferAmount_${id}`);
-            const isChecked = container.querySelector('input[type="checkbox"]').checked;
-            if (isChecked) {
-                container.className = "bg-slate-100 p-3.5 rounded-xl border border-slate-200 flex justify-between items-center shadow-inner opacity-60 transition-all duration-300";
-                text.classList.add('line-through', 'text-slate-400'); amount.className = "text-xs font-bold text-slate-400 line-through";
-            } else {
-                container.className = "bg-emerald-50 p-3.5 rounded-xl border border-emerald-200 flex justify-between items-center shadow-sm transition-all duration-300";
-                text.classList.remove('line-through', 'text-slate-400'); amount.className = "text-sm sm:text-base font-black text-emerald-700";
-            }
-        }
-
-        document.getElementById('groupNameInput').value = ""; 
-        setDefaultDate();
-        updatePayerDropdown();
-        renderSplitUI();
-        loadExpensesFromSheet();
+        // โหลดข้อมูลอัตโนมัติเมื่อเปิดหน้าเว็บครั้งแรก
+        window.onload = function() {
+            setDefaultDate();
+            loadExpensesFromSheet();
+        };
     </script>
 </body>
 </html>
