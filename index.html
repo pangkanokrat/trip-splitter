@@ -3,231 +3,421 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Trip Split-Bill Web App</title>
-    <!-- Bootstrap 5 CSS -->
+    <title>Trip Split-Bill App - ระบบออนไลน์จริง 100%</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <!-- Font Awesome Icons -->
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <style>
-        body { background-color: #f4f7f6; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
-        .setup-container, .login-container { max-width: 450px; margin: 60px auto; }
+        body { background-color: #f4f7f6; font-family: 'Segoe UI', sans-serif; }
+        .setup-container { max-width: 450px; margin: 80px auto; }
         .card { border: none; border-radius: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); }
         .sidebar { height: 100vh; background-color: #1e293b; color: #fff; position: fixed; width: 260px; padding-top: 20px; }
         .sidebar .nav-link { color: #cbd5e1; padding: 12px 20px; border-radius: 8px; margin: 4px 15px; display: flex; align-items: center; gap: 10px; transition: all 0.3s; text-decoration: none; }
         .sidebar .nav-link:hover, .sidebar .nav-link.active { background-color: #334155; color: #fff; }
         .main-content { margin-left: 260px; padding: 40px; min-height: 100vh; }
-        .navbar-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; }
         .hidden { display: none !important; }
-        .stat-card { background: linear-gradient(135deg, #3b82f6, #1d4ed8); color: white; border-radius: 15px; padding: 20px; }
-        @media (max-width: 768px) { .sidebar { width: 100%; height: auto; position: relative; } .main-content { margin-left: 0; padding: 20px; } }
     </style>
 </head>
 <body>
 
-    <!-- STAGE 0: SETUP URL (ใส่ URL เพื่อเชื่อมหลังบ้าน) -->
     <div id="setupSection" class="container setup-container">
         <div class="card p-4">
-            <h4 class="text-center mb-3 fw-bold text-dark"><i class="fa-solid fa-gear text-secondary me-2"></i>ตั้งค่าระบบครั้งแรก</h4>
-            <p class="text-muted small text-center">โปรดกรอก URL ที่ได้จากการ Deploy Web App ของ Google Apps Script เพื่อเชื่อมต่อระบบ</p>
+            <h4 class="text-center mb-3 fw-bold"><i class="fa-solid fa-cloud-plug text-primary me-2"></i>ระบบออนไลน์เชื่อมต่อ Sheet</h4>
             <div class="mb-3">
-                <label class="form-label fw-bold">Google Script Web App URL</label>
+                <label class="form-label fw-bold">วาง URL Google Script (Web App) ของคุณ</label>
                 <input type="text" id="scriptUrlInput" class="form-control" placeholder="https://script.google.com/macros/s/.../exec">
             </div>
-            <button onclick="saveSystemUrl()" class="btn btn-dark w-100">เชื่อมต่อระบบ & ไปหน้าแอปหลัก</button>
+            <button onclick="saveSystemUrl()" class="btn btn-primary w-100 fw-bold">เข้าสู่ระบบแอปพลิเคชัน</button>
         </div>
     </div>
 
-    <!-- STAGE 1: MAIN APP SECTION (ปลดล็อกให้โชว์เมนูและปุ่มทั้งหมดทันที) -->
     <div id="appSection" class="hidden">
-        <!-- แถบเมนูด้านข้าง -->
         <div class="sidebar">
             <div class="px-4 mb-4">
-                <h4 class="fw-bold text-warning"><i class="fa-solid fa-wallet me-2"></i>Split Bill App</h4>
-                <p class="small text-muted"><i class="fa-solid fa-circle-user text-success me-1"></i> สถานะ: เชื่อมต่อแล้ว</p>
+                <h4 class="fw-bold text-warning"><i class="fa-solid fa-wallet me-2"></i>Split Bill Live</h4>
+                <p class="small text-muted"><i class="fa-solid fa-circle text-success me-1"></i> ฐานข้อมูลออนไลน์</p>
             </div>
             <nav class="nav flex-column">
-                <a class="nav-link active" href="#" onclick="switchTab('dashboard')"><i class="fa-solid fa-chart-pie"></i> แดชบอร์ดสรุปทริป</a>
-                <a class="nav-link" href="#" onclick="switchTab('groups')"><i class="fa-solid fa-people-group"></i> จัดการกลุ่มทริป</a>
-                <a class="nav-link" href="#" onclick="switchTab('friends')"><i class="fa-solid fa-users"></i> รายชื่อสมาชิก</a>
-                <a class="nav-link text-danger mt-5" href="#" onclick="clearSystemUrl()"><i class="fa-solid fa-trash"></i> ลบลิงก์เชื่อมต่อ</a>
+                <a class="nav-link active" href="#" onclick="switchTab('dashboard')"><i class="fa-solid fa-receipt"></i> บันทึกค่าใช้จ่ายและหารเงิน</a>
+                <a class="nav-link" href="#" onclick="switchTab('groups')"><i class="fa-solid fa-folder-plus"></i> ปุ่มสร้างกลุ่มทริปใหม่</a>
+                <a class="nav-link" href="#" onclick="switchTab('friends')"><i class="fa-solid fa-user-plus"></i> ปุ่มเพิ่มรายชื่อสมาชิก</a>
+                <a class="nav-link text-danger mt-5" href="#" onclick="clearSystemUrl()"><i class="fa-solid fa-power-off"></i> ตัดการเชื่อมต่อชีท</a>
             </nav>
         </div>
 
-        <!-- เนื้อหาหลักตามเมนูที่เลือก -->
         <div class="main-content">
             
-            <!-- ตู้คอนเทนเนอร์หน้า 1: แดชบอร์ดสรุปทริป และ ฟอร์มบันทึกค่าใช้จ่าย/แชร์เงิน -->
             <div id="tab-dashboard" class="tab-content">
-                <div class="navbar-top">
-                    <h2 class="fw-bold text-dark">📊 สรุปแดชบอร์ดและบันทึกแชร์เงิน</h2>
-                </div>
+                <h2 class="fw-bold text-dark mb-4">🧾 บันทึกและคำนวณแชร์เงิน (Real-time)</h2>
                 
-                <div class="row g-4 mb-4">
-                    <div class="col-md-6">
-                        <div class="stat-card">
-                            <h5><i class="fa-solid fa-money-bill-wave me-2"></i>ยอดใช้จ่ายรวมในทริปนี้</h5>
-                            <h2 class="fw-bold mt-2">฿ 0.00</h2>
-                            <p class="small mb-0 opacity-75">อัปเดตแบบเรียลไทม์จาก Google Sheet</p>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- 🧾 ฟอร์มบันทึกค่าใช้จ่ายและหารเงิน -->
                 <div class="card p-4 mb-4">
-                    <h5 class="fw-bold mb-3 text-primary"><i class="fa-solid fa-receipt me-2"></i>เพิ่มรายการค่าใช้จ่าย (หารเงินเท่ากัน)</h5>
-                    <div class="row g-3">
+                    <div class="row g-3 mb-4">
                         <div class="col-md-3">
-                            <label class="form-label">เลือกกลุ่มทริป</label>
-                            <select id="expenseGroup" class="form-select">
-                                <option value="">-- โปรดเลือกกลุ่ม --</option>
-                                <option value="GRP_01">ทริปหัวหินปาร์ตี้</option>
+                            <label class="form-label fw-bold text-danger">1. เลือกกลุ่มทริปก่อนเริ่ม</label>
+                            <select id="expenseGroup" class="form-select bg-warning bg-opacity-10" onchange="loadActiveMembersFromSheet()">
+                                <option value="">-- โปรดเลือกกลุ่มทริปของคุณ --</option>
                             </select>
                         </div>
                         <div class="col-md-3">
-                            <label class="form-label">ชื่อรายการ (เช่น ค่าที่พัก, ค่ากิน)</label>
-                            <input type="text" id="expenseTitle" class="form-control" placeholder="เช่น ค่าอาหารเย็น">
+                            <label class="form-label fw-bold">2. ชื่อรายการ</label>
+                            <input type="text" id="expenseTitle" class="form-control" placeholder="เช่น ค่าซีฟู้ดริมหาด">
                         </div>
-                        <div class="col-md-2">
-                            <label class="form-label">จำนวนเงินทั้งหมด (บาท)</label>
-                            <input type="number" id="expenseAmount" class="form-control" placeholder="0.00">
+                        <div class="col-md-3">
+                            <label class="form-label fw-bold">3. จำนวนยอดรวม (บาท)</label>
+                            <input type="number" id="expenseAmount" class="form-control" placeholder="0.00" oninput="updateSplitInputs()">
                         </div>
-                        <div class="col-md-2">
-                            <label class="form-label">คนจ่ายเงินสำรอง</label>
+                        <div class="col-md-3">
+                            <label class="form-label fw-bold">4. คนจ่ายสำรองเงิน</label>
                             <select id="expensePayer" class="form-select">
-                                <option value="">-- ใครเป็นคนจ่าย --</option>
-                                <option value="USR_01">ตัวฉัน</option>
+                                <option value="">-- ดึงรายชื่ออัตโนมัติ --</option>
                             </select>
                         </div>
-                        <div class="col-md-2 d-flex align-items-end">
-                            <button onclick="submitExpense()" class="btn btn-primary w-100"><i class="fa-solid fa-plus me-1"></i>บันทึกและหาร</button>
+                    </div>
+
+                    <div class="mb-4">
+                        <label class="form-label fw-bold text-dark"><i class="fa-solid fa-calculator me-1 text-primary"></i> 5. เลือกวิธีแบ่งหารค่าใช้จ่าย</label>
+                        <div class="d-flex flex-wrap gap-2">
+                            <input type="radio" class="btn-check" name="splitType" id="typeEqual" value="EQUAL" checked onchange="onChangeSplitType()">
+                            <label class="btn btn-outline-primary" for="typeEqual">หารเท่ากัน</label>
+
+                            <input type="radio" class="btn-check" name="splitType" id="typeAmount" value="EXACT" onchange="onChangeSplitType()">
+                            <label class="btn btn-outline-primary" for="typeAmount">ระบุจำนวนเงินบาท</label>
+
+                            <input type="radio" class="btn-check" name="splitType" id="typeShare" value="SHARE" onchange="onChangeSplitType()">
+                            <label class="btn btn-outline-primary" for="typeShare">หารเป็นสัดส่วน (ส่วน)</label>
+
+                            <input type="radio" class="btn-check" name="splitType" id="typePercent" value="PERCENT" onchange="onChangeSplitType()">
+                            <label class="btn btn-outline-primary" for="typePercent">หารเป็นเปอร์เซ็นต์ (%)</label>
                         </div>
                     </div>
+
+                    <div class="p-3 bg-light rounded mb-3" style="border-left: 5px solid #2563eb;">
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <span class="fw-bold"><i class="fa-solid fa-users me-1 text-secondary"></i> สมาชิกที่อยู่ในกลุ่มทริปนี้</span>
+                            <div id="actionEqualButtons">
+                                <button type="button" class="btn btn-sm btn-outline-secondary py-0" onclick="toggleSelectAll(true)">เลือกทุกคน</button>
+                                <button type="button" class="btn btn-sm btn-outline-secondary py-0" onclick="toggleSelectAll(false)">ล้างทั้งหมด</button>
+                            </div>
+                        </div>
+
+                        <div id="dynamicSplitContainer" class="row g-3">
+                            <div class="text-center text-muted p-3">โปรดเลือกกลุ่มทริปด้านบนเพื่อดึงรายชื่อสมาชิกจริงจากกูเกิลชีท</div>
+                        </div>
+
+                        <div class="mt-4 pt-2 border-top d-flex justify-content-between align-items-center fw-bold">
+                            <div id="splitValidationMessage" class="text-danger small"></div>
+                            <div id="splitSummaryResult" class="text-dark">รวมที่แบ่ง: ฿0.00 / ยอดบิล: ฿0.00</div>
+                        </div>
+                    </div>
+
+                    <button id="btnSubmitExpense" onclick="submitExpense()" class="btn btn-dark w-100 py-2 fw-bold" disabled><i class="fa-solid fa-paper-plane me-2"></i>บันทึกและคำนวณบิลลงกูเกิลชีท</button>
                 </div>
             </div>
 
-            <!-- 👥 ตู้คอนเทนเนอร์หน้า 2: จัดการกลุ่มทริป (เพิ่มปุ่มสร้างกลุ่มที่นี่แล้วครับ) -->
             <div id="tab-groups" class="tab-content hidden">
-                <div class="navbar-top">
-                    <h2 class="fw-bold text-dark">👥 จัดการกลุ่มทริป</h2>
-                </div>
-
-                <!-- ➕ ฟอร์มสร้างกลุ่มใหม่ -->
+                <h2 class="fw-bold text-dark mb-4">👥 ปุ่มสร้างกลุ่มทริปใหม่</h2>
                 <div class="card p-4 mb-4" style="max-width: 600px;">
-                    <h5 class="fw-bold mb-3 text-success"><i class="fa-solid fa-folder-plus me-2"></i>สร้างกลุ่มทริปใหม่</h5>
                     <div class="mb-3">
-                        <label class="form-label">ชื่อกลุ่มทริป / กิจกรรม</label>
-                        <input type="text" id="groupNameInput" class="form-control" placeholder="เช่น ทริปเที่ยวเชียงใหม่ 2026">
+                        <label class="form-label fw-bold">ชื่อกลุ่มกิจกรรมทริป</label>
+                        <input type="text" id="groupNameInput" class="form-control" placeholder="เช่น ทริปสงกรานต์ระยอง">
                     </div>
                     <div class="mb-3">
-                        <label class="form-label">คำอธิบายกลุ่มย่อย (ระบุหรือไม่ระบุก็ได้)</label>
-                        <textarea id="groupDescInput" class="form-control" rows="2" placeholder="รายละเอียด เช่น หารค่ารถและค่าที่พักร่วมกัน"></textarea>
+                        <label class="form-label fw-bold">คำอธิบาย</label>
+                        <input type="text" id="groupDescInput" class="form-control" placeholder="รายละเอียดกลุ่มสั้นๆ">
                     </div>
-                    <button onclick="submitCreateGroup()" class="btn btn-success"><i class="fa-solid fa-square-plus me-1"></i>กดสร้างกลุ่มทริป</button>
+                    <button id="btnCreateGroup" onclick="submitCreateGroup()" class="btn btn-success fw-bold">ยืนยันกดสร้างกลุ่ม</button>
                 </div>
             </div>
 
-            <!-- 👤 ตู้คอนเทนเนอร์หน้า 3: รายชื่อสมาชิก (เพิ่มปุ่มสร้างรายชื่อเพื่อนที่นี่แล้วครับ) -->
             <div id="tab-friends" class="tab-content hidden">
-                <div class="navbar-top">
-                    <h2 class="fw-bold text-dark">👤 รายชื่อสมาชิกในระบบ</h2>
-                </div>
-
-                <!-- ➕ ฟอร์มเพิ่มรายชื่อเพื่อน -->
+                <h2 class="fw-bold text-dark mb-4">👤 ปุ่มเพิ่มรายชื่อเพื่อนเข้าระบบกลุ่ม</h2>
                 <div class="card p-4 mb-4" style="max-width: 600px;">
-                    <h5 class="fw-bold mb-3 text-info text-dark"><i class="fa-solid fa-user-plus me-2"></i>เพิ่มรายชื่อเพื่อนสมาชิกในทริป</h5>
                     <div class="mb-3">
-                        <label class="form-label">ชื่อเล่น / ชื่อที่ใช้แสดงของเพื่อน</label>
-                        <input type="text" id="friendNameInput" class="form-control" placeholder="เช่น นนท์, ส้ม, กาย">
+                        <label class="form-label fw-bold">1. เลือกกลุ่มทริปที่จะแอดเพื่อนเข้าไป</label>
+                        <select id="friendGroupSelect" class="form-select bg-light"></select>
                     </div>
                     <div class="mb-3">
-                        <label class="form-label">บทบาท หรือ รหัสอ้างอิง</label>
-                        <input type="text" id="friendIdInput" class="form-control" placeholder="เช่น USR_02 (หรือปล่อยว่างให้ระบบรันอัตโนมัติ)">
+                        <label class="form-label fw-bold">2. ชื่อเล่นของเพื่อน</label>
+                        <input type="text" id="friendNameInput" class="form-control" placeholder="กรอกชื่อเพื่อน เช่น กาย, ส้ม, นนท์">
                     </div>
-                    <button onclick="submitCreateFriend()" class="btn btn-info text-white fw-bold"><i class="fa-solid fa-user-check me-1"></i>เพิ่มรายชื่อเข้าทริป</button>
+                    <button id="btnCreateFriend" onclick="submitCreateFriend()" class="btn btn-info text-white fw-bold">กดบันทึกเพิ่มรายชื่อเพื่อน</button>
                 </div>
             </div>
 
         </div>
     </div>
 
-    <!-- ระบบ JavaScript ควบคุมหน้าจอและการยิงข้อมูลไป Google Sheets -->
     <script>
         let SCRIPT_URL = "";
+        let activeMembers = []; // เก็บข้อมูลรายชื่อคนที่ดึงมาจากกูเกิลชีทจริง
 
         window.onload = function() {
-            // ดึงลิงก์จากหน่วยความจำเครื่อง
             const savedUrl = localStorage.getItem('google_script_url');
             if (savedUrl) {
                 SCRIPT_URL = savedUrl;
                 document.getElementById('setupSection').classList.add('hidden');
                 document.getElementById('appSection').classList.remove('hidden');
+                loadGroupsFromSheet(); // โหลดรายการกลุ่มจากชีททันทีเมื่อเข้าแอป
             }
         };
 
         function saveSystemUrl() {
             const url = document.getElementById('scriptUrlInput').value.trim();
-            if(!url.startsWith("https://script.google.com")) {
-                return alert("กรุณากรอก URL ของ Google Script Web App ที่ถูกต้องครับ");
-            }
+            if(!url.startsWith("https://script.google.com")) return alert("กรุณากรอก URL ให้ถูกต้อง");
             localStorage.setItem('google_script_url', url);
-            SCRIPT_URL = url;
             location.reload();
         }
 
         function clearSystemUrl() {
-            if(confirm("คุณต้องการลบการเชื่อมต่อ URL และตั้งค่าระบบใหม่ใช่หรือไม่?")) {
+            if(confirm("ยืนยันตัดการเชื่อมต่อกับระบบฐานข้อมูล?")) {
                 localStorage.removeItem('google_script_url');
                 location.reload();
             }
         }
 
-        // ฟังก์ชันสลับหน้าเมนูซ้ายมือ
         function switchTab(tabName) {
-            // ซ่อนทุกหน้าก่อน
             document.querySelectorAll('.tab-content').forEach(tab => tab.classList.add('hidden'));
             document.querySelectorAll('.sidebar .nav-link').forEach(link => link.classList.remove('active'));
-            
-            // เปิดเฉพาะหน้าและเมนูที่เลือก
             document.getElementById(`tab-${tabName}`).classList.remove('hidden');
             event.currentTarget.classList.add('active');
         }
 
-        // 1. ระบบกดส่งข้อมูล "สร้างกลุ่มใหม่" ไปที่ Google Sheets
-        function submitCreateGroup() {
-            const name = document.getElementById('groupNameInput').value.trim();
-            const desc = document.getElementById('groupDescInput').value.trim();
-            if(!name) return alert("โปรดกรอกชื่อกลุ่มทริปด้วยครับ");
+        // 🔗 ฟังก์ชันดึงรายชื่อกลุ่มทริปจริงจาก Google Sheet
+        function loadGroupsFromSheet() {
+            fetch(`${SCRIPT_URL}?action=getGroups`)
+            .then(res => res.json())
+            .then(data => {
+                if(data.success) {
+                    const expSelect = document.getElementById('expenseGroup');
+                    const friendSelect = document.getElementById('friendGroupSelect');
+                    
+                    expSelect.innerHTML = '<option value="">-- โปรดเลือกกลุ่มทริปของคุณ --</option>';
+                    friendSelect.innerHTML = '<option value="">-- เลือกกลุ่มทริปก่อนเพิ่มเพื่อน --</option>';
+                    
+                    data.groups.forEach(g => {
+                        const opt = `<option value="${g.id}">${g.name}</option>`;
+                        expSelect.innerHTML += opt;
+                        friendSelect.innerHTML += opt;
+                    });
+                }
+            }).catch(err => alert("ไม่สามารถดึงข้อมูลกลุ่มทริปได้ โปรดตรวจเช็คสิทธิ์ Deploy ของกูเกิลสคริปต์ครับ"));
+        }
 
-            alert(`กำลังส่งข้อมูลสร้างกลุ่ม "${name}" ไปที่ฐานข้อมูล Google Sheets...\n(ระบบจะส่งไปทำงานร่วมกับคำสั่งโค้ดใน Google Apps Script ของคุณอัตโนมัติ)`);
+        // 🔗 ฟังก์ชันดึงรายชื่อเพื่อนของกลุ่มนั้นๆ จริงจาก Google Sheet
+        function loadActiveMembersFromSheet() {
+            const groupId = document.getElementById('expenseGroup').value;
+            const container = document.getElementById('dynamicSplitContainer');
+            const payerSelect = document.getElementById('expensePayer');
             
-            // ตัวอย่างการส่งโครงสร้างข้อมูล Fetch ยิงหลังบ้าน
-            /*
-            fetch(`${SCRIPT_URL}?action=createGroup&name=${name}&desc=${desc}`)
-            .then(res => res.json()).then(data => alert(data.message));
-            */
+            if(!groupId) {
+                container.innerHTML = '<div class="text-center text-muted p-3">โปรดเลือกกลุ่มทริปด้านบนเพื่อดึงรายชื่อสมาชิกจริงจากกูเกิลชีท</div>';
+                payerSelect.innerHTML = '<option value="">-- ดึงรายชื่ออัตโนมัติ --</option>';
+                return;
+            }
+
+            container.innerHTML = '<div class="text-center text-muted p-3"><i class="fa-solid fa-spinner fa-spin me-2"></i>กำลังดาวน์โหลดรายชื่อเพื่อนๆ จาก Google Sheets...</div>';
+
+            fetch(`${SCRIPT_URL}?action=getMembers&groupId=${groupId}`)
+            .then(res => res.json())
+            .then(data => {
+                if(data.success) {
+                    activeMembers = data.members;
+                    
+                    // ปรับหน้าต่างคนจ่ายเงินสำรอง
+                    payerSelect.innerHTML = '';
+                    activeMembers.forEach(m => {
+                        payerSelect.innerHTML += `<option value="${m.id}">${m.name}</option>`;
+                    });
+
+                    // วาดช่องฟอร์มคำนวณเงิน
+                    onChangeSplitType();
+                }
+            });
         }
 
-        // 2. ระบบกดส่งข้อมูล "สร้างรายชื่อเพื่อน" ไปที่ Google Sheets
-        function submitCreateFriend() {
-            const name = document.getElementById('friendNameInput').value.trim();
-            const id = document.getElementById('friendIdInput').value.trim();
-            if(!name) return alert("โปรดกรอกชื่อเล่นของเพื่อนสมาชิกด้วยครับ");
-
-            alert(`กำลังบันทึกรายชื่อคุณ "${name}" เข้าสู่ระบบและฐานข้อมูลกลุ่ม...\n(ข้อมูลจะถูกส่งเข้าตารางสมาชิกบน Google Sheet ทันที)`);
+        function getSelectedSplitType() {
+            return document.querySelector('input[name="splitType"]:checked').value;
         }
 
-        // 3. ระบบกดส่งข้อมูล "บันทึกค่าใช้จ่ายหารเงิน"
+        // สลับแสดงผลช่องกรอกเงินตามโหมดการหารแบบไดนามิกตามจำนวนเพื่อนที่มีจริงในชีท
+        function onChangeSplitType() {
+            const type = getSelectedSplitType();
+            const container = document.getElementById('dynamicSplitContainer');
+            const actionButtons = document.getElementById('actionEqualButtons');
+            container.innerHTML = "";
+
+            if(activeMembers.length === 0) {
+                container.innerHTML = '<div class="text-center text-danger p-3">❌ ยังไม่มีสมาชิกในกลุ่มนี้! โปรดเลือกไปเมนูขวาเพื่อกดเพิ่มรายชื่อเพื่อนก่อนครับ</div>';
+                return;
+            }
+
+            if (type === "EQUAL") actionButtons.classList.remove('hidden');
+            else actionButtons.classList.add('hidden');
+
+            activeMembers.forEach(member => {
+                let inputHtml = "";
+                if (type === "EQUAL") {
+                    inputHtml = `<div class="form-check mt-2"><input class="form-check-input member-split-chk" type="checkbox" value="${member.id}" id="chk_${member.id}" checked onchange="updateSplitInputs()"><label class="form-check-label" for="chk_${member.id}">ร่วมหาร</label></div><input type="hidden" id="val_${member.id}" value="0"><span class="badge bg-secondary ms-2 mt-2" id="badge_${member.id}">฿0.00</span>`;
+                } else if (type === "EXACT") {
+                    inputHtml = `<div class="input-group input-group-sm"><span class="input-group-text">฿</span><input type="number" class="form-control member-split-val" id="val_${member.id}" value="0" oninput="updateSplitInputs()"></div>`;
+                } else if (type === "SHARE") {
+                    inputHtml = `<div class="input-group input-group-sm"><input type="number" class="form-control member-split-val" id="val_${member.id}" value="1" oninput="updateSplitInputs()"><span class="input-group-text">ส่วน</span></div><span class="badge bg-secondary ms-2 mt-2" id="badge_${member.id}">฿0.00</span>`;
+                } else if (type === "PERCENT") {
+                    inputHtml = `<div class="input-group input-group-sm"><input type="number" class="form-control member-split-val" id="val_${member.id}" value="0" oninput="updateSplitInputs()"><span class="input-group-text">%</span></div><span class="badge bg-secondary ms-2 mt-2" id="badge_${member.id}">฿0.00</span>`;
+                }
+
+                container.innerHTML += `
+                    <div class="col-md-6 d-flex justify-content-between align-items-center p-2 border-bottom">
+                        <span class="fw-bold text-dark"><i class="fa-solid fa-user text-muted me-2"></i>${member.name}</span>
+                        <div class="d-flex align-items-center">${inputHtml}</div>
+                    </div>`;
+            });
+
+            updateSplitInputs();
+        }
+
+        function toggleSelectAll(status) {
+            document.querySelectorAll('.member-split-chk').forEach(chk => chk.checked = status);
+            updateSplitInputs();
+        }
+
+        // ระบบวิเคราะห์คำนวณเงินสดๆ บนหน้าจอ
+        function updateSplitInputs() {
+            const totalAmount = parseFloat(document.getElementById('expenseAmount').value) || 0;
+            const type = getSelectedSplitType();
+            let sumCalculated = 0;
+            let isValid = true;
+            let errorMsg = "";
+
+            if(activeMembers.length === 0) return;
+
+            if (type === "EQUAL") {
+                const checkedChks = Array.from(document.querySelectorAll('.member-split-chk:checked'));
+                if (checkedChks.length > 0 && totalAmount > 0) {
+                    const perPerson = totalAmount / checkedChks.length;
+                    activeMembers.forEach(m => {
+                        const isChecked = document.getElementById(`chk_${m.id}`).checked;
+                        const finalVal = isChecked ? perPerson : 0;
+                        document.getElementById(`val_${m.id}`).value = finalVal.toFixed(2);
+                        document.getElementById(`badge_${m.id}`).innerText = `฿${finalVal.toLocaleString('th-TH',{minimumFractionDigits:2})}`;
+                    });
+                    sumCalculated = totalAmount;
+                } else {
+                    activeMembers.forEach(m => document.getElementById(`badge_${m.id}`).innerText = "฿0.00");
+                }
+            } 
+            else if (type === "EXACT") {
+                activeMembers.forEach(m => {
+                    sumCalculated += parseFloat(document.getElementById(`val_${m.id}`).value) || 0;
+                });
+                if (Math.abs(sumCalculated - totalAmount) > 0.1 && totalAmount > 0) {
+                    isValid = false;
+                    errorMsg = `⚠️ ยอดบิลหลักและยอดแชร์รายคนไม่เท่ากัน ขาด/เกินไป ฿${Math.abs(totalAmount - sumCalculated).toFixed(2)}`;
+                }
+            } 
+            else if (type === "SHARE") {
+                let totalShares = 0;
+                activeMembers.forEach(m => { totalShares += parseFloat(document.getElementById(`val_${m.id}`).value) || 0; });
+                if (totalShares > 0 && totalAmount > 0) {
+                    const perShare = totalAmount / totalShares;
+                    activeMembers.forEach(m => {
+                        const share = parseFloat(document.getElementById(`val_${m.id}`).value) || 0;
+                        const finalVal = share * perShare;
+                        document.getElementById(`badge_${m.id}`).innerText = `฿${finalVal.toLocaleString('th-TH',{minimumFractionDigits:2})}`;
+                    });
+                    sumCalculated = totalAmount;
+                }
+            } 
+            else if (type === "PERCENT") {
+                let totalPercent = 0;
+                activeMembers.forEach(m => { totalPercent += parseFloat(document.getElementById(`val_${m.id}`).value) || 0; });
+                if (totalPercent > 0 && totalAmount > 0) {
+                    activeMembers.forEach(m => {
+                        const pct = parseFloat(document.getElementById(`val_${m.id}`).value) || 0;
+                        const finalVal = (pct / 100) * totalAmount;
+                        document.getElementById(`badge_${m.id}`).innerText = `฿${finalVal.toLocaleString('th-TH',{minimumFractionDigits:2})}`;
+                    });
+                    sumCalculated = (totalPercent / 100) * totalAmount;
+                    if (totalPercent !== 100) {
+                        isValid = false;
+                        errorMsg = `⚠️ รวมเปอร์เซ็นต์ต้องเท่ากับ 100% ตอนนี้รวมได้ ${totalPercent}%`;
+                    }
+                }
+            }
+
+            document.getElementById('splitSummaryResult').innerText = `รวมที่แบ่ง: ฿${sumCalculated.toLocaleString('th-TH',{minimumFractionDigits:2})} / ยอดบิล: ฿${totalAmount.toLocaleString('th-TH',{minimumFractionDigits:2})}`;
+            document.getElementById('splitValidationMessage').innerText = errorMsg;
+            document.getElementById('btnSubmitExpense').disabled = (!isValid || totalAmount <= 0);
+        }
+
+        // 🚀 สั่งยิงข้อมูลบันทึกบิลแชร์เงินจริงเข้า Google Sheets 
         function submitExpense() {
             const group = document.getElementById('expenseGroup').value;
             const title = document.getElementById('expenseTitle').value.trim();
             const amount = document.getElementById('expenseAmount').value;
             const payer = document.getElementById('expensePayer').value;
+            const type = getSelectedSplitType();
 
-            if(!group || !title || !amount || !payer) {
-                return alert("กรุณากรอกข้อมูลบันทึกบิลค่าใช้จ่ายให้ครบทุกช่องก่อนกดหารครับ");
-            }
+            let splitDetails = {};
+            activeMembers.forEach(m => {
+                const val = parseFloat(document.getElementById(`val_${m.id}`).value) || 0;
+                if (val > 0) splitDetails[m.id] = parseFloat(val.toFixed(2));
+            });
 
-            alert(`บันทึกบิลเรียบร้อย!\nรายการ: ${title}\nยอดเงิน: ฿${amount}\nระบบส่งข้อมูลแชร์บิลนี้เข้าไปคำนวณและบันทึกใน Google Sheets แล้วครับ`);
+            document.getElementById('btnSubmitExpense').innerText = "กำลังอัปโหลดส่งข้อมูลบันทึกกูเกิลชีท...";
+            document.getElementById('btnSubmitExpense').disabled = true;
+
+            const finalUrl = `${SCRIPT_URL}?action=createExpense&group=${group}&title=${encodeURIComponent(title)}&amount=${amount}&payer=${payer}&splitType=${type}&details=${encodeURIComponent(JSON.stringify(splitDetails))}`;
+
+            fetch(finalUrl)
+            .then(res => res.json())
+            .then(data => {
+                alert(data.message || "บันทึกสำเร็จ!");
+                document.getElementById('expenseTitle').value = "";
+                document.getElementById('expenseAmount').value = "";
+                loadActiveMembersFromSheet(); // โหลดกระดานใหม่
+            })
+            .catch(err => alert("เกิดข้อผิดพลาดในการเชื่อมโยงเครือข่าย"))
+            .finally(() => {
+                document.getElementById('btnSubmitExpense').innerHTML = `<i class="fa-solid fa-paper-plane me-2"></i>บันทึกและคำนวณบิลลงกูเกิลชีท`;
+            });
+        }
+
+        // 🔗 ส่งข้อมูลงชีทจริง: กดสร้างกลุ่มใหม่
+        function submitCreateGroup() {
+            const name = document.getElementById('groupNameInput').value.trim();
+            const desc = document.getElementById('groupDescInput').value.trim();
+            if(!name) return alert("โปรดใส่ชื่อกลุ่มทริป");
+
+            document.getElementById('btnCreateGroup').disabled = true;
+            
+            fetch(`${SCRIPT_URL}?action=createGroup&name=${encodeURIComponent(name)}&desc=${encodeURIComponent(desc)}`)
+            .then(res => res.json())
+            .then(data => {
+                if(data.success) {
+                    alert("บันทึกตารางกลุ่มใหม่สำเร็จ!");
+                    document.getElementById('groupNameInput').value = "";
+                    document.getElementById('groupDescInput').value = "";
+                    loadGroupsFromSheet(); // โหลดลิสต์กลุ่มอัปเดตใหม่
+                }
+            }).finally(() => document.getElementById('btnCreateGroup').disabled = false);
+        }
+
+        // 🔗 ส่งข้อมูลงชีทจริง: สั่งเพิ่มรายชื่อเพื่อนเข้ากลุ่มทริป
+        function submitCreateFriend() {
+            const groupId = document.getElementById('friendGroupSelect').value;
+            const name = document.getElementById('friendNameInput').value.trim();
+            if(!groupId || !name) return alert("โปรดกรอกข้อมูลให้ครบถ้วน");
+
+            document.getElementById('btnCreateFriend').disabled = true;
+
+            fetch(`${SCRIPT_URL}?action=createFriend&groupId=${groupId}&name=${encodeURIComponent(name)}`)
+            .then(res => res.json())
+            .then(data => {
+                if(data.success) {
+                    alert(`เพิ่มคุณ "${name}" เข้าสู่กลุ่มทริปในกูเกิลชีทเรียบร้อยครับ!`);
+                    document.getElementById('friendNameInput').value = "";
+                }
+            }).finally(() => document.getElementById('btnCreateFriend').disabled = false);
         }
     </script>
 </body>
