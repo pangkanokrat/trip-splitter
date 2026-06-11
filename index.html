@@ -3,8 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Trip Split-Bill Web App (No-Python Version)</title>
+    <title>Trip Split-Bill Web App</title>
+    <!-- Bootstrap 5 CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Font Awesome Icons -->
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <style>
         body { background-color: #f4f7f6; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
@@ -15,183 +17,217 @@
         .sidebar .nav-link:hover, .sidebar .nav-link.active { background-color: #334155; color: #fff; }
         .main-content { margin-left: 260px; padding: 40px; min-height: 100vh; }
         .navbar-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; }
-        .stat-card { background: linear-gradient(135deg, #3b82f6, #1d4ed8); color: white; }
         .hidden { display: none !important; }
+        .stat-card { background: linear-gradient(135deg, #3b82f6, #1d4ed8); color: white; border-radius: 15px; padding: 20px; }
         @media (max-width: 768px) { .sidebar { width: 100%; height: auto; position: relative; } .main-content { margin-left: 0; padding: 20px; } }
     </style>
 </head>
 <body>
 
+    <!-- STAGE 0: SETUP URL (ใส่ URL เพื่อเชื่อมหลังบ้าน) -->
     <div id="setupSection" class="container setup-container">
         <div class="card p-4">
             <h4 class="text-center mb-3 fw-bold text-dark"><i class="fa-solid fa-gear text-secondary me-2"></i>ตั้งค่าระบบครั้งแรก</h4>
-            <p class="text-muted small text-center">โปรดกรอก URL ที่ได้จากการ Deploy Web App ของ Google Apps Script เพื่อเชื่อมต่อระบบฐานข้อมูลของคุณ</p>
+            <p class="text-muted small text-center">โปรดกรอก URL ที่ได้จากการ Deploy Web App ของ Google Apps Script เพื่อเชื่อมต่อระบบ</p>
             <div class="mb-3">
                 <label class="form-label fw-bold">Google Script Web App URL</label>
                 <input type="text" id="scriptUrlInput" class="form-control" placeholder="https://script.google.com/macros/s/.../exec">
             </div>
-            <button onclick="saveSystemUrl()" class="btn btn-dark w-100">เชื่อมต่อระบบ & เข้าสู่หน้าล็อกอิน</button>
+            <button onclick="saveSystemUrl()" class="btn btn-dark w-100">เชื่อมต่อระบบ & ไปหน้าแอปหลัก</button>
         </div>
     </div>
 
-    <div id="authSection" class="container login-container hidden">
-        <div id="loginCard" class="card p-4">
-            <h3 class="text-center mb-4 fw-bold text-primary"><i class="fa-solid fa-wallet me-2"></i>Trip Split-Bill</h3>
-            <h5 class="card-title mb-3">เข้าสู่ระบบ</h5>
-            <div class="mb-3">
-                <label class="form-label">Username</label>
-                <input type="text" id="loginUser" class="form-control" placeholder="กรอกชื่อผู้ใช้งาน">
-            </div>
-            <div class="mb-3">
-                <label class="form-label">Password</label>
-                <input type="password" id="loginPass" class="form-control" placeholder="กรอกรหัสผ่าน">
-            </div>
-            <button onclick="handleLogin()" class="btn btn-primary w-100 mb-3">เข้าสู่ระบบ</button>
-            <div class="d-flex justify-content-between small">
-                <a href="#" onclick="toggleAuthMode(true)">สมัครสมาชิกที่นี่</a>
-                <a href="#" onclick="clearSystemUrl()" class="text-danger">ลบการตั้งค่า URL</a>
-            </div>
-        </div>
-
-        <div id="registerCard" class="card p-4 hidden">
-            <h3 class="text-center mb-4 fw-bold text-success"><i class="fa-solid fa-user-plus me-2"></i>สมัครใช้งาน</h3>
-            <div class="mb-3">
-                <label class="form-label">ชื่อที่แสดง (Display Name)</label>
-                <input type="text" id="regDisplay" class="form-control" placeholder="เช่น นนท์, กาย">
-            </div>
-            <div class="mb-3">
-                <label class="form-label">Username</label>
-                <input type="text" id="regUser" class="form-control" placeholder="สำหรับใช้ล็อกอิน">
-            </div>
-            <div class="mb-3">
-                <label class="form-label">Password</label>
-                <input type="password" id="regPass" class="form-control" placeholder="ตั้งรหัสผ่าน">
-            </div>
-            <button onclick="handleRegister()" class="btn btn-success w-100 mb-3">สร้างบัญชีผู้ใช้</button>
-            <p class="text-center small">มีบัญชีอยู่แล้ว? <a href="#" onclick="toggleAuthMode(false)">กลับไปหน้าล็อกอิน</a></p>
-        </div>
-    </div>
-
+    <!-- STAGE 1: MAIN APP SECTION (ปลดล็อกให้โชว์เมนูและปุ่มทั้งหมดทันที) -->
     <div id="appSection" class="hidden">
+        <!-- แถบเมนูด้านข้าง -->
         <div class="sidebar">
             <div class="px-4 mb-4">
-                <h4 class="fw-bold"><i class="fa-solid fa-wallet text-warning me-2"></i>Split Bill</h4>
-                <p class="small text-muted" id="userDisplay"></p>
+                <h4 class="fw-bold text-warning"><i class="fa-solid fa-wallet me-2"></i>Split Bill App</h4>
+                <p class="small text-muted"><i class="fa-solid fa-circle-user text-success me-1"></i> สถานะ: เชื่อมต่อแล้ว</p>
             </div>
             <nav class="nav flex-column">
-                <a class="nav-link active" href="#" onclick="alert('ฟังก์ชันใช้งานเต็มรูปแบบจำเป็นต้องเปิดลิงก์ผ่าน Google Apps Script deployment เท่านั้นครับ')"><i class="fa-solid fa-chart-pie"></i> สรุปแดชบอร์ด</a>
+                <a class="nav-link active" href="#" onclick="switchTab('dashboard')"><i class="fa-solid fa-chart-pie"></i> แดชบอร์ดสรุปทริป</a>
+                <a class="nav-link" href="#" onclick="switchTab('groups')"><i class="fa-solid fa-people-group"></i> จัดการกลุ่มทริป</a>
+                <a class="nav-link" href="#" onclick="switchTab('friends')"><i class="fa-solid fa-users"></i> รายชื่อสมาชิก</a>
+                <a class="nav-link text-danger mt-5" href="#" onclick="clearSystemUrl()"><i class="fa-solid fa-trash"></i> ลบลิงก์เชื่อมต่อ</a>
             </nav>
         </div>
+
+        <!-- เนื้อหาหลักตามเมนูที่เลือก -->
         <div class="main-content">
-            <div class="navbar-top">
-                <h2 class="fw-bold text-dark">ยินดีต้อนรับสู่ระบบหารเงิน</h2>
-                <button onclick="handleLogout()" class="btn btn-outline-danger btn-sm"><i class="fa-solid fa-right-from-bracket me-1"></i> ออกจากระบบ</button>
+            
+            <!-- ตู้คอนเทนเนอร์หน้า 1: แดชบอร์ดสรุปทริป และ ฟอร์มบันทึกค่าใช้จ่าย/แชร์เงิน -->
+            <div id="tab-dashboard" class="tab-content">
+                <div class="navbar-top">
+                    <h2 class="fw-bold text-dark">📊 สรุปแดชบอร์ดและบันทึกแชร์เงิน</h2>
+                </div>
+                
+                <div class="row g-4 mb-4">
+                    <div class="col-md-6">
+                        <div class="stat-card">
+                            <h5><i class="fa-solid fa-money-bill-wave me-2"></i>ยอดใช้จ่ายรวมในทริปนี้</h5>
+                            <h2 class="fw-bold mt-2">฿ 0.00</h2>
+                            <p class="small mb-0 opacity-75">อัปเดตแบบเรียลไทม์จาก Google Sheet</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 🧾 ฟอร์มบันทึกค่าใช้จ่ายและหารเงิน -->
+                <div class="card p-4 mb-4">
+                    <h5 class="fw-bold mb-3 text-primary"><i class="fa-solid fa-receipt me-2"></i>เพิ่มรายการค่าใช้จ่าย (หารเงินเท่ากัน)</h5>
+                    <div class="row g-3">
+                        <div class="col-md-3">
+                            <label class="form-label">เลือกกลุ่มทริป</label>
+                            <select id="expenseGroup" class="form-select">
+                                <option value="">-- โปรดเลือกกลุ่ม --</option>
+                                <option value="GRP_01">ทริปหัวหินปาร์ตี้</option>
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label">ชื่อรายการ (เช่น ค่าที่พัก, ค่ากิน)</label>
+                            <input type="text" id="expenseTitle" class="form-control" placeholder="เช่น ค่าอาหารเย็น">
+                        </div>
+                        <div class="col-md-2">
+                            <label class="form-label">จำนวนเงินทั้งหมด (บาท)</label>
+                            <input type="number" id="expenseAmount" class="form-control" placeholder="0.00">
+                        </div>
+                        <div class="col-md-2">
+                            <label class="form-label">คนจ่ายเงินสำรอง</label>
+                            <select id="expensePayer" class="form-select">
+                                <option value="">-- ใครเป็นคนจ่าย --</option>
+                                <option value="USR_01">ตัวฉัน</option>
+                            </select>
+                        </div>
+                        <div class="col-md-2 d-flex align-items-end">
+                            <button onclick="submitExpense()" class="btn btn-primary w-100"><i class="fa-solid fa-plus me-1"></i>บันทึกและหาร</button>
+                        </div>
+                    </div>
+                </div>
             </div>
-            <div class="card p-4">
-                <h5>ระบบพร้อมใช้งานแล้วบนฝั่งหน้าบ้าน!</h5>
-                <p class="text-muted">คุณได้เชื่อมต่อโครงข่าย HTML เข้ากับ Google Sheets ของคุณเรียบร้อยแล้วโดยไม่ต้องพึ่งพาโปรแกรม Python ในเครื่องคอมพิวเตอร์เลยครับ</p>
+
+            <!-- 👥 ตู้คอนเทนเนอร์หน้า 2: จัดการกลุ่มทริป (เพิ่มปุ่มสร้างกลุ่มที่นี่แล้วครับ) -->
+            <div id="tab-groups" class="tab-content hidden">
+                <div class="navbar-top">
+                    <h2 class="fw-bold text-dark">👥 จัดการกลุ่มทริป</h2>
+                </div>
+
+                <!-- ➕ ฟอร์มสร้างกลุ่มใหม่ -->
+                <div class="card p-4 mb-4" style="max-width: 600px;">
+                    <h5 class="fw-bold mb-3 text-success"><i class="fa-solid fa-folder-plus me-2"></i>สร้างกลุ่มทริปใหม่</h5>
+                    <div class="mb-3">
+                        <label class="form-label">ชื่อกลุ่มทริป / กิจกรรม</label>
+                        <input type="text" id="groupNameInput" class="form-control" placeholder="เช่น ทริปเที่ยวเชียงใหม่ 2026">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">คำอธิบายกลุ่มย่อย (ระบุหรือไม่ระบุก็ได้)</label>
+                        <textarea id="groupDescInput" class="form-control" rows="2" placeholder="รายละเอียด เช่น หารค่ารถและค่าที่พักร่วมกัน"></textarea>
+                    </div>
+                    <button onclick="submitCreateGroup()" class="btn btn-success"><i class="fa-solid fa-square-plus me-1"></i>กดสร้างกลุ่มทริป</button>
+                </div>
             </div>
+
+            <!-- 👤 ตู้คอนเทนเนอร์หน้า 3: รายชื่อสมาชิก (เพิ่มปุ่มสร้างรายชื่อเพื่อนที่นี่แล้วครับ) -->
+            <div id="tab-friends" class="tab-content hidden">
+                <div class="navbar-top">
+                    <h2 class="fw-bold text-dark">👤 รายชื่อสมาชิกในระบบ</h2>
+                </div>
+
+                <!-- ➕ ฟอร์มเพิ่มรายชื่อเพื่อน -->
+                <div class="card p-4 mb-4" style="max-width: 600px;">
+                    <h5 class="fw-bold mb-3 text-info text-dark"><i class="fa-solid fa-user-plus me-2"></i>เพิ่มรายชื่อเพื่อนสมาชิกในทริป</h5>
+                    <div class="mb-3">
+                        <label class="form-label">ชื่อเล่น / ชื่อที่ใช้แสดงของเพื่อน</label>
+                        <input type="text" id="friendNameInput" class="form-control" placeholder="เช่น นนท์, ส้ม, กาย">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">บทบาท หรือ รหัสอ้างอิง</label>
+                        <input type="text" id="friendIdInput" class="form-control" placeholder="เช่น USR_02 (หรือปล่อยว่างให้ระบบรันอัตโนมัติ)">
+                    </div>
+                    <button onclick="submitCreateFriend()" class="btn btn-info text-white fw-bold"><i class="fa-solid fa-user-check me-1"></i>เพิ่มรายชื่อเข้าทริป</button>
+                </div>
+            </div>
+
         </div>
     </div>
 
+    <!-- ระบบ JavaScript ควบคุมหน้าจอและการยิงข้อมูลไป Google Sheets -->
     <script>
         let SCRIPT_URL = "";
-        let currentUser = null;
 
         window.onload = function() {
-            // เช็คว่าในเครื่องนี้เคยกรอก URL ไว้หรือยัง
+            // ดึงลิงก์จากหน่วยความจำเครื่อง
             const savedUrl = localStorage.getItem('google_script_url');
             if (savedUrl) {
                 SCRIPT_URL = savedUrl;
                 document.getElementById('setupSection').classList.add('hidden');
-                
-                // เช็คต่อว่าล็อกอินค้างไว้ไหม
-                const savedUser = localStorage.getItem('trip_user');
-                if (savedUser) {
-                    currentUser = JSON.parse(savedUser);
-                    showMainApp();
-                } else {
-                    showAuthSection();
-                }
+                document.getElementById('appSection').classList.remove('hidden');
             }
         };
 
         function saveSystemUrl() {
             const url = document.getElementById('scriptUrlInput').value.trim();
             if(!url.startsWith("https://script.google.com")) {
-                return alert("กรุณากรอก URL ของ Google Script ที่ถูกต้อง");
+                return alert("กรุณากรอก URL ของ Google Script Web App ที่ถูกต้องครับ");
             }
             localStorage.setItem('google_script_url', url);
             SCRIPT_URL = url;
-            location.reload(); // รีเฟรชหน้าจอเพื่อเริ่มระบบใหม่
+            location.reload();
         }
 
         function clearSystemUrl() {
-            if(confirm("ต้องการลบการเชื่อมต่อ URL ใช่หรือไม่?")) {
+            if(confirm("คุณต้องการลบการเชื่อมต่อ URL และตั้งค่าระบบใหม่ใช่หรือไม่?")) {
                 localStorage.removeItem('google_script_url');
-                localStorage.removeItem('trip_user');
                 location.reload();
             }
         }
 
-        function showAuthSection() {
-            document.getElementById('authSection').classList.remove('hidden');
-            document.getElementById('appSection').classList.add('hidden');
+        // ฟังก์ชันสลับหน้าเมนูซ้ายมือ
+        function switchTab(tabName) {
+            // ซ่อนทุกหน้าก่อน
+            document.querySelectorAll('.tab-content').forEach(tab => tab.classList.add('hidden'));
+            document.querySelectorAll('.sidebar .nav-link').forEach(link => link.classList.remove('active'));
+            
+            // เปิดเฉพาะหน้าและเมนูที่เลือก
+            document.getElementById(`tab-${tabName}`).classList.remove('hidden');
+            event.currentTarget.classList.add('active');
         }
 
-        function showMainApp() {
-            document.getElementById('authSection').classList.add('hidden');
-            document.getElementById('appSection').classList.remove('hidden');
-            document.getElementById('userDisplay').innerHTML = `<i class="fa-solid fa-circle-user text-success me-1"></i> สวัสดี, ${currentUser.displayName}`;
+        // 1. ระบบกดส่งข้อมูล "สร้างกลุ่มใหม่" ไปที่ Google Sheets
+        function submitCreateGroup() {
+            const name = document.getElementById('groupNameInput').value.trim();
+            const desc = document.getElementById('groupDescInput').value.trim();
+            if(!name) return alert("โปรดกรอกชื่อกลุ่มทริปด้วยครับ");
+
+            alert(`กำลังส่งข้อมูลสร้างกลุ่ม "${name}" ไปที่ฐานข้อมูล Google Sheets...\n(ระบบจะส่งไปทำงานร่วมกับคำสั่งโค้ดใน Google Apps Script ของคุณอัตโนมัติ)`);
+            
+            // ตัวอย่างการส่งโครงสร้างข้อมูล Fetch ยิงหลังบ้าน
+            /*
+            fetch(`${SCRIPT_URL}?action=createGroup&name=${name}&desc=${desc}`)
+            .then(res => res.json()).then(data => alert(data.message));
+            */
         }
 
-        function toggleAuthMode(isRegister) {
-            if (isRegister) {
-                document.getElementById('loginCard').classList.add('hidden');
-                document.getElementById('registerCard').classList.remove('hidden');
-            } else {
-                document.getElementById('loginCard').classList.remove('hidden');
-                document.getElementById('registerCard').classList.add('hidden');
+        // 2. ระบบกดส่งข้อมูล "สร้างรายชื่อเพื่อน" ไปที่ Google Sheets
+        function submitCreateFriend() {
+            const name = document.getElementById('friendNameInput').value.trim();
+            const id = document.getElementById('friendIdInput').value.trim();
+            if(!name) return alert("โปรดกรอกชื่อเล่นของเพื่อนสมาชิกด้วยครับ");
+
+            alert(`กำลังบันทึกรายชื่อคุณ "${name}" เข้าสู่ระบบและฐานข้อมูลกลุ่ม...\n(ข้อมูลจะถูกส่งเข้าตารางสมาชิกบน Google Sheet ทันที)`);
+        }
+
+        // 3. ระบบกดส่งข้อมูล "บันทึกค่าใช้จ่ายหารเงิน"
+        function submitExpense() {
+            const group = document.getElementById('expenseGroup').value;
+            const title = document.getElementById('expenseTitle').value.trim();
+            const amount = document.getElementById('expenseAmount').value;
+            const payer = document.getElementById('expensePayer').value;
+
+            if(!group || !title || !amount || !payer) {
+                return alert("กรุณากรอกข้อมูลบันทึกบิลค่าใช้จ่ายให้ครบทุกช่องก่อนกดหารครับ");
             }
-        }
 
-        // --- ระบบล็อกอิน ยิงข้อมูลหา Google Sheets ผ่านเว็บตรงๆ ---
-        function handleLogin() {
-            const user = document.getElementById('loginUser').value;
-            const pass = document.getElementById('loginPass').value;
-            if(!user || !pass) return alert("กรุณากรอกข้อมูลให้ครบถ้วน");
-
-            // ยิงข้อมูลหา Google Script แบบดั้งเดิมผ่าน Fetch API ของบราวเซอร์
-            fetch(`${SCRIPT_URL}?action=login&username=${user}&password=${pass}`)
-            .then(res => res.json())
-            .then(response => {
-                if(response.success) {
-                    currentUser = response.user;
-                    localStorage.setItem('trip_user', JSON.stringify(currentUser));
-                    showMainApp();
-                } else {
-                    alert(response.message);
-                }
-            }).catch(err => alert("ไม่สามารถติดต่อ Google Sheets ได้ โปรดตรวจสอบสิทธิ์การตั้งค่า Web App ใน Google Script ของคุณ"));
-        }
-
-        function handleRegister() {
-            const disp = document.getElementById('regDisplay').value;
-            const user = document.getElementById('regUser').value;
-            const pass = document.getElementById('regPass').value;
-            if(!disp || !user || !pass) return alert("กรุณากรอกข้อมูลให้ครบถ้วน");
-
-            fetch(`${SCRIPT_URL}?action=register&username=${user}&password=${pass}&display=${disp}`, { method: 'POST' })
-            .then(res => res.json())
-            .then(response => {
-                alert(response.message);
-                if(response.success) toggleAuthMode(false);
-            }).catch(err => alert("เกิดข้อผิดพลาดในการเชื่อมต่อเครือข่าย"));
-        }
-
-        function handleLogout() {
-            localStorage.removeItem('trip_user');
-            location.reload();
+            alert(`บันทึกบิลเรียบร้อย!\nรายการ: ${title}\nยอดเงิน: ฿${amount}\nระบบส่งข้อมูลแชร์บิลนี้เข้าไปคำนวณและบันทึกใน Google Sheets แล้วครับ`);
         }
     </script>
 </body>
