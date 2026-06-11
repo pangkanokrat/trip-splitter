@@ -234,8 +234,8 @@
                 </div>
             </div>
             <nav class="nav flex-column">
-                <a class="nav-link" href="#" onclick="switchTab('summary')"><i class="fa-solid fa-chart-pie"></i> สรุปยอดและเคลียร์เงิน</a>
-                <a class="nav-link active" href="#" onclick="switchTab('dashboard')"><i class="fa-solid fa-receipt"></i> บันทึกบิลค่าใช้จ่าย</a>
+                <a class="nav-link" href="#" onclick="switchTab('dashboard')"><i class="fa-solid fa-receipt"></i> บันทึกบิลค่าใช้จ่าย</a>
+                <a class="nav-link active" href="#" onclick="switchTab('summary')"><i class="fa-solid fa-chart-pie"></i> สรุปยอดและเคลียร์เงิน</a>
                 <a class="nav-link" href="#" onclick="switchTab('groups')"><i class="fa-solid fa-folder-plus"></i> สร้างกลุ่มทริปใหม่</a>
                 <a class="nav-link" href="#" onclick="switchTab('friends')"><i class="fa-solid fa-user-plus"></i> เพิ่มรายชื่อสมาชิก</a>
                 <a class="nav-link text-danger" href="#" onclick="clearSystemUrl()" style="margin-top: auto; margin-bottom: 30px;"><i class="fa-solid fa-power-off"></i> ตัดการเชื่อมต่อชีท</a>
@@ -244,7 +244,7 @@
 
         <div class="main-content">
             
-            <div id="tab-dashboard" class="tab-content">
+            <div id="tab-dashboard" class="tab-content hidden">
                 <h1 class="page-header-title">บันทึกบิลค่าใช้จ่าย</h1>
                 <p class="page-header-subtitle">ใส่ข้อมูลใบเสร็จและกระจายยอดเงินแชร์รายคนลงกูเกิลชีท</p>
                 
@@ -312,7 +312,7 @@
                 </div>
             </div>
 
-            <div id="tab-summary" class="tab-content hidden">
+            <div id="tab-summary" class="tab-content">
                 <h1 class="page-header-title">Weekly sumup</h1>
                 <p class="page-header-subtitle">สรุปผลยอดใช้จ่ายรวมในทริป แผนผังคำนวณการโอนเงินคืน และประวัติบิลทั้งหมด</p>
                 
