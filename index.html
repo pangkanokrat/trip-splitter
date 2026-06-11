@@ -3,168 +3,369 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Trip Split-Bill App - ระบบออนไลน์จริง 100%</title>
+    <title>Trip Split-Bill App - CloudCash Style</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&family=Sarabun:wght@400;500;600;700&display=swap" rel="stylesheet">
+    
     <style>
-        body { background-color: #f4f7f6; font-family: 'Segoe UI', sans-serif; }
-        .setup-container { max-width: 450px; margin: 80px auto; }
-        .card { border: none; border-radius: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); }
-        .sidebar { height: 100vh; background-color: #1e293b; color: #fff; position: fixed; width: 260px; padding-top: 20px; }
-        .sidebar .nav-link { color: #cbd5e1; padding: 12px 20px; border-radius: 8px; margin: 4px 15px; display: flex; align-items: center; gap: 10px; transition: all 0.3s; text-decoration: none; }
-        .sidebar .nav-link:hover, .sidebar .nav-link.active { background-color: #334155; color: #fff; }
-        .main-content { margin-left: 260px; padding: 40px; min-height: 100vh; }
+        :root {
+            --bg-main: #f8fafc;
+            --sidebar-bg: #ffffff;
+            --text-dark: #1e293b;
+            --text-muted: #64748b;
+            --accent-primary: #2563eb;
+            --accent-success: #10b981;
+            --accent-danger: #ef4444;
+            --card-shadow: 0 10px 30px rgba(0, 0, 0, 0.03);
+        }
+
+        body { 
+            background-color: var(--bg-main); 
+            font-family: 'Plus Jakarta Sans', 'Sarabun', sans-serif;
+            color: var(--text-dark);
+        }
+
+        /* Sidebar สไตล์คลีนสีขาว */
+        .sidebar { 
+            height: 100vh; 
+            background-color: var(--sidebar-bg); 
+            position: fixed; 
+            width: 260px; 
+            padding-top: 30px; 
+            border-right: 1px solid #edf2f7;
+        }
+        
+        .sidebar-brand {
+            padding: 0 30px;
+            margin-bottom: 40px;
+        }
+
+        .sidebar .nav-link { 
+            color: var(--text-muted); 
+            padding: 14px 24px; 
+            border-radius: 12px; 
+            margin: 6px 20px; 
+            display: flex; 
+            align-items: center; 
+            gap: 12px; 
+            font-weight: 500;
+            font-size: 0.95rem;
+            transition: all 0.2s ease; 
+            text-decoration: none; 
+        }
+
+        .sidebar .nav-link:hover {
+            background-color: #f1f5f9;
+            color: var(--text-dark);
+        }
+
+        .sidebar .nav-link.active { 
+            background-color: #eff6ff; 
+            color: var(--accent-primary); 
+            font-weight: 600;
+        }
+
+        /* พื้นที่เนื้อหาหลัก */
+        .main-content { 
+            margin-left: 260px; 
+            padding: 50px; 
+            min-height: 100vh; 
+        }
+
+        /* การ์ดสไตล์มินิมอล ขอบมน โค้งสวย ลอยๆ */
+        .card { 
+            background: #ffffff;
+            border: none; 
+            border-radius: 20px; 
+            box-shadow: var(--card-shadow); 
+            padding: 24px;
+            margin-bottom: 24px;
+        }
+
+        .card-title {
+            font-weight: 600;
+            font-size: 1.1rem;
+            margin-bottom: 20px;
+            color: var(--text-dark);
+        }
+
+        /* ฟอร์มสไตล์คลีน */
+        .form-label {
+            font-weight: 500;
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 8px;
+        }
+
+        .form-control, .form-select {
+            background-color: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 12px;
+            padding: 12px 16px;
+            color: var(--text-dark);
+            font-size: 0.95rem;
+            transition: all 0.2s;
+        }
+
+        .form-control:focus, .form-select:focus {
+            background-color: #ffffff;
+            border-color: var(--accent-primary);
+            box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.1);
+        }
+
+        /* การ์ดสถิติตัวเลขด้านบนแบบแอป CloudCash */
+        .stat-card {
+            border-radius: 20px;
+            padding: 24px;
+            background: #ffffff;
+            box-shadow: var(--card-shadow);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .stat-label {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            font-weight: 500;
+        }
+
+        .stat-value {
+            font-size: 1.8rem;
+            font-weight: 700;
+            margin-top: 4px;
+            color: var(--text-dark);
+        }
+
+        /* ปุ่มต่างๆ */
+        .btn-primary {
+            background-color: var(--accent-primary);
+            border: none;
+            border-radius: 12px;
+            padding: 12px 24px;
+            font-weight: 600;
+            transition: all 0.2s;
+        }
+
+        .btn-primary:hover {
+            background-color: #1d4ed8;
+            transform: translateY(-1px);
+        }
+
+        /* ตารางสไตล์โปร่งแสง คลีนๆ */
+        .table {
+            margin-bottom: 0;
+        }
+        
+        .table th {
+            font-weight: 500;
+            color: var(--text-muted);
+            border-bottom: 1px solid #edf2f7;
+            padding: 16px;
+            font-size: 0.85rem;
+        }
+
+        .table td {
+            padding: 18px 16px;
+            border-bottom: 1px solid #f1f5f9;
+            color: var(--text-dark);
+            font-size: 0.95rem;
+            vertical-align: middle;
+        }
+
+        .badge-member {
+            background-color: #f1f5f9;
+            color: var(--text-dark);
+            border-radius: 8px;
+            padding: 6px 12px;
+            font-weight: 500;
+            font-size: 0.8rem;
+        }
+
         .hidden { display: none !important; }
+        
+        .page-header-title {
+            font-weight: 700;
+            font-size: 2.2rem;
+            color: var(--text-dark);
+            margin-bottom: 4px;
+        }
+        
+        .page-header-subtitle {
+            color: var(--text-muted);
+            font-size: 1rem;
+            margin-bottom: 35px;
+        }
     </style>
 </head>
 <body>
 
     <div id="setupSection" class="container setup-container">
-        <div class="card p-4">
-            <h4 class="text-center mb-3 fw-bold"><i class="fa-solid fa-cloud-plug text-primary me-2"></i>ระบบออนไลน์เชื่อมต่อ Sheet</h4>
-            <div class="mb-3">
-                <label class="form-label fw-bold">วาง URL Google Script (Web App) ของคุณ</label>
+        <div class="card p-5 mt-5 text-center" style="max-width: 480px; margin: auto;">
+            <div class="mb-4">
+                <div class="bg-primary bg-opacity-10 text-primary rounded-circle d-inline-flex align-items-center justify-content-center" style="width: 70px; height: 70px; font-size: 1.8rem;">
+                    <i class="fa-solid fa-cloud-plug"></i>
+                </div>
+            </div>
+            <h3 class="fw-bold mb-2">เชื่อมต่อฐานข้อมูล</h3>
+            <p class="text-muted small mb-4">วางลิงก์ Google Script Web App เพื่อเปิดใช้งานระบบผ่านกูเกิลชีท</p>
+            <div class="mb-4 text-start">
+                <label class="form-label">Web App URL</label>
                 <input type="text" id="scriptUrlInput" class="form-control" placeholder="https://script.google.com/macros/s/.../exec">
             </div>
-            <button onclick="saveSystemUrl()" class="btn btn-primary w-100 fw-bold">เข้าสู่ระบบแอปพลิเคชัน</button>
+            <button onclick="saveSystemUrl()" class="btn btn-primary w-100 py-3 text-white">เชื่อมต่อเข้าสู่แอปพลิเคชัน</button>
         </div>
     </div>
 
     <div id="appSection" class="hidden">
+        
         <div class="sidebar">
-            <div class="px-4 mb-4">
-                <h4 class="fw-bold text-warning"><i class="fa-solid fa-wallet me-2"></i>Split Bill Live</h4>
-                <p class="small text-muted"><i class="fa-solid fa-circle text-success me-1"></i> ฐานข้อมูลออนไลน์</p>
+            <div class="sidebar-brand">
+                <div class="d-flex align-items-center gap-3">
+                    <div class="bg-primary rounded-3 text-white d-flex align-items-center justify-content-center" style="width: 38px; height: 38px; font-size: 1.1rem;">
+                        <i class="fa-solid fa-wallet"></i>
+                    </div>
+                    <div>
+                        <h5 class="fw-bold m-0" style="letter-spacing: -0.5px;">cloudsplit</h5>
+                        <span class="text-success small fw-semibold" style="font-size: 0.75rem;"><i class="fa-solid fa-circle me-1" style="font-size: 0.6rem;"></i> ชีทออนไลน์พร้อมใช้</span>
+                    </div>
+                </div>
             </div>
             <nav class="nav flex-column">
-                <a class="nav-link active" href="#" onclick="switchTab('dashboard')"><i class="fa-solid fa-receipt"></i> บันทึกค่าใช้จ่ายและหารเงิน</a>
-                <a class="nav-link" href="#" onclick="switchTab('summary')"><i class="fa-solid fa-chart-pie"></i> 📊 สรุปยอดและเคลียร์เงิน</a>
-                <a class="nav-link" href="#" onclick="switchTab('groups')"><i class="fa-solid fa-folder-plus"></i> ปุ่มสร้างกลุ่มทริปใหม่</a>
-                <a class="nav-link" href="#" onclick="switchTab('friends')"><i class="fa-solid fa-user-plus"></i> ปุ่มเพิ่มรายชื่อสมาชิก</a>
-                <a class="nav-link text-danger mt-5" href="#" onclick="clearSystemUrl()"><i class="fa-solid fa-power-off"></i> ตัดการเชื่อมต่อชีท</a>
+                <a class="nav-link" href="#" onclick="switchTab('summary')"><i class="fa-solid fa-chart-pie"></i> สรุปยอดและเคลียร์เงิน</a>
+                <a class="nav-link active" href="#" onclick="switchTab('dashboard')"><i class="fa-solid fa-receipt"></i> บันทึกบิลค่าใช้จ่าย</a>
+                <a class="nav-link" href="#" onclick="switchTab('groups')"><i class="fa-solid fa-folder-plus"></i> สร้างกลุ่มทริปใหม่</a>
+                <a class="nav-link" href="#" onclick="switchTab('friends')"><i class="fa-solid fa-user-plus"></i> เพิ่มรายชื่อสมาชิก</a>
+                <a class="nav-link text-danger" href="#" onclick="clearSystemUrl()" style="margin-top: auto; margin-bottom: 30px;"><i class="fa-solid fa-power-off"></i> ตัดการเชื่อมต่อชีท</a>
             </nav>
         </div>
 
         <div class="main-content">
             
             <div id="tab-dashboard" class="tab-content">
-                <h2 class="fw-bold text-dark mb-4">🧾 บันทึกและคำนวณแชร์เงิน (Real-time)</h2>
+                <h1 class="page-header-title">บันทึกบิลค่าใช้จ่าย</h1>
+                <p class="page-header-subtitle">ใส่ข้อมูลใบเสร็จและกระจายยอดเงินแชร์รายคนลงกูเกิลชีท</p>
                 
-                <div class="card p-4 mb-4">
-                    <div class="row g-3 mb-4">
+                <div class="card">
+                    <div class="row g-4 mb-4">
                         <div class="col-md-3">
-                            <label class="form-label fw-bold text-danger">1. เลือกกลุ่มทริปก่อนเริ่ม</label>
-                            <select id="expenseGroup" class="form-select bg-warning bg-opacity-10" onchange="loadActiveMembersFromSheet()">
-                                <option value="">-- โปรดเลือกกลุ่มทริปของคุณ --</option>
+                            <label class="form-label text-primary fw-bold">1. กลุ่มทริป</label>
+                            <select id="expenseGroup" class="form-select text-dark fw-medium" onchange="loadActiveMembersFromSheet()">
+                                <option value="">-- โปรดเลือกกลุ่มทริป --</option>
                             </select>
                         </div>
                         <div class="col-md-3">
-                            <label class="form-label fw-bold">2. ชื่อรายการ</label>
-                            <input type="text" id="expenseTitle" class="form-control" placeholder="เช่น ค่าซีฟู้ดริมหาด">
+                            <label class="form-label">2. ชื่อรายการ</label>
+                            <input type="text" id="expenseTitle" class="form-control" placeholder="">
                         </div>
                         <div class="col-md-3">
-                            <label class="form-label fw-bold">3. จำนวนยอดรวม (บาท)</label>
+                            <label class="form-label">3. จำนวนเงินรวม (บาท)</label>
                             <input type="number" id="expenseAmount" class="form-control" placeholder="0.00" oninput="updateSplitInputs()">
                         </div>
                         <div class="col-md-3">
-                            <label class="form-label fw-bold">4. คนจ่ายสำรองเงิน</label>
+                            <label class="form-label">4. คนจ่ายสำรอง</label>
                             <select id="expensePayer" class="form-select">
-                                <option value="">-- ดึงรายชื่ออัตโนมัติ --</option>
+                                <option value="">-- เลือกสมาชิก --</option>
                             </select>
                         </div>
                     </div>
 
                     <div class="mb-4">
-                        <label class="form-label fw-bold text-dark"><i class="fa-solid fa-calculator me-1 text-primary"></i> 5. เลือกวิธีแบ่งหารค่าใช้จ่าย</label>
+                        <label class="form-label"><i class="fa-solid fa-calculator me-1"></i> 5. วิธีแบ่งหารแชร์เงิน</label>
                         <div class="d-flex flex-wrap gap-2">
                             <input type="radio" class="btn-check" name="splitType" id="typeEqual" value="EQUAL" checked onchange="onChangeSplitType()">
-                            <label class="btn btn-outline-primary" for="typeEqual">หารเท่ากัน</label>
+                            <label class="btn btn-outline-primary px-4 py-2" style="border-radius: 10px;" for="typeEqual">หารเท่ากัน</label>
 
                             <input type="radio" class="btn-check" name="splitType" id="typeAmount" value="EXACT" onchange="onChangeSplitType()">
-                            <label class="btn btn-outline-primary" for="typeAmount">ระบุจำนวนเงินบาท</label>
+                            <label class="btn btn-outline-primary px-4 py-2" style="border-radius: 10px;" for="typeAmount">ระบุเงินบาท</label>
 
                             <input type="radio" class="btn-check" name="splitType" id="typeShare" value="SHARE" onchange="onChangeSplitType()">
-                            <label class="btn btn-outline-primary" for="typeShare">หารเป็นสัดส่วน (ส่วน)</label>
+                            <label class="btn btn-outline-primary px-4 py-2" style="border-radius: 10px;" for="typeShare">หารเป็นส่วน</label>
 
                             <input type="radio" class="btn-check" name="splitType" id="typePercent" value="PERCENT" onchange="onChangeSplitType()">
-                            <label class="btn btn-outline-primary" for="typePercent">หารเป็นเปอร์เซ็นต์ (%)</label>
+                            <label class="btn btn-outline-primary px-4 py-2" style="border-radius: 10px;" for="typePercent">หารตาม %</label>
                         </div>
                     </div>
 
-                    <div class="p-3 bg-light rounded mb-3" style="border-left: 5px solid #2563eb;">
-                        <div class="d-flex justify-content-between align-items-center mb-3">
-                            <span class="fw-bold"><i class="fa-solid fa-users me-1 text-secondary"></i> สมาชิกที่อยู่ในกลุ่มทริปนี้</span>
+                    <div class="p-4 rounded-4 bg-light mb-4" style="border-left: 4px solid var(--accent-primary);">
+                        <div class="d-flex justify-content-between align-items-center mb-4">
+                            <span class="fw-semibold text-secondary" style="font-size: 0.9rem;"><i class="fa-solid fa-users me-2"></i>รายชื่อเพื่อนร่วมหารบิลนี้</span>
                             <div id="actionEqualButtons">
-                                <button type="button" class="btn btn-sm btn-outline-secondary py-0" onclick="toggleSelectAll(true)">เลือกทุกคน</button>
-                                <button type="button" class="btn btn-sm btn-outline-secondary py-0" onclick="toggleSelectAll(false)">ล้างทั้งหมด</button>
+                                <button type="button" class="btn btn-sm btn-link text-decoration-none text-muted" onclick="toggleSelectAll(true)">เลือกทุกคน</button>
+                                <button type="button" class="btn btn-sm btn-link text-decoration-none text-danger" onclick="toggleSelectAll(false)">ล้างทั้งหมด</button>
                             </div>
                         </div>
 
                         <div id="dynamicSplitContainer" class="row g-3">
-                            <div class="text-center text-muted p-3">โปรดเลือกกลุ่มทริปด้านบนเพื่อดึงรายชื่อสมาชิกจริงจากกูเกิลชีท</div>
+                            <div class="text-center text-muted py-3">เลือกกลุ่มทริปด้านบนเพื่อเรียกดูรายชื่อสมาชิก</div>
                         </div>
 
-                        <div class="mt-4 pt-2 border-top d-flex justify-content-between align-items-center fw-bold">
-                            <div id="splitValidationMessage" class="text-danger small"></div>
-                            <div id="splitSummaryResult" class="text-dark">รวมที่แบ่ง: ฿0.00 / ยอดบิล: ฿0.00</div>
+                        <div class="mt-4 pt-3 border-top d-flex justify-content-between align-items-center">
+                            <div id="splitValidationMessage" class="text-danger small fw-medium"></div>
+                            <div id="splitSummaryResult" class="fw-bold text-dark" style="font-size: 1.05rem;">ยอดรวมแบ่ง: ฿0.00 / บิลหลัก: ฿0.00</div>
                         </div>
                     </div>
 
-                    <button id="btnSubmitExpense" onclick="submitExpense()" class="btn btn-dark w-100 py-2 fw-bold" disabled><i class="fa-solid fa-paper-plane me-2"></i>บันทึกและคำนวณบิลลงกูเกิลชีท</button>
+                    <button id="btnSubmitExpense" onclick="submitExpense()" class="btn btn-primary w-100 py-3 text-white" disabled><i class="fa-solid fa-paper-plane me-2"></i>บันทึกและคำนวณบิลลงกูเกิลชีท</button>
                 </div>
             </div>
 
             <div id="tab-summary" class="tab-content hidden">
-                <h2 class="fw-bold text-dark mb-4">📊 สรุปยอดภาพรวมและเคลียร์เงินประจำกลุ่ม</h2>
+                <h1 class="page-header-title">Weekly sumup</h1>
+                <p class="page-header-subtitle">สรุปผลยอดใช้จ่ายรวมในทริป แผนผังคำนวณการโอนเงินคืน และประวัติบิลทั้งหมด</p>
                 
-                <div class="mb-4" style="max-width: 400px;">
-                    <label class="form-label fw-bold text-primary">เลือกกลุ่มทริปเพื่อดูรายงานสรุป</label>
-                    <select id="summaryGroupSelect" class="form-select bg-white" onchange="calculateTripSummary()">
-                        <option value="">-- โปรดเลือกกลุ่มทริป --</option>
-                    </select>
-                </div>
-
-                <div class="row g-3 mb-4">
-                    <div class="col-md-4">
-                        <div class="card p-3 bg-primary text-white">
-                            <div class="small">ยอดใช้จ่ายรวมในทริปนี้</div>
-                            <h3 class="fw-bold mt-1" id="sumTotalAmount">฿0.00</h3>
-                        </div>
-                    </div>
-                    <div class="col-md-4">
-                        <div class="card p-3 bg-success text-white">
-                            <div class="small">จำนวนบิลทั้งหมด</div>
-                            <h3 class="fw-bold mt-1" id="sumTotalBills">0 บิล</h3>
-                        </div>
+                <div class="mb-4 card p-4 d-flex flex-row align-items-center gap-3" style="max-width: 450px;">
+                    <div style="flex-grow: 1;">
+                        <label class="form-label text-primary">เลือกกลุ่มทริปเพื่อประมวลผลข้อมูล</label>
+                        <select id="summaryGroupSelect" class="form-select bg-light" onchange="calculateTripSummary()">
+                            <option value="">-- โปรดเลือกกลุ่มทริปของคุณ --</option>
+                        </select>
                     </div>
                 </div>
 
-                <div class="row g-4 mb-4">
-                    <div class="col-lg-6">
-                        <div class="card p-4 h-100">
-                            <h5 class="fw-bold text-danger mb-3"><i class="fa-solid fa-hand-holding-dollar me-2"></i>สรุปการโอนเงิน (เคลียร์หนี้)</h5>
-                            <div id="settlementContainer" class="list-group list-group-flush">
-                                <div class="text-center text-muted p-3">โปรดเลือกกลุ่มด้านบนเพื่อคำนวณแผนการโอนเงินคืน</div>
+                <div class="row g-4 mb-5">
+                    <div class="col-md-4">
+                        <div class="stat-card">
+                            <span class="stat-label">ยอดรวมการใช้จ่ายในทริปนี้</span>
+                            <div class="stat-value text-primary" id="sumTotalAmount">฿0.00</div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="stat-card">
+                            <span class="stat-label">จำนวนบิลที่รูดบันทึกไป</span>
+                            <div class="stat-value text-dark" id="sumTotalBills">0 บิล</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row g-4 mb-5">
+                    <div class="col-lg-5">
+                        <div class="card h-100">
+                            <h5 class="card-title text-danger"><i class="fa-solid fa-arrow-right-arrow-left me-2"></i>จับคู่สรุปการโอนเงินคืน</h5>
+                            <div id="settlementContainer" class="list-group list-group-flush mt-2">
+                                <div class="text-center text-muted py-4">กรุณาเลือกกลุ่มทริปด้านบน</div>
                             </div>
                         </div>
                     </div>
 
-                    <div class="col-lg-6">
-                        <div class="card p-4 h-100">
-                            <h5 class="fw-bold text-dark mb-3"><i class="fa-solid fa-scale-balanced me-2"></i>สรุปสถานะรายคน (ยอดสุทธิ)</h5>
+                    <div class="col-lg-7">
+                        <div class="card h-100">
+                            <h5 class="card-title text-dark"><i class="fa-solid fa-user-check me-2"></i>สรุปสถานะกระเป๋าเงินรายคน</h5>
                             <div class="table-responsive">
-                                <table class="table table-hover align-middle">
-                                    <thead class="table-light">
+                                <table class="table align-middle">
+                                    <thead>
                                         <tr>
                                             <th>ชื่อสมาชิก</th>
-                                            <th>สำรองจ่ายไป</th>
-                                            <th>ยอดที่ต้องร่วมหาร</th>
+                                            <th>ออกเงินไป</th>
+                                            <th>ต้องร่วมแชร์</th>
                                             <th>ยอดสุทธิ</th>
                                         </tr>
                                     </thead>
                                     <tbody id="memberSummaryTableBody">
                                         <tr>
-                                            <td colspan="4" class="text-center text-muted">เลือกกลุ่มทริปเพื่อสรุปข้อมูลรายบุคคล</td>
+                                            <td colspan="4" class="text-center text-muted py-4">ไม่มีข้อมูลให้แสดงผล</td>
                                         </tr>
                                     </tbody>
                                 </table>
@@ -173,24 +374,24 @@
                     </div>
                 </div>
 
-                <div class="card p-4">
-                    <h5 class="fw-bold text-dark mb-3" style="color: #1e3a8a;"><i class="fa-solid fa-list-check me-2 text-info"></i>รายการประวัติบิลค่าใช้จ่ายทั้งหมดในกลุ่ม</h5>
+                <div class="card">
+                    <h5 class="card-title"><i class="fa-solid fa-clock-rotate-left me-2 text-primary"></i>Transaction history (ประวัติบิลรายรายการ)</h5>
                     <div class="table-responsive">
-                        <table class="table table-striped table-hover align-middle">
-                            <thead class="table-dark">
+                        <table class="table table-hover align-middle">
+                            <thead>
                                 <tr>
-                                    <th style="width: 12%;">วันที่-เวลา</th>
-                                    <th style="width: 20%;">ชื่อรายการ</th>
-                                    <th style="width: 13%;">จำนวนเงินรวม</th>
-                                    <th style="width: 13%;">คนจ่ายเงินสำรอง</th>
-                                    <th style="width: 13%;">รูปแบบการหาร</th>
-                                    <th style="width: 19%;">รายละเอียดผู้ร่วมหาร</th>
-                                    <th style="width: 10%; text-align: center;">จัดการ</th>
+                                    <th>วันที่-เวลา</th>
+                                    <th>ชื่อรายการค่าใช้จ่าย</th>
+                                    <th>จำนวนเงินรวม</th>
+                                    <th>คนออกสำรองจ่าย</th>
+                                    <th>รูปแบบหาร</th>
+                                    <th>ผู้มีรายชื่อร่วมหารบิล</th>
+                                    <th style="text-align: center;">การจัดการ</th>
                                 </tr>
                             </thead>
                             <tbody id="historyExpenseTableBody">
                                 <tr>
-                                    <td colspan="7" class="text-center text-muted p-3">โปรดเลือกกลุ่มทริปด้านบนเพื่อดึงประวัติรายการบิล</td>
+                                    <td colspan="7" class="text-center text-muted py-4">โปรดเลือกกลุ่มทริปเพื่อเรียกดูข้อมูลประวัติธุรกรรม</td>
                                 </tr>
                             </tbody>
                         </table>
@@ -200,32 +401,34 @@
             </div>
 
             <div id="tab-groups" class="tab-content hidden">
-                <h2 class="fw-bold text-dark mb-4">👥 ปุ่มสร้างกลุ่มทริปใหม่</h2>
-                <div class="card p-4 mb-4" style="max-width: 600px;">
+                <h1 class="page-header-title">สร้างกลุ่มทริปใหม่</h1>
+                <p class="page-header-subtitle">ตั้งชื่อโฟลเดอร์กิจกรรมการเดินทางกลุ่มใหม่ของคุณ</p>
+                <div class="card" style="max-width: 550px;">
                     <div class="mb-3">
-                        <label class="form-label fw-bold">ชื่อกลุ่มกิจกรรมทริป</label>
-                        <input type="text" id="groupNameInput" class="form-control" placeholder="เช่น ทริปสงกรานต์ระยอง">
+                        <label class="form-label">ชื่อกลุ่ม / ทริป</label>
+                        <input type="text" id="groupNameInput" class="form-control" placeholder="">
                     </div>
-                    <div class="mb-3">
-                        <label class="form-label fw-bold">คำอธิบาย</label>
-                        <input type="text" id="groupDescInput" class="form-control" placeholder="รายละเอียดกลุ่มสั้นๆ">
+                    <div class="mb-4">
+                        <label class="form-label">บันทึกข้อความบันทึกช่วยจำ</label>
+                        <input type="text" id="groupDescInput" class="form-control" placeholder="">
                     </div>
-                    <button id="btnCreateGroup" onclick="submitCreateGroup()" class="btn btn-success fw-bold">ยืนยันกดสร้างกลุ่ม</button>
+                    <button id="btnCreateGroup" onclick="submitCreateGroup()" class="btn btn-primary w-100 py-3 text-white">ยืนยันสร้างกลุ่มทริป</button>
                 </div>
             </div>
 
             <div id="tab-friends" class="tab-content hidden">
-                <h2 class="fw-bold text-dark mb-4">👤 ปุ่มเพิ่มรายชื่อเพื่อนเข้าระบบกลุ่ม</h2>
-                <div class="card p-4 mb-4" style="max-width: 600px;">
+                <h1 class="page-header-title">เพิ่มสมาชิกในกลุ่ม</h1>
+                <p class="page-header-subtitle">พิมพ์ชื่อเล่นเพื่อเพิ่มเพื่อนๆ เข้าไปในระบบคำนวณเงินแชร์กลุ่ม</p>
+                <div class="card" style="max-width: 550px;">
                     <div class="mb-3">
-                        <label class="form-label fw-bold">1. เลือกกลุ่มทริปที่จะแอดเพื่อนเข้าไป</label>
+                        <label class="form-label text-primary">1. เลือกกลุ่มเป้าหมาย</label>
                         <select id="friendGroupSelect" class="form-select bg-light"></select>
                     </div>
-                    <div class="mb-3">
-                        <label class="form-label fw-bold">2. ชื่อเล่นของเพื่อน</label>
-                        <input type="text" id="friendNameInput" class="form-control" placeholder="กรอกชื่อเพื่อน เช่น กาย, ส้ม, นนท์">
+                    <div class="mb-4">
+                        <label class="form-label">2. ชื่อเล่นของสมาชิกใหม่</label>
+                        <input type="text" id="friendNameInput" class="form-control" placeholder="">
                     </div>
-                    <button id="btnCreateFriend" onclick="submitCreateFriend()" class="btn btn-info text-white fw-bold">กดบันทึกเพิ่มรายชื่อเพื่อน</button>
+                    <button id="btnCreateFriend" onclick="submitCreateFriend()" class="btn btn-primary w-100 py-3 text-white">กดบันทึกเพิ่มเพื่อนเข้าทริป</button>
                 </div>
             </div>
 
@@ -254,7 +457,7 @@
         }
 
         function clearSystemUrl() {
-            if(confirm("ยืนยันตัดการเชื่อมต่อกับระบบฐานข้อมูล?")) {
+            if(confirm("ต้องการตัดการเชื่อมต่อแอปและล้างประจุความจำ URL?")) {
                 localStorage.removeItem('google_script_url');
                 location.reload();
             }
@@ -278,7 +481,7 @@
                     
                     expSelect.innerHTML = '<option value="">-- โปรดเลือกกลุ่มทริปของคุณ --</option>';
                     friendSelect.innerHTML = '<option value="">-- เลือกกลุ่มทริปก่อนเพิ่มเพื่อน --</option>';
-                    summarySelect.innerHTML = '<option value="">-- โปรดเลือกกลุ่มทริป --</option>';
+                    summarySelect.innerHTML = '<option value="">-- โปรดเลือกกลุ่มทริปของคุณ --</option>';
                     
                     data.groups.forEach(g => {
                         const opt = `<option value="${g.id}">${g.name}</option>`;
@@ -287,7 +490,7 @@
                         summarySelect.innerHTML += opt;
                     });
                 }
-            }).catch(err => alert("ไม่สามารถดึงข้อมูลกลุ่มทริปได้ โปรดตรวจเช็คสิทธิ์ Deploy ของกูเกิลสคริปต์ครับ"));
+            }).catch(err => alert("สัญญานขัดข้อง ไม่สามารถติดต่อไฟล์ Google Sheets"));
         }
 
         function loadActiveMembersFromSheet() {
@@ -296,12 +499,12 @@
             const payerSelect = document.getElementById('expensePayer');
             
             if(!groupId) {
-                container.innerHTML = '<div class="text-center text-muted p-3">โปรดเลือกกลุ่มทริปด้านบนเพื่อดึงรายชื่อสมาชิกจริงจากกูเกิลชีท</div>';
-                payerSelect.innerHTML = '<option value="">-- ดึงรายชื่ออัตโนมัติ --</option>';
+                container.innerHTML = '<div class="text-center text-muted py-3">เลือกกลุ่มทริปด้านบนเพื่อเรียกดูรายชื่อสมาชิก</div>';
+                payerSelect.innerHTML = '<option value="">-- เลือกสมาชิก --</option>';
                 return;
             }
 
-            container.innerHTML = '<div class="text-center text-muted p-3"><i class="fa-solid fa-spinner fa-spin me-2"></i>กำลังดาวน์โหลดรายชื่อเพื่อนๆ จาก Google Sheets...</div>';
+            container.innerHTML = '<div class="text-center text-muted py-3"><i class="fa-solid fa-spinner fa-spin me-2"></i>กำลังดึงข้อมูลสมาชิก...</div>';
 
             fetch(`${SCRIPT_URL}?action=getMembers&groupId=${groupId}`)
             .then(res => res.json())
@@ -328,7 +531,7 @@
             container.innerHTML = "";
 
             if(activeMembers.length === 0) {
-                container.innerHTML = '<div class="text-center text-danger p-3">❌ ยังไม่มีสมาชิกในกลุ่มนี้! โปรดเลือกไปเมนูขวาเพื่อกดเพิ่มรายชื่อเพื่อนก่อนครับ</div>';
+                container.innerHTML = '<div class="text-center text-danger py-2">❌ ทริปนี้ยังไม่มีรายชื่อเพื่อนเลยครับ ไปกดเพิ่มเพื่อนที่เมนูก่อนนะ</div>';
                 return;
             }
 
@@ -338,18 +541,18 @@
             activeMembers.forEach(member => {
                 let inputHtml = "";
                 if (type === "EQUAL") {
-                    inputHtml = `<div class="form-check mt-2"><input class="form-check-input member-split-chk" type="checkbox" value="${member.id}" id="chk_${member.id}" checked onchange="updateSplitInputs()"><label class="form-check-label" for="chk_${member.id}">ร่วมหาร</label></div><input type="hidden" id="val_${member.id}" value="0"><span class="badge bg-secondary ms-2 mt-2" id="badge_${member.id}">฿0.00</span>`;
+                    inputHtml = `<div class="form-check m-0"><input class="form-check-input member-split-chk" type="checkbox" value="${member.id}" id="chk_${member.id}" checked onchange="updateSplitInputs()"><label class="form-check-label ms-1" for="chk_${member.id}">หาร</label></div><input type="hidden" id="val_${member.id}" value="0"><span class="badge badge-member ms-3" id="badge_${member.id}">฿0.00</span>`;
                 } else if (type === "EXACT") {
-                    inputHtml = `<div class="input-group input-group-sm"><span class="input-group-text">฿</span><input type="number" class="form-control member-split-val" id="val_${member.id}" value="0" oninput="updateSplitInputs()"></div>`;
+                    inputHtml = `<div class="input-group input-group-sm" style="width: 140px;"><span class="input-group-text bg-white border-end-0">฿</span><input type="number" class="form-control bg-white border-start-0 member-split-val" id="val_${member.id}" value="0" oninput="updateSplitInputs()"></div>`;
                 } else if (type === "SHARE") {
-                    inputHtml = `<div class="input-group input-group-sm"><input type="number" class="form-control member-split-val" id="val_${member.id}" value="1" oninput="updateSplitInputs()"><span class="input-group-text">ส่วน</span></div><span class="badge bg-secondary ms-2 mt-2" id="badge_${member.id}">฿0.00</span>`;
+                    inputHtml = `<div class="input-group input-group-sm" style="width: 120px;"><input type="number" class="form-control bg-white border-end-0 member-split-val" id="val_${member.id}" value="1" oninput="updateSplitInputs()"><span class="input-group-text bg-white border-start-0">ส่วน</span></div><span class="badge badge-member ms-2" id="badge_${member.id}">฿0.00</span>`;
                 } else if (type === "PERCENT") {
-                    inputHtml = `<div class="input-group input-group-sm"><input type="number" class="form-control member-split-val" id="val_${member.id}" value="0" oninput="updateSplitInputs()"><span class="input-group-text">%</span></div><span class="badge bg-secondary ms-2 mt-2" id="badge_${member.id}">฿0.00</span>`;
+                    inputHtml = `<div class="input-group input-group-sm" style="width: 120px;"><input type="number" class="form-control bg-white border-end-0 member-split-val" id="val_${member.id}" value="0" oninput="updateSplitInputs()"><span class="input-group-text bg-white border-start-0">%</span></div><span class="badge badge-member ms-2" id="badge_${member.id}">฿0.00</span>`;
                 }
 
                 container.innerHTML += `
-                    <div class="col-md-6 d-flex justify-content-between align-items-center p-2 border-bottom">
-                        <span class="fw-bold text-dark"><i class="fa-solid fa-user text-muted me-2"></i>${member.name}</span>
+                    <div class="col-md-6 d-flex justify-content-between align-items-center p-2 border-bottom border-light">
+                        <span class="fw-medium text-dark"><i class="fa-solid fa-user-circle text-muted me-2"></i>${member.name}</span>
                         <div class="d-flex align-items-center">${inputHtml}</div>
                     </div>`;
             });
@@ -392,7 +595,7 @@
                 });
                 if (Math.abs(sumCalculated - totalAmount) > 0.1 && totalAmount > 0) {
                     isValid = false;
-                    errorMsg = `⚠️ ยอดบิลหลักและยอดแชร์รายคนไม่เท่ากัน ขาด/เกินไป ฿${Math.abs(totalAmount - sumCalculated).toFixed(2)}`;
+                    errorMsg = `⚠️ รวมเงินคนย่อยไม่เท่ากับบิลหลัก ขาด/เกินไป ฿${Math.abs(totalAmount - sumCalculated).toFixed(2)}`;
                 }
             } 
             else if (type === "SHARE") {
@@ -420,12 +623,12 @@
                     sumCalculated = (totalPercent / 100) * totalAmount;
                     if (totalPercent !== 100) {
                         isValid = false;
-                        errorMsg = `⚠️ รวมเปอร์เซ็นต์ต้องเท่ากับ 100% ตอนนี้รวมได้ ${totalPercent}%`;
+                        errorMsg = `⚠️ รวมอัตราส่วนตอนนี้ได้ ${totalPercent}% (ต้องรวมให้ครบ 100%)`;
                     }
                 }
             }
 
-            document.getElementById('splitSummaryResult').innerText = `รวมที่แบ่ง: ฿${sumCalculated.toLocaleString('th-TH',{minimumFractionDigits:2})} / ยอดบิล: ฿${totalAmount.toLocaleString('th-TH',{minimumFractionDigits:2})}`;
+            document.getElementById('splitSummaryResult').innerText = `รวมแบ่งเงิน: ฿${sumCalculated.toLocaleString('th-TH',{minimumFractionDigits:2})} / ยอดบิลหลัก: ฿${totalAmount.toLocaleString('th-TH',{minimumFractionDigits:2})}`;
             document.getElementById('splitValidationMessage').innerText = errorMsg;
             document.getElementById('btnSubmitExpense').disabled = (!isValid || totalAmount <= 0);
         }
@@ -443,7 +646,7 @@
                 if (val > 0) splitDetails[m.id] = parseFloat(val.toFixed(2));
             });
 
-            document.getElementById('btnSubmitExpense').innerText = "กำลังอัปโหลดส่งข้อมูลบันทึกกูเกิลชีท...";
+            document.getElementById('btnSubmitExpense').innerText = "กำลังยิงข้อมูลส่งเข้าสู่คลาวด์กูเกิลชีท...";
             document.getElementById('btnSubmitExpense').disabled = true;
 
             const finalUrl = `${SCRIPT_URL}?action=createExpense&group=${group}&title=${encodeURIComponent(title)}&amount=${amount}&payer=${payer}&splitType=${type}&details=${encodeURIComponent(JSON.stringify(splitDetails))}`;
@@ -451,12 +654,12 @@
             fetch(finalUrl)
             .then(res => res.json())
             .then(data => {
-                alert(data.message || "บันทึกสำเร็จ!");
+                alert("บันทึกลงฐานข้อมูลสำเร็จ!");
                 document.getElementById('expenseTitle').value = "";
                 document.getElementById('expenseAmount').value = "";
                 loadActiveMembersFromSheet(); 
             })
-            .catch(err => alert("เกิดข้อผิดพลาดในการเชื่อมโยงเครือข่าย"))
+            .catch(err => alert("เครือข่ายขัดข้อง กรุณาลองใหม่อีกครั้งครับ"))
             .finally(() => {
                 document.getElementById('btnSubmitExpense').innerHTML = `<i class="fa-solid fa-paper-plane me-2"></i>บันทึกและคำนวณบิลลงกูเกิลชีท`;
             });
@@ -470,79 +673,80 @@
             const tableBody = document.getElementById('memberSummaryTableBody');
             const historyBody = document.getElementById('historyExpenseTableBody'); 
             
-            settleContainer.innerHTML = '<div class="text-center p-3"><i class="fa-spin fa-solid fa-spinner"></i> กำลังคำนวณ...</div>';
-            tableBody.innerHTML = '<tr><td colspan="4" class="text-center text-muted">กำลังดึงข้อมูล...</td></tr>';
-            historyBody.innerHTML = '<tr><td colspan="7" class="text-center text-muted"><i class="fa-spin fa-solid fa-spinner"></i> กำลังโหลดประวัติรายการบิล...</td></tr>';
+            settleContainer.innerHTML = '<div class="text-center py-4"><i class="fa-spin fa-solid fa-spinner text-muted"></i></div>';
+            tableBody.innerHTML = '<tr><td colspan="4" class="text-center text-muted py-3">กำลังเรียกอ่านข้อมูล...</td></tr>';
+            historyBody.innerHTML = '<tr><td colspan="7" class="text-center text-muted py-3">กำลังประมวลผล...</td></tr>';
 
             fetch(`${SCRIPT_URL}?action=getTripReport&groupId=${groupId}`)
             .then(res => res.json())
             .then(data => {
-                if(!data.success) return alert("ดึงรายงานไม่สำเร็จ");
+                if(!data.success) return alert("ดึงรายงานผิดพลาด");
 
                 document.getElementById('sumTotalAmount').innerText = `฿${data.totalAmount.toLocaleString('th-TH',{minimumFractionDigits:2})}`;
                 document.getElementById('sumTotalBills').innerText = `${data.totalBills} บิล`;
 
+                // 1. วาดตาราง Net Balance รายคน
                 tableBody.innerHTML = "";
                 data.memberStatus.forEach(m => {
                     let netBadge = "";
-                    if(m.netBalance > 0) netBadge = `<span class="text-success fw-bold">+฿${m.netBalance.toLocaleString('th-TH',{minimumFractionDigits:2})} (ได้คืน)</span>`;
-                    else if(m.netBalance < 0) netBadge = `<span class="text-danger fw-bold">฿${m.netBalance.toLocaleString('th-TH',{minimumFractionDigits:2})} (ต้องจ่ายเพิ่ม)</span>`;
+                    if(m.netBalance > 0) netBadge = `<span class="text-success fw-bold">+฿${m.netBalance.toLocaleString('th-TH',{minimumFractionDigits:2})}</span>`;
+                    else if(m.netBalance < 0) netBadge = `<span class="text-danger fw-bold">฿${m.netBalance.toLocaleString('th-TH',{minimumFractionDigits:2})}</span>`;
                     else netBadge = `<span class="text-muted">฿0.00</span>`;
 
                     tableBody.innerHTML += `
                         <tr>
-                            <td class="fw-bold">${m.name}</td>
+                            <td class="fw-semibold">${m.name}</td>
                             <td class="text-success">฿${m.paid.toLocaleString('th-TH',{minimumFractionDigits:2})}</td>
-                            <td class="text-danger">฿${m.owed.toLocaleString('th-TH',{minimumFractionDigits:2})}</td>
+                            <td class="text-muted">฿${m.owed.toLocaleString('th-TH',{minimumFractionDigits:2})}</td>
                             <td>${netBadge}</td>
                         </tr>`;
                 });
 
+                // 2. แผนการจับคู่โอนเคลียร์เงินหนี้
                 settleContainer.innerHTML = "";
                 if(data.debts.length === 0) {
-                    settleContainer.innerHTML = '<div class="alert alert-success text-center my-2"><i class="fa-solid fa-circle-check me-2"></i>ทริปนี้เคลียร์เงินกันลงตัวเรียบร้อยแล้วครับ!</div>';
+                    settleContainer.innerHTML = '<div class="alert alert-success border-0 text-center rounded-3 my-2" style="background-color: #f0fdf4; color: #16a34a;"><i class="fa-solid fa-circle-check me-2"></i>เคลียร์เงินลงตัวครบถ้วนหมดแล้วครับ!</div>';
                 } else {
                     data.debts.forEach(d => {
                         settleContainer.innerHTML += `
-                            <div class="list-group-item d-flex justify-content-between align-items-center py-3">
-                                <div>
-                                    <span class="text-danger fw-bold"><i class="fa-solid fa-user-minus me-1"></i>${d.fromName}</span> 
-                                    <span class="text-muted mx-2">ต้องโอนเงินให้</span> 
-                                    <span class="text-success fw-bold"><i class="fa-solid fa-user-plus me-1"></i>${d.toName}</span>
+                            <div class="list-group-item d-flex justify-content-between align-items-center py-3 border-0 border-bottom">
+                                <div class="small">
+                                    <span class="text-danger fw-semibold">${d.fromName}</span> 
+                                    <span class="text-muted mx-1">โอนให้</span> 
+                                    <span class="text-success fw-semibold">${d.toName}</span>
                                 </div>
-                                <span class="badge bg-danger rounded-pill fs-6 py-2 px-3">฿${d.amount.toLocaleString('th-TH',{minimumFractionDigits:2})}</span>
+                                <span class="badge bg-danger bg-opacity-10 text-danger rounded-pill px-3 py-2 fw-bold">฿${d.amount.toLocaleString('th-TH',{minimumFractionDigits:2})}</span>
                             </div>`;
                     });
                 }
 
-                // วาดประวัติบิลพร้อมแนบปุ่ม "ลบรายการ"
+                // 3. วาดตารางประวัติบิลรายใบสไตล์คลีน (มีปุ่มลบถังขยะมินิมอล)
                 historyBody.innerHTML = "";
                 if(data.historyBills.length === 0) {
-                    historyBody.innerHTML = '<tr><td colspan="7" class="text-center text-muted p-3">ยังไม่มีการบันทึกรายการบิลค่าใช้จ่ายในกลุ่มนี้</td></tr>';
+                    historyBody.innerHTML = '<tr><td colspan="7" class="text-center text-muted py-4">ยังไม่พบบันทึกใบเสร็จธุรกรรมของทริปนี้</td></tr>';
                 } else {
                     data.historyBills.forEach(bill => {
                         let typeText = "";
                         if(bill.type === "EQUAL") typeText = "หารเท่ากัน";
-                        else if(bill.type === "EXACT") typeText = "ระบุเงินรายคน";
-                        else if(bill.type === "SHARE") typeText = "หารตามสัดส่วน";
+                        else if(bill.type === "EXACT") typeText = "ระบุเงินบาท";
+                        else if(bill.type === "SHARE") typeText = "หารตามส่วน";
                         else if(bill.type === "PERCENT") typeText = "หารตาม %";
 
                         let detailsHtml = "";
                         for (let name in bill.rawDetails) {
-                            detailsHtml += `<span class="badge bg-light text-dark border me-1 d-inline-block my-1">${name}: ฿${bill.rawDetails[name]}</span>`;
+                            detailsHtml += `<span class="badge text-dark border me-1 d-inline-block my-1 fw-normal" style="background-color: #f8fafc; border-color: #e2e8f0 !important;">${name}: ฿${bill.rawDetails[name]}</span>`;
                         }
 
-                        // เพิ่มปุ่มถังขยะสีแดง และเมื่อกดจะกระตุ้นฟังก์ชันลบ deleteExpense โดยส่งไอดีบิลไปด้วย
                         historyBody.innerHTML += `
                             <tr>
                                 <td class="small text-muted">${bill.date}</td>
-                                <td class="fw-bold text-dark">${bill.title}</td>
+                                <td class="fw-semibold text-dark">${bill.title}</td>
                                 <td class="fw-bold text-primary">฿${bill.amount.toLocaleString('th-TH',{minimumFractionDigits:2})}</td>
-                                <td><span class="badge bg-secondary">${bill.payerName}</span></td>
+                                <td><span class="badge bg-light text-secondary border px-2 py-1">${bill.payerName}</span></td>
                                 <td><small class="text-muted">${typeText}</small></td>
                                 <td>${detailsHtml}</td>
                                 <td style="text-align: center;">
-                                    <button class="btn btn-sm btn-outline-danger" onclick="deleteExpense('${bill.id}')">
+                                    <button class="btn btn-sm btn-link text-decoration-none text-danger p-0" onclick="deleteExpense('${bill.id}')">
                                         <i class="fa-solid fa-trash-can"></i> ลบ
                                     </button>
                                 </td>
@@ -552,32 +756,31 @@
             });
         }
 
-        // 🔥 [ฟังก์ชันใหม่] ยิงคำสั่งไปบอก Google Sheets ให้ทำการลบแถวของบิลนี้ออก
         function deleteExpense(expenseId) {
-            if(!confirm("คุณน้าแน่ใจใช่ไหมครับ ว่าต้องการลบรายการค่าใช้จ่ายนี้อย่างถาวร?")) return;
+            if(!confirm("คุณต้องการลบรายการบิลค่าใช้จ่ายนี้ใช่ไหม?")) return;
 
             fetch(`${SCRIPT_URL}?action=deleteExpense&expenseId=${expenseId}`)
             .then(res => res.json())
             .then(data => {
                 if(data.success) {
-                    alert("ลบบิลรายการค่าใช้จ่ายออกจากกูเกิลชีทสำเร็จแล้วครับ!");
-                    calculateTripSummary(); // โหลดความเปลี่ยนแปลงคำนวณหน้ากระดานใหม่ทันที
+                    alert("ลบข้อมูลออกจากกูเกิลชีทเรียบร้อยครับ!");
+                    calculateTripSummary(); 
                 } else {
-                    alert("เกิดข้อผิดพลาด: " + data.message);
+                    alert("ลบไม่สำเร็จ: " + data.message);
                 }
-            }).catch(err => alert("เกิดปัญหาในการเชื่อมต่อเครือข่ายออนไลน์"));
+            });
         }
 
         function submitCreateGroup() {
             const name = document.getElementById('groupNameInput').value.trim();
             const desc = document.getElementById('groupDescInput').value.trim();
-            if(!name) return alert("โปรดใส่ชื่อกลุ่มทริป");
+            if(!name) return alert("โปรดกรอกชื่อกลุ่มทริปด้วยครับ");
             document.getElementById('btnCreateGroup').disabled = true;
             fetch(`${SCRIPT_URL}?action=createGroup&name=${encodeURIComponent(name)}&desc=${encodeURIComponent(desc)}`)
             .then(res => res.json())
             .then(data => {
                 if(data.success) {
-                    alert("บันทึกตารางกลุ่มใหม่สำเร็จ!");
+                    alert("ตั้งค่าโฟลเดอร์ทริปใหม่บนระบบชีทสำเร็จ!");
                     document.getElementById('groupNameInput').value = "";
                     document.getElementById('groupDescInput').value = "";
                     loadGroupsFromSheet(); 
@@ -588,13 +791,13 @@
         function submitCreateFriend() {
             const groupId = document.getElementById('friendGroupSelect').value;
             const name = document.getElementById('friendNameInput').value.trim();
-            if(!groupId || !name) return alert("โปรดกรอกข้อมูลให้ครบถ้วน");
+            if(!groupId || !name) return alert("ข้อมูลไม่ครบถ้วน กรุณากรอกใหม่อีกครั้ง");
             document.getElementById('btnCreateFriend').disabled = true;
             fetch(`${SCRIPT_URL}?action=createFriend&groupId=${groupId}&name=${encodeURIComponent(name)}`)
             .then(res => res.json())
             .then(data => {
                 if(data.success) {
-                    alert(`เพิ่มคุณ "${name}" เข้าสู่กลุ่มทริปในกูเกิลชีทเรียบร้อยครับ!`);
+                    alert(`เพิ่มรายชื่อคุณ "${name}" เรียบร้อยแล้วครับ!`);
                     document.getElementById('friendNameInput').value = "";
                 }
             }).finally(() => document.getElementById('btnCreateFriend').disabled = false);
