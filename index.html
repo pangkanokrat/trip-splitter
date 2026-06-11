@@ -19,6 +19,7 @@
 </head>
 <body>
 
+    <!-- ⚙️ หน้าแรก: ตั้งค่าเชื่อมต่อ URL -->
     <div id="setupSection" class="container setup-container">
         <div class="card p-4">
             <h4 class="text-center mb-3 fw-bold"><i class="fa-solid fa-cloud-plug text-primary me-2"></i>ระบบออนไลน์เชื่อมต่อ Sheet</h4>
@@ -30,7 +31,9 @@
         </div>
     </div>
 
+    <!-- 💻 หน้าตัวโปรแกรมหลักเมื่อต่อติดจริง -->
     <div id="appSection" class="hidden">
+        <!-- แถบเมนูด้านข้าง -->
         <div class="sidebar">
             <div class="px-4 mb-4">
                 <h4 class="fw-bold text-warning"><i class="fa-solid fa-wallet me-2"></i>Split Bill Live</h4>
@@ -38,6 +41,7 @@
             </div>
             <nav class="nav flex-column">
                 <a class="nav-link active" href="#" onclick="switchTab('dashboard')"><i class="fa-solid fa-receipt"></i> บันทึกค่าใช้จ่ายและหารเงิน</a>
+                <a class="nav-link" href="#" onclick="switchTab('summary')"><i class="fa-solid fa-chart-pie"></i> 📊 สรุปยอดและเคลียร์เงิน</a>
                 <a class="nav-link" href="#" onclick="switchTab('groups')"><i class="fa-solid fa-folder-plus"></i> ปุ่มสร้างกลุ่มทริปใหม่</a>
                 <a class="nav-link" href="#" onclick="switchTab('friends')"><i class="fa-solid fa-user-plus"></i> ปุ่มเพิ่มรายชื่อสมาชิก</a>
                 <a class="nav-link text-danger mt-5" href="#" onclick="clearSystemUrl()"><i class="fa-solid fa-power-off"></i> ตัดการเชื่อมต่อชีท</a>
@@ -46,6 +50,7 @@
 
         <div class="main-content">
             
+            <!-- หน้าหลัก 1: บันทึกบิลและการเฉลี่ยเงินแชร์เงิน -->
             <div id="tab-dashboard" class="tab-content">
                 <h2 class="fw-bold text-dark mb-4">🧾 บันทึกและคำนวณแชร์เงิน (Real-time)</h2>
                 
@@ -73,6 +78,7 @@
                         </div>
                     </div>
 
+                    <!-- โหมดรูปแบบการหาร -->
                     <div class="mb-4">
                         <label class="form-label fw-bold text-dark"><i class="fa-solid fa-calculator me-1 text-primary"></i> 5. เลือกวิธีแบ่งหารค่าใช้จ่าย</label>
                         <div class="d-flex flex-wrap gap-2">
@@ -90,6 +96,7 @@
                         </div>
                     </div>
 
+                    <!-- พื้นที่แสดงรายชื่อเพื่อนออนไลน์จาก Google Sheets -->
                     <div class="p-3 bg-light rounded mb-3" style="border-left: 5px solid #2563eb;">
                         <div class="d-flex justify-content-between align-items-center mb-3">
                             <span class="fw-bold"><i class="fa-solid fa-users me-1 text-secondary"></i> สมาชิกที่อยู่ในกลุ่มทริปนี้</span>
@@ -113,6 +120,71 @@
                 </div>
             </div>
 
+            <!-- หน้าหลักใหม่!! 📊 สรุปรายงานค่าใช้จ่ายประจำทริป (Dashboard ตัวจริง) -->
+            <div id="tab-summary" class="tab-content hidden">
+                <h2 class="fw-bold text-dark mb-4">📊 สรุปยอดภาพรวมและเคลียร์เงินประจำกลุ่ม</h2>
+                
+                <div class="mb-4" style="max-width: 400px;">
+                    <label class="form-label fw-bold text-primary">เลือกกลุ่มทริปเพื่อดูรายงานสรุป</label>
+                    <select id="summaryGroupSelect" class="form-select bg-white" onchange="calculateTripSummary()">
+                        <option value="">-- โปรดเลือกกลุ่มทริป --</option>
+                    </select>
+                </div>
+
+                <!-- การ์ดตัวเลขสรุป -->
+                <div class="row g-3 mb-4">
+                    <div class="col-md-4">
+                        <div class="card p-3 bg-primary text-white">
+                            <div class="small">ยอดใช้จ่ายรวมในทริปนี้</div>
+                            <h3 class="fw-bold mt-1" id="sumTotalAmount">฿0.00</h3>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="card p-3 bg-success text-white">
+                            <div class="small">จำนวนบิลทั้งหมด</div>
+                            <h3 class="fw-bold mt-1" id="sumTotalBills">0 บิล</h3>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row g-4">
+                    <!-- ตารางแจกแจงหนี้สิน: ต้องโอนให้ใครเท่าไหร่ -->
+                    <div class="col-lg-6">
+                        <div class="card p-4 h-100">
+                            <h5 class="fw-bold text-danger mb-3"><i class="fa-solid fa-hand-holding-dollar me-2"></i>สรุปการโอนเงิน (เคลียร์หนี้)</h5>
+                            <div id="settlementContainer" class="list-group list-group-flush">
+                                <div class="text-center text-muted p-3">โปรดเลือกกลุ่มด้านบนเพื่อคำนวณแผนการโอนเงินคืน</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- ตารางสรุปเงินรายบุคคล: จ่ายไปเท่าไหร่ / ติดลบเท่าไหร่ -->
+                    <div class="col-lg-6">
+                        <div class="card p-4 h-100">
+                            <h5 class="fw-bold text-dark mb-3"><i class="fa-solid fa-scale-balanced me-2"></i>สรุปสถานะรายคน (ยอดสุทธิ)</h5>
+                            <div class="table-responsive">
+                                <table class="table table-hover align-middle">
+                                    <thead class="table-light">
+                                        <tr>
+                                            <th>ชื่อสมาชิก</th>
+                                            <th>สำรองจ่ายไป</th>
+                                            <th>ยอดที่ต้องร่วมหาร</th>
+                                            <th>ยอดสุทธิ</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="memberSummaryTableBody">
+                                        <tr>
+                                            <td colspan="4" class="text-center text-muted">เลือกกลุ่มทริปเพื่อสรุปข้อมูลรายบุคคล</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- หน้าหลัก 3: สร้างกลุ่มทริปใหม่ -->
             <div id="tab-groups" class="tab-content hidden">
                 <h2 class="fw-bold text-dark mb-4">👥 ปุ่มสร้างกลุ่มทริปใหม่</h2>
                 <div class="card p-4 mb-4" style="max-width: 600px;">
@@ -128,6 +200,7 @@
                 </div>
             </div>
 
+            <!-- หน้าหลัก 4: เพิ่มสมาชิกในกลุ่มทริป -->
             <div id="tab-friends" class="tab-content hidden">
                 <h2 class="fw-bold text-dark mb-4">👤 ปุ่มเพิ่มรายชื่อเพื่อนเข้าระบบกลุ่ม</h2>
                 <div class="card p-4 mb-4" style="max-width: 600px;">
@@ -148,7 +221,7 @@
 
     <script>
         let SCRIPT_URL = "";
-        let activeMembers = []; // เก็บข้อมูลรายชื่อคนที่ดึงมาจากกูเกิลชีทจริง
+        let activeMembers = []; 
 
         window.onload = function() {
             const savedUrl = localStorage.getItem('google_script_url');
@@ -156,7 +229,7 @@
                 SCRIPT_URL = savedUrl;
                 document.getElementById('setupSection').classList.add('hidden');
                 document.getElementById('appSection').classList.remove('hidden');
-                loadGroupsFromSheet(); // โหลดรายการกลุ่มจากชีททันทีเมื่อเข้าแอป
+                loadGroupsFromSheet(); 
             }
         };
 
@@ -181,7 +254,6 @@
             event.currentTarget.classList.add('active');
         }
 
-        // 🔗 ฟังก์ชันดึงรายชื่อกลุ่มทริปจริงจาก Google Sheet
         function loadGroupsFromSheet() {
             fetch(`${SCRIPT_URL}?action=getGroups`)
             .then(res => res.json())
@@ -189,20 +261,22 @@
                 if(data.success) {
                     const expSelect = document.getElementById('expenseGroup');
                     const friendSelect = document.getElementById('friendGroupSelect');
+                    const summarySelect = document.getElementById('summaryGroupSelect');
                     
                     expSelect.innerHTML = '<option value="">-- โปรดเลือกกลุ่มทริปของคุณ --</option>';
                     friendSelect.innerHTML = '<option value="">-- เลือกกลุ่มทริปก่อนเพิ่มเพื่อน --</option>';
+                    summarySelect.innerHTML = '<option value="">-- โปรดเลือกกลุ่มทริป --</option>';
                     
                     data.groups.forEach(g => {
                         const opt = `<option value="${g.id}">${g.name}</option>`;
                         expSelect.innerHTML += opt;
                         friendSelect.innerHTML += opt;
+                        summarySelect.innerHTML += opt;
                     });
                 }
             }).catch(err => alert("ไม่สามารถดึงข้อมูลกลุ่มทริปได้ โปรดตรวจเช็คสิทธิ์ Deploy ของกูเกิลสคริปต์ครับ"));
         }
 
-        // 🔗 ฟังก์ชันดึงรายชื่อเพื่อนของกลุ่มนั้นๆ จริงจาก Google Sheet
         function loadActiveMembersFromSheet() {
             const groupId = document.getElementById('expenseGroup').value;
             const container = document.getElementById('dynamicSplitContainer');
@@ -221,14 +295,10 @@
             .then(data => {
                 if(data.success) {
                     activeMembers = data.members;
-                    
-                    // ปรับหน้าต่างคนจ่ายเงินสำรอง
                     payerSelect.innerHTML = '';
                     activeMembers.forEach(m => {
                         payerSelect.innerHTML += `<option value="${m.id}">${m.name}</option>`;
                     });
-
-                    // วาดช่องฟอร์มคำนวณเงิน
                     onChangeSplitType();
                 }
             });
@@ -238,7 +308,6 @@
             return document.querySelector('input[name="splitType"]:checked').value;
         }
 
-        // สลับแสดงผลช่องกรอกเงินตามโหมดการหารแบบไดนามิกตามจำนวนเพื่อนที่มีจริงในชีท
         function onChangeSplitType() {
             const type = getSelectedSplitType();
             const container = document.getElementById('dynamicSplitContainer');
@@ -280,7 +349,6 @@
             updateSplitInputs();
         }
 
-        // ระบบวิเคราะห์คำนวณเงินสดๆ บนหน้าจอ
         function updateSplitInputs() {
             const totalAmount = parseFloat(document.getElementById('expenseAmount').value) || 0;
             const type = getSelectedSplitType();
@@ -349,7 +417,6 @@
             document.getElementById('btnSubmitExpense').disabled = (!isValid || totalAmount <= 0);
         }
 
-        // 🚀 สั่งยิงข้อมูลบันทึกบิลแชร์เงินจริงเข้า Google Sheets 
         function submitExpense() {
             const group = document.getElementById('expenseGroup').value;
             const title = document.getElementById('expenseTitle').value.trim();
@@ -374,7 +441,7 @@
                 alert(data.message || "บันทึกสำเร็จ!");
                 document.getElementById('expenseTitle').value = "";
                 document.getElementById('expenseAmount').value = "";
-                loadActiveMembersFromSheet(); // โหลดกระดานใหม่
+                loadActiveMembersFromSheet(); 
             })
             .catch(err => alert("เกิดข้อผิดพลาดในการเชื่อมโยงเครือข่าย"))
             .finally(() => {
@@ -382,14 +449,68 @@
             });
         }
 
-        // 🔗 ส่งข้อมูลงชีทจริง: กดสร้างกลุ่มใหม่
+        // 📊 ฟังก์ชันหัวใจสำคัญ: คำนวณสรุปยอดทริปจริงจากชีททั้งหมด
+        function calculateTripSummary() {
+            const groupId = document.getElementById('summaryGroupSelect').value;
+            if(!groupId) return;
+
+            const settleContainer = document.getElementById('settlementContainer');
+            const tableBody = document.getElementById('memberSummaryTableBody');
+            
+            settleContainer.innerHTML = '<div class="text-center p-3"><i class="fa-spin fa-solid fa-spinner"></i> กำลังคำนวณสถิติจริงจากกูเกิลชีท...</div>';
+            tableBody.innerHTML = '<tr><td colspan="4" class="text-center text-muted">กำลังดึงข้อมูล...</td></tr>';
+
+            // ยิงไปดึงบิลและรายชื่อสมาชิกของกลุ่มพร้อมๆ กันจากหลังบ้าน
+            fetch(`${SCRIPT_URL}?action=getTripReport&groupId=${groupId}`)
+            .then(res => res.json())
+            .then(data => {
+                if(!data.success) return alert("ดึงรายงานไม่สำเร็จ");
+
+                document.getElementById('sumTotalAmount').innerText = `฿${data.totalAmount.toLocaleString('th-TH',{minimumFractionDigits:2})}`;
+                document.getElementById('sumTotalBills').innerText = `${data.totalBills} บิล`;
+
+                // 1. วาดตารางแจกแจงสถานะ Net Balance รายบุคคล
+                tableBody.innerHTML = "";
+                data.memberStatus.forEach(m => {
+                    let netBadge = "";
+                    if(m.netBalance > 0) netBadge = `<span class="text-success fw-bold">+฿${m.netBalance.toLocaleString('th-TH',{minimumFractionDigits:2})} (ได้คืน)</span>`;
+                    else if(m.netBalance < 0) netBadge = `<span class="text-danger fw-bold">฿${m.netBalance.toLocaleString('th-TH',{minimumFractionDigits:2})} (ต้องจ่ายเพิ่ม)</span>`;
+                    else netBadge = `<span class="text-muted">฿0.00</span>`;
+
+                    tableBody.innerHTML += `
+                        <tr>
+                            <td class="fw-bold">${m.name}</td>
+                            <td class="text-success">฿${m.paid.toLocaleString('th-TH',{minimumFractionDigits:2})}</td>
+                            <td class="text-danger">฿${m.owed.toLocaleString('th-TH',{minimumFractionDigits:2})}</td>
+                            <td>${netBadge}</td>
+                        </tr>`;
+                });
+
+                // 2. วาดรายการเคลียร์หนี้โอนเงิน (ใครต้องโอนให้ใคร)
+                settleContainer.innerHTML = "";
+                if(data.debts.length === 0) {
+                    settleContainer.innerHTML = '<div class="alert alert-success text-center my-2"><i class="fa-solid fa-circle-check me-2"></i>ทริปนี้เคลียร์เงินกันลงตัวเรียบร้อยแล้วครับ!</div>';
+                } else {
+                    data.debts.forEach(d => {
+                        settleContainer.innerHTML += `
+                            <div class="list-group-item d-flex justify-content-between align-items-center py-3">
+                                <div>
+                                    <span class="text-danger fw-bold"><i class="fa-solid fa-user-minus me-1"></i>${d.fromName}</span> 
+                                    <span class="text-muted mx-2">ต้องโอนเงินให้</span> 
+                                    <span class="text-success fw-bold"><i class="fa-solid fa-user-plus me-1"></i>${d.toName}</span>
+                                </div>
+                                <span class="badge bg-danger rounded-pill fs-6 py-2 px-3">฿${d.amount.toLocaleString('th-TH',{minimumFractionDigits:2})}</span>
+                            </div>`;
+                    });
+                }
+            });
+        }
+
         function submitCreateGroup() {
             const name = document.getElementById('groupNameInput').value.trim();
             const desc = document.getElementById('groupDescInput').value.trim();
             if(!name) return alert("โปรดใส่ชื่อกลุ่มทริป");
-
             document.getElementById('btnCreateGroup').disabled = true;
-            
             fetch(`${SCRIPT_URL}?action=createGroup&name=${encodeURIComponent(name)}&desc=${encodeURIComponent(desc)}`)
             .then(res => res.json())
             .then(data => {
@@ -397,19 +518,16 @@
                     alert("บันทึกตารางกลุ่มใหม่สำเร็จ!");
                     document.getElementById('groupNameInput').value = "";
                     document.getElementById('groupDescInput').value = "";
-                    loadGroupsFromSheet(); // โหลดลิสต์กลุ่มอัปเดตใหม่
+                    loadGroupsFromSheet(); 
                 }
             }).finally(() => document.getElementById('btnCreateGroup').disabled = false);
         }
 
-        // 🔗 ส่งข้อมูลงชีทจริง: สั่งเพิ่มรายชื่อเพื่อนเข้ากลุ่มทริป
         function submitCreateFriend() {
             const groupId = document.getElementById('friendGroupSelect').value;
             const name = document.getElementById('friendNameInput').value.trim();
             if(!groupId || !name) return alert("โปรดกรอกข้อมูลให้ครบถ้วน");
-
             document.getElementById('btnCreateFriend').disabled = true;
-
             fetch(`${SCRIPT_URL}?action=createFriend&groupId=${groupId}&name=${encodeURIComponent(name)}`)
             .then(res => res.json())
             .then(data => {
